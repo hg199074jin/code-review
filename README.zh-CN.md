@@ -321,7 +321,7 @@ PR #1 元评审的后续修补：
 - 修正 `PR42_METADATA` head ref、三个过时 fixture 名、rubric 缺失的 Group D、以及五个文件间的
   lens 命名漂移
 
-`run.sh` 有 ocr 35/35、无 ocr 29/29；`mutation-test.sh` 8/8；`shellcheck` 干净。
+`run.sh` 有 ocr 34/34、无 ocr 29/29；`mutation-test.sh` 9/9；`shellcheck` 干净。
 
 ## License
 

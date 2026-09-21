@@ -45,7 +45,7 @@ assert_grep() {
 # condition holds (defect still planted / contract still broken). Non-zero => drift.
 behave() {
   _d="$1"; _ok="$2"; _bad="$3"; _code="$4"
-  if PROBE_DIR="$_d" python3 -c "$_code" >/dev/null 2>&1; then
+  if PROBE_DIR="$_d" PYTHONDONTWRITEBYTECODE=1 python3 -c "$_code" >/dev/null 2>&1; then
     ok "$_ok"
   else
     bad "$_bad"
@@ -91,8 +91,15 @@ PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini"
 
 # ---------------------------------------------------------------- fixtures --
 echo '[1/6] fixture integrity'
-for f in $ALL_FIXTURES; do require "$f"; done
-ok "all $(echo "$ALL_FIXTURES" | wc -w | tr -d ' ') fixture files present"
+# The reassuring summary line is emitted only when nothing was missing: a green line beside
+# a FAIL is misleading in a release whose thesis is evidence honesty.
+MISSING=0
+for f in $ALL_FIXTURES; do require "$f" || MISSING=$((MISSING + 1)); done
+if [ "$MISSING" -eq 0 ]; then
+  ok "all $(echo "$ALL_FIXTURES" | wc -w | tr -d ' ') fixture files present"
+else
+  bad "$MISSING fixture file(s) missing"
+fi
 
 # --- invoice: behavioural probes (audit CR-001) ---
 INV="$FIX/changed"
@@ -346,8 +353,11 @@ else
   bad "feature-x has no resolvable upstream — skipping trap assertions"
 fi
 DEFAULT_REF=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+# This fixture can never produce origin/HEAD (the remote is added, never cloned), so the
+# unresolvable branch is structural, not a tested outcome. Emitting it as ok() would inflate
+# the headline score with a permanently-green check.
 if [ -z "$DEFAULT_REF" ]; then
-  ok "origin/HEAD unresolvable here — ladder falls through to main (step 4)"
+  note "origin/HEAD unresolvable in this fixture (structural) — ladder falls through to main"
 else
   note "origin/HEAD resolved to $DEFAULT_REF (ladder step 3 would use it)"
 fi

@@ -1,6 +1,6 @@
 {
   "skill": "code-review",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "source": "V2 Review Control Plane eval suite: V1.1 regression coverage plus PR context, R3 security routing, S3 cross-file integration, and bounded review-fix-verify.",
   "darwin_compatible": true,
   "fixtures_root": "evals/fixtures; evals/run.sh builds temporary git repos for deterministic checks.",
@@ -71,7 +71,7 @@
       "id": "v2-pr-context-08",
       "type": "v2_context",
       "prompt": "审查 PR #42。PR 描述要求 total 跳过缺 price 的行、apply_discount 越界抛 ValueError；仓库没有 SPEC。",
-      "repo": "invoice branch; provider metadata supplied from evals/fixtures/PR42_METADATA.json (base=main, head=feature, title/body); no SPEC.md. Harness feeds the metadata as environment context — never fetched from a live provider.",
+      "repo": "invoice branch; provider metadata supplied from evals/fixtures/PR42_METADATA.json (base=main, head=feature-x, title/body); no SPEC.md. Harness feeds the metadata as environment context — never fetched from a live provider.",
       "expected": "Use PR base/head for scope and PR body as intent context; catch the two requirement gaps while making clear that PR text is context, not infallible authority. PR metadata comes from the fixture file (OR-003), so the scenario runs offline."
     },
     {
