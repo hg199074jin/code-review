@@ -2,7 +2,7 @@
 name: code-review
 description: The single entry point for code review. Resolves scope deterministically, builds intent context, routes by risk and change size, runs independent review lenses, fuses tool evidence, deduplicates findings, and returns one mechanical PASS / NEEDS_REVISION / FAILED verdict. Use for workspace/branch/commit/PR review, merge-safety checks, whole-repo audits, review-and-fix, or post-fix verification.
 metadata:
-  version: "2.0.0"
+  version: "2.0.1"
 ---
 
 # Code Review V2 — Review Control Plane
@@ -408,7 +408,7 @@ Start with:
 
 ```text
 ## 目标与意图
-Mode: <DIFF_WORKSPACE | DIFF_BRANCH | DIFF_COMMIT | DIFF_PR | AUDIT | VERIFY>
+Mode: <DIFF_WORKSPACE | DIFF_BRANCH | DIFF_COMMIT | DIFF_PR | AUDIT | REVIEW_FIX | VERIFY>
 Target: <workspace | base..head | commit | PR | path>
 Requirement source: <source or "none found">
 Scope: <reviewable/reviewed/skipped counts; excluded files and reasons>
