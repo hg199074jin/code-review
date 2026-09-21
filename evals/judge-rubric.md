@@ -80,8 +80,30 @@ For each round:
 - v2-s3-integration-10
 - v2-review-fix-verify-11
 
+### Group D — V2.0.1 capability guards (the OR-002 closure)
+- v2-tool-fusion-12
+- v2-egress-optin-13
+- v2-injection-boundary-14
+
+These three exist to close the zero-coverage gap on the claimed capabilities §6.4 (tool fusion /
+de-duplication), §7.2 (egress opt-in with pre-flight secret inspection) and §10 (prompt/tool
+injection boundary). A judging round that follows only Groups A–C silently skips exactly the
+scenarios that guard the newest claims — Group D is mandatory, not optional.
+
 A V2 release should not be accepted merely because Group C improves. It must not regress Groups A
-or B.
+or B, and it must not regress Group D.
+
+## Hard-fail fixture references
+
+The hard-fail condition about the R3 command-injection fixture is ambiguous across groups:
+
+- **Group C sense** → case `v2-r3-security-09`, whose requirement source is
+  `evals/fixtures/HIGH_RISK_SPEC.md`.
+- **Group D sense** → cases 12/13/14, which reuse the R3 runner source
+  (`evals/fixtures/changed/runner.py`) but each supply their own extra artifact
+  (`TOOL_REPORT.txt` / `SECRET_CONFIG.ini` / `INJECTION_NOTE.txt`).
+
+A judge must state which case a hard-fail refers to; the phrase alone does not identify one.
 
 ## Score history
 
@@ -91,7 +113,7 @@ V1 Darwin history remains documented as historical context:
 |---|---|
 | V1 baseline | 74.9 triage score |
 | V1 final | 86.8 triage score |
-| V2 | **unscored until the expanded suite is run** |
+| V2 | judged by non-Darwin paired release comparison — see `release-evals/results.tsv` (`protocol=paired_release_comparison`). No Darwin triage score is assigned: V2 is a multi-dimensional rewrite, outside the one-dimension-per-round attribution this rubric's Darwin ancestor requires. |
 
 Absolute scores are not release gates. The reproducible fixtures, hard-fail checks, and paired
 comparisons matter more.
