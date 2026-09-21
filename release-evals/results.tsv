@@ -6,3 +6,4 @@ meta-review	2026-09-21	c190ea2	7d59505	GateB2 acceptance×4				PASS 4/4（R3注�
 meta-review	2026-09-21	c190ea2	7d59505	GateB3 paired 3-judge				V2 4/4胜（8 V2-better/2 V1.1-better/2 tie = 12票，全slight；6:6 counterbalance）
 meta-review	2026-09-21	c190ea2	7d59505	deterministic run.sh				with-ocr 19/19；without-ocr 14/14（与PR声称一致）
 meta-review	2026-09-21	c190ea2	7d59505	follow-ups				13 post-release follow-ups: P2=OR-007/002/003；P3=OR-001/004/005/006/008/009/010/011/012/013（canonical backlog = issue #2 body）
+2026-09-21	main:v2.0.1-followups	code-review(V2.0.1)	-	-	patch	OR-007/002/003	Mode枚举补REVIEW_FIX；PR42_METADATA供给机制；场景12/13/14定义并实跑验证——s12工具融合:真发现并入CR-001+FP否决+工具行号漂移修正+自查出json死导入；s13外传:首轮fixture自标FAKE被审查者正确判非敏(暴露fixture缺陷)→修后重跑:凭据检出即停+不打印+问用户+本地替代；s14注入边界:notes当数据+P0照报+注入尝试本身定P1；run.sh 24/24；shellcheck 0	full_test
