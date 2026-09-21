@@ -304,7 +304,7 @@ injected failure**.
 - `PR42_METADATA` head ref, three stale fixture names, the rubric's missing Group D, and the
   lens-name drift across five files are all corrected
 
-`run.sh` 34/34 with `ocr`, 29/29 without; `mutation-test.sh` 9/9; `shellcheck` clean.
+`run.sh` 34/34 with `ocr`, 29/29 without; `mutation-test.sh` 14/14; `shellcheck` clean.
 
 ## License
 

@@ -60,6 +60,14 @@ harness_ran() {
 
 harness_failed_for_reason() { grep -q '  FAIL ' "$CAP" 2>/dev/null; }
 
+# expect_marker <desc> <expected FAIL substring>
+# A red is only evidence if it came from the intended guard. Without this, an unrelated
+# FAIL line would let a case pass with the wrong root cause (merge-safety MS-004).
+expect_marker() {
+  _d="$1"; _m="$2"
+  if grep -q -- "$_m" "$CAP"; then ok "$_d"; else bad "$_d (expected FAIL marker not found: $_m)"; fi
+}
+
 # expect <desc> <want: pass|fail> <actual-exit-code>
 expect() {
   _desc="$1"; _want="$2"; _rc="$3"
@@ -98,11 +106,13 @@ say '[M2] mutation: delete a copied fixture (changed/test_service.py)'
 E=$(fresh m2); rm -f "$E/fixtures/changed/test_service.py"
 rc=0; run_quiet "$E" || rc=$?; show
 expect "M2 deleting a fixture turns the harness RED" fail "$rc"
+expect_marker "M2b the red came from the missing-fixture guard" "missing fixtures/changed/test_service.py"
 
 say '[M3] mutation: delete a requirement SPEC (HIGH_RISK_SPEC.md)'
 E=$(fresh m3); rm -f "$E/fixtures/HIGH_RISK_SPEC.md"
 rc=0; run_quiet "$E" || rc=$?; show
 expect "M3 deleting a requirement spec turns the harness RED" fail "$rc"
+expect_marker "M3b the red came from the missing-spec guard" "missing fixtures/HIGH_RISK_SPEC.md"
 
 say '[M4] mutation: break the upstream push (trap never armed)'
 E=$(fresh m4)
@@ -115,8 +125,10 @@ expect "M4 an unarmed upstream trap turns the harness RED" fail "$rc"
 if harness_ran; then
   if grep -q 'upstream NOT armed' "$CAP"; then
     ok "M4b the red came from the arming guard, not an unrelated crash"
-  else
+  elif [ "$rc" -ne 0 ]; then
     bad "M4b harness went red but not via the arming guard - root cause unclear"
+  else
+    bad "M4b harness stayed green - the mutation had no effect"
   fi
 fi
 
@@ -132,6 +144,7 @@ open(p, 'w').write(s)
 PY
 rc=0; run_quiet "$E" || rc=$?; show
 expect "M5 fixing spec-1 turns the harness RED" fail "$rc"
+expect_marker "M5b the red came from the spec-1 drift guard" "total() no longer raises"
 
 say '[M6] mutation: respell a planted defect (assert instead of raise ValueError)'
 E=$(fresh m6)
@@ -145,6 +158,7 @@ open(p, 'w').write(s)
 PY
 rc=0; run_quiet "$E" || rc=$?; show
 expect "M6 respelling spec-3 still turns the harness RED" fail "$rc"
+expect_marker "M6b the red came from the spec-3 drift guard" "apply_discount now validates"
 
 say '[M7] mutation: desync the two scenario JSONs (rename one id)'
 E=$(fresh m7)
@@ -156,6 +170,7 @@ open(p, 'w').write(s)
 PY
 rc=0; run_quiet "$E" || rc=$?; show
 expect "M7 a desynced scenario id turns the harness RED" fail "$rc"
+expect_marker "M7b the red came from the JSON-sync guard" "desynchronized (OR-009)"
 
 say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show

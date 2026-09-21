@@ -1,7 +1,7 @@
 # AUDIT findings — canonical record (2026-09-21)
 
 Whole-repo AUDIT of `code-review` at `v2.0.1-followups`. This is the deduplicated, canonical
-finding set: 15 discrete findings. The working report contained a duplicated CR-001..CR-006
+finding set: 17 discrete findings. The working report contained a duplicated CR-001..CR-006
 block (a copy artifact, not two reviewer submissions) — removed here so finding statistics
 stay clean.
 
@@ -46,7 +46,6 @@ release evidence is signed incorrectly. This is failure-as-success, not thin cov
 ## Confirmed still open from the acknowledged backlog (not new discoveries)
 
 OR-001 (context cost ~2x, accepted tradeoff), OR-004 (REVIEW_FIX acceptance contract
-under-specified), OR-001 (context cost ~2x, accepted tradeoff), OR-004 (REVIEW_FIX acceptance contract
 under-specified), OR-005 (R2/S2 pass split — **fixed** in V2.0.2), OR-006 (case 09 dual
 expected verdict), OR-010 (legacy ban — **fixed** in V2.0.2), OR-011 (README requirement
 priority — **fixed** in V2.0.2), OR-013 (spec2 must-not — **fixed** in V2.0.1). OR-008,
