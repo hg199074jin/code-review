@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Editors
+.idea/
+.vscode/
+
+# Local scratch — never commit skill backups or test fixtures
+*.bak.*
+*.bak
+SKILL.md.kept-*
