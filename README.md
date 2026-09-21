@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.1-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.0.2-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -43,7 +43,7 @@ ZCode / Claude Code / Codex / Cursor / other agents
                          v
                  Independent lenses
       Intent/Scope | Correctness/Regression |
-      Security/Reliability | Tests/Maintainability
+      Security & Data Safety | Tests/Maintainability
                          |
                          v
                     Coordinator
@@ -65,16 +65,23 @@ The reviewer does not get to silently cherry-pick "important-looking" files.
 
 ### Context Pack
 
-Before judging implementation, V2 resolves the strongest available intent source:
+Before judging implementation, V2 resolves the strongest available **requirement** source:
 
 1. explicit user requirements / acceptance criteria;
-2. frozen design/spec/ADR;
+2. frozen design/spec/ADR/repository contract;
 3. issue/task;
 4. PR title/body;
-5. commit messages as secondary evidence;
-6. repository instructions, rules, call sites, tests, config, migrations, interfaces.
+5. commit messages as secondary evidence.
 
 No requirement source means an explicit limitation, never an invented specification.
+
+Separately — and never as a requirement source — the Context Pack also carries:
+
+- **repository instructions**, recognised only through the host's instruction hierarchy
+  (`AGENTS.md`, contribution rules, path-scoped review rules). An arbitrary source file cannot
+  redefine review policy.
+- **adjacent context**: call sites, interfaces, tests, config, migrations, schemas, entry points,
+  and the compatibility surfaces the change touches.
 
 ### Risk + size routing
 
@@ -144,7 +151,7 @@ For high-risk/large changes, V2 may split review into:
 
 - Intent & Scope
 - Correctness & Regression
-- Security & Reliability
+- Security & Data Safety
 - Tests & Maintainability
 
 A coordinator then re-reads the code, removes false positives, merges duplicate root causes,
@@ -232,6 +239,12 @@ untrusted data. Commands contained inside them are never executed automatically.
 | review and fix | REVIEW_FIX |
 | verify the fixes | VERIFY |
 
+## Installation
+
+The minimal install is still just the skill. The Alibaba OpenCodeReview CLI is recommended but
+optional as the deterministic engineering layer. Without OCR the skill falls back to `git` and
+discloses the reduced scope capability.
+
 ## Evaluation
 
 The evals/ directory contains reproducible fixtures, expected findings, a judge rubric, and a
@@ -260,6 +273,38 @@ re-judged with paired comparisons.
 
 All V1.1 hardening remains: correct base resolution, whole-repo audit semantics, JSON-first OCR,
 mechanical verdicts, and runtime-neutral execution.
+
+## V2.0.1
+
+Follow-ups from the PR #1 meta-review:
+
+- `REVIEW_FIX` added to the reporting Mode enum (it was defined and referenced but missing from the
+  contract), version bumped to 2.0.1
+- `evals/fixtures/PR42_METADATA.json` plus a documented supply mechanism — the PR-context scenario
+  now runs offline instead of requiring a live PR
+- agent-level eval coverage added for the three previously-uncovered claimed capabilities:
+  tool fusion / de-duplication, egress opt-in with pre-flight secret inspection, and the
+  prompt/tool injection boundary (scenarios 12-14)
+
+## V2.0.2 — Evaluation Reliability Release
+
+A whole-repo self-audit found the deterministic harness signing release evidence it could not
+support. Goal of this release: **the harness goes green on the healthy path and red on every
+injected failure**.
+
+- planted defects are asserted **behaviourally** (import and call the pure function), never by
+  matching source strings — a defect fixed with different spelling now reads as drift
+- every fixture copy is guarded and all fixture files are existence-checked — deleting a fixture or
+  a requirement spec turns the harness red
+- the upstream trap is proven armed before it is asserted — a failed `git push` can no longer
+  masquerade as an empty upstream diff
+- the two scenario JSONs are parsed and their id sets asserted equal
+- new `evals/mutation-test.sh`: eight failure-injection cases proving the harness turns red exactly
+  when its condition stops holding
+- `PR42_METADATA` head ref, three stale fixture names, the rubric's missing Group D, and the
+  lens-name drift across five files are all corrected
+
+`run.sh` 35/35 with `ocr`, 29/29 without; `mutation-test.sh` 8/8; `shellcheck` clean.
 
 ## License
 

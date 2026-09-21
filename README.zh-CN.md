@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.1-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.0.2-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -67,16 +67,21 @@ V2 不允许 reviewer 自己凭感觉挑“重要文件”。
 
 ### 2. Context Pack
 
-审查前先解析最好的需求来源，优先级为：
+审查前先解析最好的**需求**来源，优先级为：
 
 1. 用户明确要求 / 验收标准；
-2. FROZEN 设计、实施方案、SPEC、ADR；
+2. FROZEN 设计、实施方案、SPEC、ADR、仓库契约；
 3. Issue / Task；
 4. PR 标题和正文；
-5. commit message 仅作辅助；
-6. AGENTS.md、路径规则、调用方、测试、配置、迁移、接口。
+5. commit message 仅作辅助。
 
 没有需求依据时，A 项必须明确标注受限，而不是自己补需求。
+
+另外，Context Pack 还会携带以下内容——但它们**不是需求来源**：
+
+- **仓库指令**：只经由宿主的指令层级识别（`AGENTS.md`、贡献规范、按路径的审查规则）。
+  任意源码文件不能重新定义本审查策略。
+- **相邻上下文**：调用方、接口、测试、配置、迁移、schema、入口点，以及本次改动触及的兼容面。
 
 ### 3. 风险 + 规模双路由
 
@@ -167,6 +172,21 @@ VERIFY
 ~~~
 
 默认最多 **2 个 fix/verify cycle**，避免 AI 无限“写→审→改→审”。
+
+---
+
+## 专项审查不投票
+
+高风险或大型改动，V2 可以拆成多个独立镜头：
+
+- 意图与范围
+- 正确性与回归
+- 安全与数据安全
+- 测试与可维护性
+
+随后由 coordinator 回读代码、剔除误报、合并同一根因、裁决冲突、重新定级，并独占最终裁决权。
+
+**三个审查员意见一致，本身不构成充分证据。**
 
 ---
 
@@ -275,6 +295,33 @@ V1 的 Darwin 终态曾得到 **86.8/100 的当次 triage score**；这不是稳
 - V2 eval suite
 
 V1.1 的 base-resolution、whole-repo audit、JSON-first OCR、机械 Verdict、runtime-neutral 等修订全部保留。
+
+## V2.0.1
+
+PR #1 元评审的后续修补：
+
+- 报告模板 Mode 枚举补上 `REVIEW_FIX`（此前已定义、已引用，但契约里漏了），版本号升至 2.0.1
+- 新增 `evals/fixtures/PR42_METADATA.json` 并文档化供给机制——PR 上下文场景现在离线可复现，
+  不再依赖真实 PR
+- 为三项此前零验收覆盖的能力补齐 agent 级场景：工具融合/去重、外传 opt-in 与传输前敏感检查、
+  prompt/tool 注入边界（场景 12-14）
+
+## V2.0.2 — 评估可靠性发布
+
+一次全仓自审发现：确定性 harness 在为其并不成立的条件签发 release evidence。本版本目标只有一句：
+**正常路径会绿，故障注入必红。**
+
+- planted defect 改为**行为断言**（import 后调用纯函数），不再匹配源码字符串——换写法修复的缺陷
+  现在会被正确识别为漂移
+- 每次 fixture 复制都有守卫、所有 fixture 文件都有存在性检查——删掉 fixture 或需求 SPEC 会让
+  harness 转红
+- upstream 陷阱在断言前先证明已武装——`git push` 失败不再能被冒充成空 upstream diff
+- 两份场景 JSON 会被解析并断言 id 集合一致
+- 新增 `evals/mutation-test.sh`：8 个故障注入用例，证明 harness 恰在其条件不再成立时转红
+- 修正 `PR42_METADATA` head ref、三个过时 fixture 名、rubric 缺失的 Group D、以及五个文件间的
+  lens 命名漂移
+
+`run.sh` 有 ocr 35/35、无 ocr 29/29；`mutation-test.sh` 8/8；`shellcheck` 干净。
 
 ## License
 

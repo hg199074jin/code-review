@@ -24,6 +24,10 @@ set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 FIX="$HERE/fixtures"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/cr-eval.XXXXXX")
+# Keep the workspace for inspection with CR_EVAL_KEEP=1; otherwise remove it on exit so
+# repeated runs do not accumulate git repos (audit CR-011).
+cleanup() { [ "${CR_EVAL_KEEP:-0}" = "1" ] || rm -rf "${WORK:?}"; }
+trap cleanup EXIT INT TERM
 PASS=0
 FAIL=0
 
@@ -403,5 +407,5 @@ if [ "$have_ocr" = 1 ]; then
 fi
 
 echo
-echo "result: $PASS passed, $FAIL failed (workdir $WORK)"
+echo "result: $PASS passed, $FAIL failed (set CR_EVAL_KEEP=1 to inspect $WORK)"
 if [ "$FAIL" -ne 0 ]; then exit 1; fi

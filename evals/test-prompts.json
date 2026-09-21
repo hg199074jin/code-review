@@ -79,7 +79,7 @@
       "type": "v2_high_risk",
       "prompt": "审查这次修改",
       "repo": "high-risk runner fixture from HIGH_RISK_SPEC.md: safe argv subprocess changed to os.system(f-string)",
-      "expected": "Classify R3; require an independent Security/Reliability lens or sequential equivalent; report command injection as P0/P1 with E1 code-path proof; report the implementation-shaped test gap; do not need an external scanner to find it."
+      "expected": "Classify R3; require an independent Security & Data Safety lens or sequential equivalent; report command injection as P0/P1 with E1 code-path proof; report the implementation-shaped test gap; do not need an external scanner to find it."
     },
     {
       "id": "v2-s3-integration-10",
