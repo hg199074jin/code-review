@@ -25,8 +25,8 @@ commands, and verdict lines verbatim.
 - Before refactoring (record a baseline first).
 - After fixing a complex bug.
 
-**Red lines:** never skip a review because "it is simple"; never ignore a Critical finding; never
-proceed with an unfixed Important finding.
+**Red lines:** never skip a review because "it is simple"; never ignore a P0 finding; never
+proceed with an unfixed P0 or P1 finding.
 
 ## 2. What to review — resolve the target
 
@@ -34,10 +34,23 @@ Run every git/ocr command from the repository root the user is working in.
 
 | User says | Target |
 |---|---|
-| "审查这次修改" (no qualifier) | workspace changes: `ocr delegate preview` |
-| "审查 xxx 分支" | `ocr delegate preview --from <base> --to <branch>`; base = the merge target the user names, else the branch's upstream, else `main` |
-| "审查这个 commit/SHA" | `ocr delegate preview --commit <sha>` |
+| "审查这次修改" (no qualifier) | workspace changes: `ocr delegate preview --format json` |
+| "审查 xxx 分支" | `ocr delegate preview --format json --from <base> --to <branch>`; resolve `base` per the ladder below |
+| "审查这个 commit/SHA" | `ocr delegate preview --format json --commit <sha>` |
 | "扫描/审计整个仓库" | whole-repo audit, not a diff review — see §3.1 |
+
+If the CLI rejects `--format`, retry the same command without it and parse the text output; note
+the fallback in the report.
+
+**Base-resolution ladder.** A branch's own tracking upstream is **not** its merge target —
+`origin/feature-a` is the *same branch* on the remote, and diffing against it reviews almost
+nothing. Resolve the base in this order and stop at the first that works:
+
+1. The merge target the user names.
+2. The PR's base branch, when the environment exposes it (e.g. `gh pr view --json baseRefName`).
+3. The repository's default branch: `git symbolic-ref --short refs/remotes/origin/HEAD`.
+4. `main`, then `master`.
+5. None resolve → say "merge target unavailable" and stop. Never guess a base.
 
 If the request is ambiguous, default to the workspace changes, state that assumption in one line,
 and continue. Never silently review a range other than the one asked for.
@@ -53,37 +66,41 @@ whole test-file change goes unreviewed.
 
 ### 3.1 Size the target and route
 
-Determine changed-file count and diff size before reading anything.
+Whenever a diff is under review and `ocr` is available, resolve the deterministic scope first:
+`ocr delegate preview` costs no LLM call and removes scope ambiguity regardless of change size.
+Size then decides how the review is **batched**, not whether the scope is resolved.
 
-- **Small change** (≤5 files or a compact diff): review natively per §3.3.
-- **Medium/large change** (many files, refactor, cross-module change, pre-merge or release gate):
-  run `ocr delegate preview` for the deterministic reviewable-file list, then
-  `ocr delegate rule <files>` for the resolved per-path rules. Treat the OCR list as the file
-  checklist and review every file it selects; if it excludes a file the change actually touches
-  (for example tests under a default-excluded path), inspect it manually anyway. Use
-  `ocr rules check <path>` when a single path's rule is in question.
-- **Whole-repository audit or unfamiliar legacy code:** 🛑 **STOP** — `ocr scan` is not available in
-  the default local setup (§5). Audit natively instead: read `AGENTS.md`, entry points,
-  configuration, and tests, then apply §3.3 to what you read.
-- **High-risk change** (security-sensitive code, data-loss paths, frozen contracts): double pass —
-  the OCR pipeline output plus an independent full re-read of the critical paths.
+1. Run `ocr delegate preview --format json` (add `--from <base> --to <head>` for a branch,
+   `--commit <sha>` for a commit), then `ocr delegate rule --format json <files>` for the
+   resolved per-path rules. Treat the OCR list as the file checklist and review every file it
+   selects; if it excludes a file the change actually touches, inspect it manually anyway (§2
+   CHECKPOINT). Use `ocr rules check <path>` when a single path's rule is in question.
+2. **Batching by size:** ≤5 reviewable files → one reviewer pass; medium → one pass per module or
+   rule group; large → bounded batches, and the report says which batches were reviewed.
+3. **High-risk change** (security-sensitive code, data-loss paths, frozen contracts): double pass —
+   the pipeline output plus an independent full re-read of the critical paths.
+4. **Whole-repository audit or unfamiliar legacy code:** `ocr scan --preview --format json` for the
+   deterministic whole-repo file list — this runs locally, calls no LLM, and excludes binaries and
+   generated files. Then read `AGENTS.md`, entry points, configuration, and tests, and apply §3.3
+   in bounded batches, under the audit-mode defect criteria of §3.4. Full `ocr scan` (which sends
+   content to an LLM endpoint) still requires explicit user authorization — §5.
 
 If the repository defines `.opencodereview/rule.json`, honor those path-scoped rules in addition
 to the applicable `AGENTS.md` instructions.
 
 ### 3.2 Execution mode
 
-Prefer dispatching a `general-purpose` subagent as the reviewer so it works from a fresh context
-rather than the session history. Hand it:
+If the runtime supports isolated or fresh subagents, dispatch the reviewer as one so it works from
+a fresh context rather than the session history; if it does not, review in the current context and
+disclose in the report that reviewer-context isolation was unavailable. Hand the reviewer:
 
 - `{DESCRIPTION}` — what was built, in one or two sentences.
 - `{PLAN_OR_REQUIREMENTS}` — the plan file path, task text, or requirement the work must satisfy.
 - `{BASE_SHA}` / `{HEAD_SHA}` (or "workspace changes").
 - This file's §3.3–§4 as its review standard.
 
-The review is **read-only**: `git show`, `git diff`, `git log`, and reading files only. Never move
-HEAD, stage, or mutate the working tree; use `git worktree add /tmp/review-<sha> <sha>` if another
-revision must be materialized. The reviewer never dispatches its own subagents — it reviews in
+The review is **source-tree read-only** (§5): `git show`, `git diff`, `git log`, and reading files
+only. Never move HEAD, stage, or mutate the working tree; use `git worktree add /tmp/review-<sha> <sha>` if another revision must be materialized. The reviewer never dispatches its own subagents — it reviews in
 passes itself and says so. The main agent may review a small, clearly-scoped change in context.
 
 ### 3.3 The A–J checklist — check every item, every time
@@ -159,24 +176,36 @@ Work through all ten items in order. Do not skip an item because the change "loo
 - `P1` Major — urgent defect to fix next (correctness, edge case, regression, faked tests).
 - `P2` Minor — ordinary defect to fix, or over-design with a real cost.
 - `P3` Suggestion — low-impact improvement.
-- Exactly one verdict line: `PASS` (no P0/P1), `NEEDS_REVISION` (any P1, or clustered P2),
-  `FAILED` (any P0 — must not merge or ship).
+- Exactly one verdict line, computed mechanically from the findings: `FAILED` if any P0;
+  `NEEDS_REVISION` if any P1; `PASS` if only P2/P3 or none. P2 and P3 never change the verdict —
+  if a P2 deserves to block, grade it P1; that is what the severity ladder is for.
 
 ### 3.4 What counts as a defect
 
 🔴 **CHECKPOINT** — before recording any P0 or P1, confirm you can demonstrate the failing scenario
 from code you actually read. If you cannot demonstrate it, downgrade it or drop it.
 
-Flag an issue only when **all** of these hold:
+The criteria differ by mode; state in the report which mode was run.
+
+**Diff review** (workspace / branch / commit) — flag an issue only when **all** of these hold:
 
 - It affects correctness, security, performance, or maintainability in a meaningful way.
 - It is discrete and actionable.
 - It was introduced by the reviewed change.
 - The affected scenario or call path can be demonstrated from the code.
+- The cited range overlaps the reviewed diff.
 - The author would probably fix it if they knew about it.
 
 Do not flag speculative concerns, pre-existing problems, intentional behaviour changes, or style
-nits that do not obscure the code.
+nits that do not obscure the code. A pre-existing problem is mentioned at most once, in the
+residual-risk paragraph — never as a finding.
+
+**Whole-repo audit** — finding pre-existing problems is the point, so "introduced by this change"
+and "overlap the diff" do not apply. An issue still must be:
+
+- Discrete, actionable, and demonstrable from the code, cited as file:line.
+- Worth acting on: triage toward issues with real blast radius (security, data loss, broken
+  contracts, live bugs); do not drown an audit in style drift across a legacy codebase.
 
 ### 3.5 Failure modes and fallbacks
 
@@ -188,7 +217,8 @@ first column and never fall back to silence.
 | `ocr` not on PATH or `ocr delegate preview` errors | Confirm with `which ocr`; if absent, review with plain `git diff` and record "no ocr" in the report | Continue the native review; state in the report that file selection was not deterministic |
 | Not a git repository, or no commit yet (no `HEAD`) | `ocr delegate preview` cannot resolve a diff — switch to reading the working-tree files directly | Review the files as they are; state that there is no history to compare against |
 | The named branch, commit, or SHA does not resolve | Try the branch's configured upstream explicitly: `git rev-parse --abbrev-ref --symbolic-full-name @{u}`, then `git merge-base HEAD <ref>` | Report "target unavailable" and stop. **Never silently substitute a different range** |
-| Tests cannot be run (no pytest, no runner, missing deps) | Invoke the test functions directly by importing the module, one by one | Mark E and G as ⚠️ "tests not executed, static review only". **Never write "tests pass" without having run them** |
+| `ocr` rejects `--format json` (older CLI) | Retry the same command without `--format` and parse the text output | Continue; record which output mode was used in the report |
+| Tests cannot be run (no runner, missing deps) | Detect the project-native runner (`pytest`, `npm test`, `go test`, `cargo test`, …) and run the minimal relevant subset | Direct-call of test functions only when confirmed safe — plain asserts, no fixtures, no parametrize, no async setup, no import side effects; otherwise mark E and G ⚠️ "tests not executed, static review only". **Never write "tests pass" without having run them** |
 | The diff is too large for one pass | Split by directory or module and review in passes; say in the report how many passes you made | Do not truncate silently — report which parts were reviewed and which were not |
 | A deviation may be intentional or may be a mistake | Report it as an **unconfirmed deviation** and ask the author to confirm | Do not decide intent on the author's behalf in either direction |
 | The repository holds confidential material and an external mode is requested | 🛑 **STOP** — refuse and review locally instead (§5) | Escalate to the user; do not proceed on assumption |
@@ -216,17 +246,20 @@ there are no qualifying findings, say `No findings.` — never invent one to fil
 Close with a brief overall assessment that names any material test gaps and residual risks, then
 exactly one verdict line: `Verdict: PASS` / `Verdict: NEEDS_REVISION` / `Verdict: FAILED`.
 
-🔴 **CHECKPOINT** — the verdict is exactly one line and must match the findings you listed: no
-P0/P1 → PASS; any P1, or clustered P2 → NEEDS_REVISION; any P0 → FAILED. Do not soften a verdict to
-avoid an awkward conversation, and do not upgrade one to look thorough.
+🔴 **CHECKPOINT** — the verdict is exactly one line and is computed, not negotiated: any P0 →
+FAILED; else any P1 → NEEDS_REVISION; else PASS. Do not soften a verdict to avoid an awkward
+conversation, and do not upgrade one to look thorough.
 
 ## 5. Boundaries
 
-- Read-only: never modify files, commit, push, or post review comments.
-- Delegation mode only: `ocr delegate preview` / `delegate rule` run locally and need no key.
-  Provider-based `ocr review`, `ocr scan`, and any ocr LLM endpoint or key configuration transmit
-  content off the machine — 🛑 never run or configure them without explicit user authorization
-  (AGENTS.md §21).
+- Source-tree read-only: never modify source files, stage, commit, push, or post review comments.
+  Running tests is permitted but is not side-effect-free — prefer a sandbox, a temp worktree, or
+  the project's designated test environment; when side effects cannot be confirmed, do not execute
+  and mark E/G ⚠️ static review only.
+- Delegation mode only: `ocr delegate preview` / `delegate rule`, and `ocr scan --preview`, run
+  locally and need no key. Provider-based `ocr review`, full `ocr scan`, and any ocr LLM endpoint
+  or key configuration transmit content off the machine — 🛑 never run or configure them without
+  explicit user authorization (AGENTS.md §21).
 - This skill is the only entry to the review stack: do not install or invoke ocr's official
   companion skills, and do not load the legacy `review-agent` skill.
 - `superpowers:requesting-code-review` remains the trigger used by automated development flows and

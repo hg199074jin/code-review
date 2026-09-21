@@ -1,0 +1,87 @@
+{
+  "comment": "What each eval scenario must and must not surface. Scenario ids match evals/test-prompts.json. 'must_report' items are keyed to planted defects; 'must_not_report' guards the discipline traps. Verdict expectations are mechanical per SKILL.md §4.",
+  "planted_defects": {
+    "spec1_missing_skip":      "SPEC req 1: total() must skip lines without price — NOT implemented (KeyError). Expect P1 in spec'd scenarios.",
+    "spec3_missing_validation":"SPEC req 3: apply_discount must raise ValueError outside 0-100 — NOT implemented. Expect P1 in spec'd scenarios.",
+    "spec2_implemented":       "format_invoice renders 'name x qty = amount' — correctly implemented; must NOT be flagged.",
+    "scope_creep_constants":   "TAX_RATE / ROUND_DP added with no requirement basis and zero references. Expect B-item finding, P2/P3.",
+    "regression_rounding":     "total() now rounds to 2dp, changing return semantics with no requirement. Expect P2/P3 (unconfirmed deviation framing acceptable).",
+    "weak_tests":              "test_apply_discount asserts only the happy path; no ValueError / skip-branch coverage. Expect G-item finding, P2.",
+    "preexisting_legacy_bug":  "legacy.py mutable default arg — PRE-EXISTING, not in diff. Diff modes: residual-risk mention only, NEVER a finding. Audit mode: valid finding."
+  },
+  "scenarios": {
+    "review-workspace-01": {
+      "mode": "diff/workspace",
+      "repo_state": "baseline committed; invoice.py + test_invoice.py modified; SPEC.md untracked",
+      "must_report": ["spec1_missing_skip", "spec3_missing_validation", "weak_tests", "scope_creep_constants"],
+      "may_report": ["regression_rounding"],
+      "must_not_report_as_finding": ["preexisting_legacy_bug"],
+      "must_exhibit": [
+        "ocr delegate preview run; excluded files (test_invoice.py, SPEC.md) manually inspected (§2 CHECKPOINT)",
+        "A–J coverage line present; exactly one verdict line"
+      ],
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "review-branch-02": {
+      "mode": "diff/branch",
+      "repo_state": "main=baseline; feature=change committed",
+      "must_report": ["spec1_missing_skip", "spec3_missing_validation", "weak_tests", "scope_creep_constants"],
+      "may_report": ["regression_rounding"],
+      "must_not_report_as_finding": ["preexisting_legacy_bug"],
+      "must_exhibit": [
+        "base resolved via the §2 ladder (user target > PR base > origin/HEAD > main > master) — NOT the branch's tracking upstream",
+        "diff computed from merge-base, not branch tips"
+      ],
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "review-nospec-03": {
+      "mode": "diff/workspace (degraded)",
+      "repo_state": "same change, no SPEC.md anywhere",
+      "must_report": ["scope_creep_constants", "weak_tests"],
+      "must_exhibit": [
+        "item A marked ⚠️ 'no design basis found' — explicitly, never silently skipped or pretended",
+        "C/D items still report testable defects (e.g. apply_discount accepts pct=150 → negative total)"
+      ],
+      "must_not_exhibit": ["invented spec assumptions stated as fact"],
+      "expected_verdict": "NEEDS_REVISION or PASS is acceptable if findings are graded P2/P3 only — but spec1/spec3 cannot be claimed without a spec; grade on code-internal grounds only"
+    },
+    "regress-upstream-trap-04": {
+      "mode": "diff/branch (adversarial)",
+      "repo_state": "feature-x committed; bare origin pushed; upstream = origin/feature-x (same-named); origin/HEAD unresolvable",
+      "must_exhibit": [
+        "does NOT diff origin/feature-x..feature-x (empty diff — the trap)",
+        "resolves base to main via ladder; reviews the full feature delta"
+      ],
+      "expected_verdict": "NEEDS_REVISION (same findings as branch-02)"
+    },
+    "regress-whole-repo-audit-05": {
+      "mode": "audit/whole-repo",
+      "repo_state": "feature-x state committed on main",
+      "must_report": ["preexisting_legacy_bug", "spec3_missing_validation"],
+      "must_exhibit": [
+        "ocr scan --preview --format json used for deterministic enumeration (no LLM)",
+        "audit-mode criteria of §3.4 applied: pre-existing problems ARE findings, cited file:line, no diff-overlap requirement",
+        "report states audit mode was run"
+      ],
+      "expected_verdict": "computed mechanically from severities (any P1 → NEEDS_REVISION)"
+    },
+    "regress-old-ocr-compat-06": {
+      "mode": "diff/workspace (compat)",
+      "repo_state": "same as workspace-01; simulated old ocr without --format",
+      "must_exhibit": [
+        "retries the command without --format, parses text output, notes the fallback in the report"
+      ],
+      "note": "deterministic half covered by evals/run.sh (unknown-flag branch); agent half is manual"
+    },
+    "regress-no-test-runner-07": {
+      "mode": "diff/workspace (degraded)",
+      "repo_state": "change applied; test files present but no runner installed and tests are NOT plain-assert safe (e.g. would need pytest fixtures)",
+      "must_exhibit": [
+        "detects the native runner, attempts the minimal subset",
+        "does NOT blind-import test modules with fixtures/side effects",
+        "E and G marked ⚠️ static review only; never writes 'tests pass'"
+      ],
+      "expected_verdict": "computed from findings as usual"
+    }
+  }
+}

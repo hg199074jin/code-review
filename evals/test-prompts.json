@@ -1,0 +1,74 @@
+{
+  "skill": "code-review",
+  "version": "1.1.0",
+  "source": "2026-09-20 三技能收敛为单一入口；2026-09-21 darwin 进化（74.9→86.8）+ 外部评审 V1.1 修订（2 P1 + 5 P2 + 2 P3 全采纳）",
+  "darwin_compatible": true,
+  "fixtures_root": "evals/fixtures — 用 evals/run.sh 一键重建，勿手写 /tmp 路径",
+  "planted_defects": {
+    "A_spec_gap": "SPEC 第1条要求 total() 跳过无 price 键的行——未实现",
+    "A_spec_partial": "SPEC 第3条要求 apply_discount 对 pct 越界抛 ValueError——只实现了折扣，没做校验",
+    "B_scope_creep": "新增 TAX_RATE / ROUND_DP 两个常量，无任何需求依据且无人使用",
+    "C_regression": "total() 返回值被 round(...,2) 改变，影响既有调用方",
+    "D_edge_case": "apply_discount 未处理 pct<0 或 >100；空 lines 未验证",
+    "G_weak_test": "test_apply_discount 只测 pct=10 正常路径，且断言的是当前（未校验）行为",
+    "discipline_trap": "legacy.py 的可变默认参数是改动前就有的问题，且不在 diff 中——diff 模式不应报告为 finding"
+  },
+  "test_cases": [
+    {
+      "id": "review-workspace-01",
+      "type": "happy_path",
+      "prompt": "审查这次修改",
+      "repo": "run.sh 重建的 workspace 场景：baseline 已提交，改动未提交，SPEC.md 未跟踪",
+      "expected": "ocr delegate preview --format json 并说明排除了 test_invoice.py 与 SPEC.md，两文件被人工检查；A 项对照 SPEC.md 抓第1条未实现、第3条只做一半；B 报 TAX_RATE/ROUND_DP；C/E 报 round 回归；D 报 pct 越界；G 指出测试只覆盖正常路径；legacy.py 既有问题不作为 finding；含 A-J 覆盖行；结尾恰好一行 Verdict: NEEDS_REVISION",
+      "notes": "正向：最典型场景，同时压测 ocr 排除项规则与 §2 CHECKPOINT"
+    },
+    {
+      "id": "review-branch-02",
+      "type": "complex",
+      "prompt": "帮我看看 feature 分支能不能合到 main",
+      "repo": "run.sh 重建的 branch 场景：main=baseline，feature=改动已提交",
+      "expected": "base 按阶梯解析（用户点名 > PR base > origin/HEAD > main > master），绝不是分支自身 upstream；merge-base 比较；A 项对照 SPEC.md；结论回答'能不能合'",
+      "notes": "歧义场景：用户问的是合并决策"
+    },
+    {
+      "id": "review-nospec-03",
+      "type": "degraded",
+      "prompt": "审查这次修改，这个项目没什么文档",
+      "repo": "同 workspace 场景但删除 SPEC.md",
+      "expected": "A 项明确标 ⚠️'无设计依据'而非假装对照；其余各项照常；不因缺文档降低标准",
+      "notes": "负向：检验 A 项诚实降级"
+    },
+    {
+      "id": "regress-upstream-trap-04",
+      "type": "regression",
+      "prompt": "审查 feature-x 分支",
+      "repo": "run.sh 第4段：feature-x 已提交；bare origin 已推送；upstream=origin/feature-x（同名）；origin/HEAD 不可解析",
+      "expected": "绝不 diff origin/feature-x..feature-x（空 diff 陷阱）；阶梯落到 main；审完整 feature 增量；发现与 branch-02 相同",
+      "notes": "V1.1 P1-1 回归用例：upstream≠merge target"
+    },
+    {
+      "id": "regress-whole-repo-audit-05",
+      "type": "regression",
+      "prompt": "扫描这个仓库",
+      "repo": "feature-x 状态合到 main 后的仓库",
+      "expected": "用 ocr scan --preview --format json 做确定性枚举（本地无 LLM）；按 §3.4 审计模式判据——legacy.py 既有问题这次【是】合法 finding（file:line 引用，无 diff overlap 要求）；报告声明审计模式",
+      "notes": "V1.1 P1-2 回归用例：whole-repo 与 diff-only 判据解耦"
+    },
+    {
+      "id": "regress-old-ocr-compat-06",
+      "type": "regression",
+      "prompt": "审查这次修改",
+      "repo": "workspace 场景 + 模拟旧版 ocr（无 --format）",
+      "expected": "命令去掉 --format 重试并解析文本输出；报告注明回退",
+      "notes": "V1.1 P2 回归用例：--format json 优先 + 文本兜底；确定性半边由 run.sh unknown-flag 分支覆盖"
+    },
+    {
+      "id": "regress-no-test-runner-07",
+      "type": "regression",
+      "prompt": "审查这次修改",
+      "repo": "workspace 场景 + 无测试运行器且测试依赖 fixture/参数化",
+      "expected": "先探测原生 runner 再尝试最小子集；绝不盲目 import 测试模块；E/G 标 ⚠️ 仅静态审阅；绝不写'tests pass'",
+      "notes": "V1.1 P2 回归用例：测试兜底收紧"
+    }
+  ]
+}

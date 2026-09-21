@@ -68,10 +68,10 @@ The review is **read-only**: it never edits files, commits, pushes, or posts com
 
 ## How it works
 
-1. **Resolve the target** — workspace, branch, or commit. Ambiguity defaults to the workspace and says so in one line; it never silently reviews a different range than asked for.
-2. **Size and route** — small changes (≤5 files) are read directly; medium/large changes go through the `ocr` CLI for deterministic file selection, then the same judgment is applied. High-risk changes (security, data loss, frozen contracts) get a double pass.
-3. **Walk A–J** — all ten items, in order. An item may be marked `➖ not applicable` only with a stated reason.
-4. **Report** — a coverage line showing which items were checked, findings ordered by severity as `[P1] title — path/to/file.ext:line`, then exactly one verdict line: `PASS` / `NEEDS_REVISION` / `FAILED`.
+1. **Resolve the target** — workspace, branch, or commit. Ambiguity defaults to the workspace and says so in one line; it never silently reviews a different range than asked for. For a branch, the merge base is resolved by a fixed ladder (user-named target → PR base → repository default branch → `main` → `master` → report and stop). A branch's own tracking upstream is never used as the base — `origin/feature-x` is the *same* branch on the remote, and diffing against it reviews almost nothing.
+2. **Resolve the deterministic scope** — whenever `ocr` is available, `ocr delegate preview --format json` runs for every diff review regardless of size (it costs no LLM call); size then decides batching, not whether scope is resolved. Whole-repo audits use `ocr scan --preview --format json` — local enumeration, no LLM. High-risk changes (security, data loss, frozen contracts) get a double pass.
+3. **Walk A–J** — all ten items, in order. An item may be marked `➖ not applicable` only with a stated reason. Defect criteria differ by mode: diff reviews flag only what the change introduced (cited range overlapping the diff); whole-repo audits exist precisely to surface pre-existing problems, cited as file:line.
+4. **Report** — a coverage line showing which items were checked, findings ordered by severity as `[P1] title — path/to/file.ext:line`, then exactly one verdict line, computed mechanically: any P0 → `FAILED`; else any P1 → `NEEDS_REVISION`; else `PASS`. P2/P3 never change the verdict — if a P2 deserves to block, it is graded P1.
 
 The coverage line is the anti-rubber-stamp device: it forces the review to show, item by item, what was actually checked. `⚠️` means "checked but limited — here is why"; `➖` means "not applicable — here is why".
 
@@ -82,9 +82,10 @@ A skill that only describes the happy path fails the moment reality disagrees. T
 | Trigger | First repair | Still failing |
 |---|---|---|
 | `ocr` missing or erroring | confirm with `which ocr`, else plain `git diff` | continue natively, state that selection was not deterministic |
+| `ocr` rejects `--format json` (older CLI) | retry without `--format`, parse the text output | continue; record which output mode was used |
 | Not a git repo / no commits yet | switch to reading the working tree | review the files, state there is no history to compare |
 | Branch / SHA does not resolve | try the configured upstream, then `git merge-base` | report "target unavailable" and stop — never substitute a different range |
-| Tests cannot be run | invoke the test functions directly by import | mark E and G `⚠️ static review only` — **never write "tests pass" without running them** |
+| Tests cannot be run | detect the project-native runner and run the minimal relevant subset | direct-call only when confirmed safe (no fixtures/parametrize/async/import side effects); else mark E and G `⚠️ static review only` — **never write "tests pass" without running them** |
 | Diff too large for one pass | split by directory or module | report which parts were reviewed and which were not |
 | Deviation may be intentional | report as an *unconfirmed deviation* | do not decide intent on the author's behalf |
 | Confidential repo + external mode requested | 🛑 refuse and review locally | escalate to the user |
@@ -99,20 +100,40 @@ ocr delegate preview          # reviewable file list for workspace changes
 ocr delegate rule <files>     # resolved rules per path
 ```
 
-Without `ocr`, the skill falls back to `git diff` and says so in the report. Two `ocr` modes are deliberately **not** used by default: `ocr review` and `ocr scan` require a configured LLM endpoint and transmit content off the machine — the skill refuses them without explicit authorization.
+Without `ocr`, the skill falls back to `git diff` and says so in the report. Two `ocr` modes are deliberately **not** used by default: `ocr review` and full `ocr scan` require a configured LLM endpoint and transmit content off the machine — the skill refuses them without explicit authorization. `ocr scan --preview` is used: it enumerates files locally with no LLM call, which is exactly what a whole-repo audit needs.
 
 ## Project layout
 
 ```
 code-review/
 ├── SKILL.md                  # the skill — the whole standard, self-contained
-├── test-prompts.json         # 3 test cases + the planted defects they must catch
+├── evals/                    # reproducible evaluation
+│   ├── run.sh                # one command: rebuild fixtures + deterministic checks
+│   ├── fixtures/             # baseline / changed sources + SPEC.md
+│   ├── test-prompts.json     # 7 scenarios (3 behaviour + 4 regression)
+│   ├── expected-findings.json# per-scenario must-report / must-not-report
+│   └── judge-rubric.md       # 9-dim rubric + paired-majority protocol
 ├── docs/
 │   └── darwin-result-card.png
 ├── README.md
 ├── README.zh-CN.md
 └── LICENSE
 ```
+
+## V1.1 changelog (external review round, 2026-09-21)
+
+All nine findings from an external review were verified and adopted:
+
+- **[P1] base resolution**: the branch's tracking upstream is no longer accepted as a merge target — fixed ladder (user-named → PR base → default branch → `main` → `master` → report). The upstream trap is regression-tested in `evals/run.sh`: `git diff @{u}..HEAD` is empty while `main..HEAD` carries the real delta.
+- **[P1] whole-repo vs diff criteria**: §3.4 now defines two modes — diff reviews flag only change-introduced findings overlapping the diff; whole-repo audits surface pre-existing problems as file:line findings.
+- **[P2] `ocr scan --preview`** (verified locally, v1.12.7): whole-repo audits now get deterministic local file enumeration instead of giving up on `ocr` entirely.
+- **[P2] JSON-first**: all `delegate` calls prefer `--format json`, with a documented text fallback for older CLIs.
+- **[P2] routing simplified**: `delegate preview` runs for every diff review regardless of size; size decides batching only.
+- **[P2] test fallback tightened**: native-runner detection first; blind import of test modules is forbidden unless confirmed side-effect-free.
+- **[P2] verdict made mechanical**: `clustered P2` removed — any P0 → FAILED, else any P1 → NEEDS_REVISION, else PASS.
+- **[P3] terminology**: leftover "Critical/Important" wording unified to P0/P1; "read-only" redefined as *source-tree read-only* with explicit test-execution side-effect rules.
+- **[P3] runtime neutrality**: the reviewer-subagent instruction no longer names a runtime-specific agent type.
+- **reproducibility**: `evals/` added — fixtures, expected findings, judge rubric, and a one-command deterministic check.
 
 ## Evolution record
 

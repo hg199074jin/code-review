@@ -68,10 +68,10 @@ cp -r code-review ~/.claude/skills/code-review        # 或其他运行时对应
 
 ## 工作方式
 
-1. **解析目标**——工作区、分支或 commit。有歧义时默认取工作区并用一行说明，绝不静默地审一个用户没要求的范围。
-2. **规模分流**——小改动（≤5 文件）直接读；中大改动先用 `ocr` CLI 拿确定性文件清单，再套用同一套判断。高风险改动（安全、数据丢失、冻结契约）过两遍。
-3. **走 A–J**——十项全查，按顺序。某一项只有说明理由后才能标 `➖ 不适用`。
-4. **出报告**——一行"检查覆盖"说明每项查了没查；findings 按严重度排成 `[P1] 标题 — path/to/file.ext:line`；结尾恰好一行裁决：`PASS` / `NEEDS_REVISION` / `FAILED`。
+1. **解析目标**——工作区、分支或 commit。有歧义时默认取工作区并用一行说明，绝不静默地审一个用户没要求的范围。分支审查的合并基点按固定阶梯解析（用户点名 → PR base → 仓库默认分支 → `main` → `master` → 报告并停止），**绝不把分支自身的 tracking upstream 当基点**——`origin/feature-x` 是同一分支的远端副本，对它 diff 几乎审不到东西。
+2. **解析确定性范围**——只要 `ocr` 可用，任何 diff 审查都先跑 `ocr delegate preview --format json`（不花 LLM 调用）；规模只决定分批方式，不决定要不要解析范围。全仓库审计用 `ocr scan --preview --format json`——本地枚举、不调 LLM。高风险改动（安全、数据丢失、冻结契约）过两遍。
+3. **走 A–J**——十项全查，按顺序。某一项只有说明理由后才能标 `➖ 不适用`。缺陷判据分模式：diff 审查只报本次改动引入、引用范围与 diff 重叠的问题；全仓库审计的目的恰恰是挖存量问题，按 file:line 引用。
+4. **出报告**——一行"检查覆盖"说明每项查了没查；findings 按严重度排成 `[P1] 标题 — path/to/file.ext:line`；结尾恰好一行裁决，**机械计算**：有 P0 → `FAILED`；否则有 P1 → `NEEDS_REVISION`；否则 `PASS`。P2/P3 不影响裁决——该拦的 P2 就该定级为 P1。
 
 那行"检查覆盖"就是防橡皮图章的装置：它逼着审查逐项摊开到底查了什么。`⚠️` 表示"查了但受限，原因如下"；`➖` 表示"不适用，原因如下"。
 
@@ -82,9 +82,10 @@ cp -r code-review ~/.claude/skills/code-review        # 或其他运行时对应
 | 触发条件 | 一线修复 | 仍失败 |
 |---|---|---|
 | `ocr` 缺失或报错 | `which ocr` 确认，否则退回 `git diff` | 继续原生审查，并说明文件筛选不是确定性的 |
+| `ocr` 拒绝 `--format json`（旧版 CLI） | 去掉 `--format` 重试，解析文本输出 | 继续；报告注明用了哪种输出模式 |
 | 不是 git 仓库 / 还没有 commit | 改为直接读工作区文件 | 审这些文件，并说明无历史可比 |
 | 分支 / SHA 解析不到 | 试配置的上游，再 `git merge-base` | 报告"目标不可用"并停下——**绝不静默换范围** |
-| 测试跑不起来 | 直接 import 调用测试函数 | E、G 标 `⚠️ 仅静态审阅`——**没跑过就绝不写"测试通过"** |
+| 测试跑不起来 | 探测项目原生 runner，运行最小相关子集 | 仅在确认安全（无 fixture/参数化/异步/导入副作用）时才直接调用测试函数；否则 E、G 标 `⚠️ 仅静态审阅`——**没跑过就绝不写"测试通过"** |
 | diff 太大一次审不完 | 按目录或模块分批 | 报告哪些部分审了、哪些没审 |
 | 分不清某处偏离是有意还是失误 | 报为"待确认偏离" | 不替作者判定意图 |
 | 涉密仓库 + 要求外传型模式 | 🛑 拒绝，改本地审查 | 上报用户，不擅自继续 |
@@ -99,20 +100,40 @@ ocr delegate preview          # 工作区改动的可审查文件清单
 ocr delegate rule <files>     # 按路径解析出的规则
 ```
 
-没有 `ocr` 就退回 `git diff`，并在报告里说明。`ocr` 有两个模式被**刻意不用**：`ocr review` 和 `ocr scan` 需要配置 LLM 端点、会把内容传出本机——未经用户明确授权，技能拒绝执行。
+没有 `ocr` 就退回 `git diff`，并在报告里说明。`ocr` 有两个模式被**刻意不用**：`ocr review` 和完整 `ocr scan` 需要配置 LLM 端点、会把内容传出本机——未经用户明确授权，技能拒绝执行。`ocr scan --preview` **在用**：它在本地枚举文件、不调 LLM，正是全仓库审计需要的确定性能力。
 
 ## 目录结构
 
 ```
 code-review/
 ├── SKILL.md                  # 技能本体——完整标准，自包含
-├── test-prompts.json         # 3 个测试场景 + 它们必须抓出的植入缺陷
+├── evals/                    # 可复现评估
+│   ├── run.sh                # 一条命令：重建 fixtures + 确定性检查
+│   ├── fixtures/             # baseline / changed 源文件 + SPEC.md
+│   ├── test-prompts.json     # 7 个场景（3 行为 + 4 回归）
+│   ├── expected-findings.json# 每场景的必报 / 禁报清单
+│   └── judge-rubric.md       # 9 维 rubric + paired 多数决协议
 ├── docs/
 │   └── darwin-result-card.png
 ├── README.md
 ├── README.zh-CN.md
 └── LICENSE
 ```
+
+## V1.1 变更记录（外部评审轮，2026-09-21）
+
+外部评审的九条发现全部核实后采纳：
+
+- **[P1] base 解析**：不再接受分支的 tracking upstream 作为合并目标——改为固定阶梯（用户点名 → PR base → 默认分支 → `main` → `master` → 报告）。upstream 陷阱已做回归测试：`evals/run.sh` 实测 `git diff @{u}..HEAD` 为空、`main..HEAD` 才有真实增量。
+- **[P1] 全仓库与 diff 判据解耦**：§3.4 分两套模式——diff 审查只报改动引入且与 diff 重叠的问题；全仓库审计专门挖存量问题，按 file:line 引用。
+- **[P2] `ocr scan --preview`**（本机 v1.12.7 实测验证）：全仓库审计获得本地确定性文件枚举，不再整体放弃 `ocr`。
+- **[P2] JSON 优先**：所有 `delegate` 调用优先 `--format json`，旧版 CLI 有文档化的文本回退。
+- **[P2] 路由简化**：`delegate preview` 对任何规模的 diff 审查都跑；规模只决定分批。
+- **[P2] 测试兜底收紧**：先探测原生 runner；禁止盲目 import 测试模块，除非确认无副作用。
+- **[P2] 裁决机械化**：删除 `clustered P2`——有 P0 → FAILED，否则有 P1 → NEEDS_REVISION，否则 PASS。
+- **[P3] 术语统一**：遗留的 "Critical/Important" 措辞统一为 P0/P1；"read-only" 重定义为*源码树只读*，并明确测试执行的副作用规则。
+- **[P3] runtime 中立**：审查子代理的指令不再点名某运行时专属的 agent 类型。
+- **可复现性**：新增 `evals/`——fixtures、期望发现、judge rubric、一条命令的确定性检查。
 
 ## 进化记录
 
