@@ -3,7 +3,7 @@
 Reproducible evaluation for code-review V2.
 
 ~~~bash
-./run.sh
+sh ./run.sh
 ~~~
 
 The shell harness is intentionally deterministic: no LLM calls are required. Agent behavior is
