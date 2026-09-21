@@ -6,6 +6,8 @@
 #   2. ocr delegate preview — workspace scope resolution + exclusion detection
 #   3. ocr scan --preview   — whole-repo enumeration without an LLM endpoint
 #   4. upstream trap        — proves why base must not be the tracking upstream
+#   5. R3 security fixture  — command-injection path + weak implementation-shaped test
+#   6. S3 integration fixture — >20-file change + stale unchanged consumer contract
 #
 # Agent-level behaviour (A–J coverage, verdicts) is covered by evals/test-prompts.json.
 # Judge-level scoring is covered by evals/judge-rubric.md.
@@ -33,7 +35,7 @@ if command -v ocr >/dev/null 2>&1; then have_ocr=1; else note "ocr not on PATH �
 G() { git -c user.email=eval@local -c user.name=eval "$@"; }
 
 # ---------------------------------------------------------------- fixtures --
-echo '[1/4] fixture integrity'
+echo '[1/6] fixture integrity'
 for f in invoice.py legacy.py test_invoice.py; do
   [ -f "$FIX/baseline/$f" ] || bad "missing baseline/$f"
 done
@@ -57,7 +59,7 @@ assert_grep 'round(s, 2)'   "$FIX/changed/invoice.py" "regression planted (total
 assert_grep 'into=\[\]'     "$FIX/baseline/legacy.py" "pre-existing trap planted (legacy mutable default)" "drift: legacy trap gone"
 
 # ------------------------------------------------------------- build repo --
-echo '[2/4] build fixture repo'
+echo '[2/6] build fixture repo'
 REPO="$WORK/repo"
 git init -q -b main "$REPO" || { echo 'cannot git init'; exit 1; }
 cd "$REPO" || exit 1
@@ -74,7 +76,7 @@ else
 fi
 
 # ------------------------------------------------- ocr deterministic scope --
-echo '[3/4] ocr deterministic scope'
+echo '[3/6] ocr deterministic scope'
 if [ "$have_ocr" = 1 ]; then
   if ocr delegate preview --format json >"$WORK/preview.json" 2>"$WORK/preview.err"; then
     assert_grep '"invoice.py"'     "$WORK/preview.json" "delegate preview json lists invoice.py"                      "invoice.py not in preview"
@@ -99,7 +101,7 @@ else
 fi
 
 # ------------------------------------------------------- upstream trap --
-echo '[4/4] base-resolution trap (why upstream != merge target)'
+echo '[4/6] base-resolution trap (why upstream != merge target)'
 G stash -q -u   # park the workspace change
 git checkout -q -b feature-x
 G stash pop -q
@@ -125,6 +127,64 @@ if [ -z "$DEFAULT_REF" ]; then
   ok "origin/HEAD unresolvable here — ladder falls through to main (step 4)"
 else
   note "origin/HEAD resolved to $DEFAULT_REF (ladder step 3 would use it)"
+fi
+
+echo '[5/6] R3 high-risk fixture'
+SEC_REPO="$WORK/security-repo"
+git init -q -b main "$SEC_REPO" || exit 1
+cd "$SEC_REPO" || exit 1
+cp "$FIX/baseline/runner.py" .
+G add -A >/dev/null && G commit -qm "baseline: safe job runner"
+cp "$FIX/changed/runner.py" "$FIX/changed/test_runner.py" .
+cp "$FIX/HIGH_RISK_SPEC.md" SPEC.md
+if grep -q "os.system" runner.py && grep -q "f\"jobctl run {job}\"" runner.py; then
+  ok "R3 fixture contains shell-injection path"
+else
+  bad "R3 fixture drifted: unsafe shell path missing"
+fi
+if grep -q "mock_system.assert_called_once_with" test_runner.py; then
+  ok "R3 fixture contains implementation-shaped happy-path test"
+else
+  bad "R3 fixture drifted: weak test missing"
+fi
+if [ "$have_ocr" = 1 ]; then
+  if ocr delegate preview --format json >"$WORK/security-preview.json" 2>/dev/null && grep -q "runner.py" "$WORK/security-preview.json"; then
+    ok "R3 fixture is visible to deterministic scope"
+  else
+    bad "R3 fixture missing from OCR preview"
+  fi
+fi
+
+echo "[6/6] S3 cross-file integration fixture"
+CROSS_REPO="$WORK/crossfile-repo"
+git init -q -b main "$CROSS_REPO" || exit 1
+cd "$CROSS_REPO" || exit 1
+cp "$FIX/baseline/producer.py" "$FIX/baseline/consumer.py" .
+i=1
+while [ "$i" -le 21 ]; do printf "VALUE = %s\n" "$i" > "module_$i.py"; i=$((i + 1)); done
+G add -A >/dev/null && G commit -qm "baseline: cross-file service"
+cp "$FIX/changed/producer.py" producer.py
+cp "$FIX/changed/test_service.py" .
+cp "$FIX/CROSSFILE_SPEC.md" SPEC.md
+i=1
+while [ "$i" -le 21 ]; do printf "VALUE = %s\nTOUCHED = True\n" "$i" > "module_$i.py"; i=$((i + 1)); done
+CHANGED_COUNT=$(git status --porcelain | wc -l | tr -d " ")
+if [ "$CHANGED_COUNT" -gt 20 ]; then
+  ok "S3 fixture exceeds 20 changed files ($CHANGED_COUNT)"
+else
+  bad "S3 fixture too small ($CHANGED_COUNT changed files)"
+fi
+if grep -q 'result\["status"\]' consumer.py && grep -q '"state"' producer.py; then
+  ok "cross-file contract drift planted: changed producer vs unchanged consumer"
+else
+  bad "cross-file contract fixture drifted"
+fi
+if [ "$have_ocr" = 1 ]; then
+  if ocr delegate preview --format json >"$WORK/cross-preview.json" 2>/dev/null && grep -q "producer.py" "$WORK/cross-preview.json"; then
+    ok "S3 fixture is visible to deterministic scope"
+  else
+    bad "S3 fixture missing from OCR preview"
+  fi
 fi
 
 echo

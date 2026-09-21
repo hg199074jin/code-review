@@ -2,154 +2,264 @@
 
 <div align="center">
 
-![Agent Skills](https://img.shields.io/badge/Agent_Skills-Standard-2196F3?style=flat-square)
-![Runtime](https://img.shields.io/badge/Runtime-Agnostic-9C27B0?style=flat-square)
-![Darwin Optimized](https://img.shields.io/badge/Darwin-Optimized-FF6B35?style=flat-square)
-![Score](https://img.shields.io/badge/9--Dim_Score-86.8%2F100-4CAF50?style=flat-square&labelColor=2E7D32)
-![Score Improved](https://img.shields.io/badge/Score-%2B11.9-8E24AA?style=flat-square)
-![Checklist](https://img.shields.io/badge/Checklist-A--J_10_items-00897B?style=flat-square)
-![Tested](https://img.shields.io/badge/Tested-3_Prompts-43A047?style=flat-square)
-![Read Only](https://img.shields.io/badge/Mode-Read--Only-00897B?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.0.0-1565C0?style=flat-square)
+![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
+![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
+![Checklist](https://img.shields.io/badge/Standard-A--J_10_items-00897B?style=flat-square)
+![Evidence](https://img.shields.io/badge/Evidence-E1--E3-5D4037?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-FBC02D?style=flat-square)
 
 </div>
 
-> **One line:** a single, self-contained code-review skill that decides *when* to review, *what* to review, and *how* — driven by a ten-item A–J checklist, P0–P3 severity, and exactly one verdict line.
+> **In one sentence:** a review control plane for AI coding — resolve scope and intent first, route review depth by risk, combine independent review lenses with deterministic evidence, then emit one mechanical verdict.
 
-**中文说明**：[README.zh-CN.md](README.zh-CN.md)
+**中文**: [README.zh-CN.md](README.zh-CN.md)
 
 ---
 
-## Why this exists
+## Why V2
 
-When an AI writes the code and an AI reviews it, the human reviewer is missing from the loop. What replaces them is not "read the diff carefully" — it is a **mechanical, itemised quality gate** that runs the same way every time.
+V1 answered: how do you stop AI-written code from receiving a vague "looks good" review?
 
-This skill is that gate. It is not a linter and not a style guide. It answers ten questions in order, every time, and refuses to let any of them be skipped silently:
+V2 answers the larger systems question: when PRs get bigger, multiple agents participate, static
+analysis joins the workflow, and fixes are generated automatically, **who owns scope, intent,
+review independence, evidence, de-duplication, and final merge safety?**
 
-| # | Item | The question it answers |
+V2 turns the project from a checklist reviewer into a **Review Control Plane**.
+
+~~~text
+ZCode / Claude Code / Codex / Cursor / other agents
+                         |
+                         v
+                    code-review V2
+                         |
+          +--------------+---------------+
+          v              v               v
+   Deterministic      Context Pack     Risk Router
+   scope: OCR/git     spec/PR/rules    R1-R3 + S1-S3
+          +--------------+---------------+
+                         |
+                         v
+                 Independent lenses
+      Intent/Scope | Correctness/Regression |
+      Security/Reliability | Tests/Maintainability
+                         |
+                         v
+                    Coordinator
+       verify -> dedupe -> evidence -> P0-P3
+                         |
+                         v
+          PASS / NEEDS_REVISION / FAILED
+~~~
+
+## Core upgrades
+
+### Deterministic scope
+
+When OpenCodeReview CLI is available, every diff review starts with delegation preview and every
+whole-repo audit starts with scan preview. Change size controls batching, not whether scope is
+resolved.
+
+The reviewer does not get to silently cherry-pick "important-looking" files.
+
+### Context Pack
+
+Before judging implementation, V2 resolves the strongest available intent source:
+
+1. explicit user requirements / acceptance criteria;
+2. frozen design/spec/ADR;
+3. issue/task;
+4. PR title/body;
+5. commit messages as secondary evidence;
+6. repository instructions, rules, call sites, tests, config, migrations, interfaces.
+
+No requirement source means an explicit limitation, never an invented specification.
+
+### Risk + size routing
+
+Risk:
+
+| Tier | Typical examples |
+|---|---|
+| **R1 Routine** | docs, narrow tests, isolated refactor |
+| **R2 Elevated** | cross-module changes, dependencies, config, persistent state, public API/CLI |
+| **R3 High-risk** | auth, secrets, command execution, file writes, network egress, migrations, concurrency, destructive/data-loss paths, security boundaries |
+
+Size is S1 / S2 / S3.
+
+~~~text
+R1 + S1
+-> one fresh full A-J pass
+
+R2 or S2
+-> two independent passes
+
+R3 or S3
+-> specialist passes
+   + cross-batch integration pass
+~~~
+
+Small changes stay simple. High-risk changes gain reviewer independence.
+
+## The A-J standard remains authoritative
+
+| # | Area | Question |
 |---|---|---|
-| **A** | Specification compliance | Does it actually implement the requirement — or only look like it does? |
-| **B** | Scope control | Was anything added that nobody asked for? |
-| **C** | Correctness | Is the logic right? |
-| **D** | Edge cases | Nulls, exceptions, concurrency, timeouts, failure recovery — considered? |
-| **E** | Regression | Did something that used to work break? |
-| **F** | Security | Paths, commands, secrets, permissions — any problems? |
-| **G** | Test quality | Do the tests prove the feature, or merely pass? |
-| **H** | Complexity | Is this over-engineered, at a real cost? |
-| **I** | Maintainability | Can a future agent read this and safely continue? |
-| **J** | Final disposition | Critical / Major / Minor / Suggestion, plus one verdict |
+| A | Specification compliance | Did it actually implement the requirement? |
+| B | Scope control | Did it add or omit unrequested behavior? |
+| C | Correctness | Is the logic and cross-file contract correct? |
+| D | Edge cases / reliability | Are failure, concurrency, timeout, recovery and idempotency paths sound? |
+| E | Regression | Did existing behavior or compatibility break? |
+| F | Security / data safety | Are permissions, commands, paths, secrets, destructive behavior or egress unsafe? |
+| G | Test quality | Do tests prove the requirement instead of mirroring the implementation? |
+| H | Complexity | Is there over-design with a real cost? |
+| I | Maintainability | Can a fresh agent safely understand and extend it? |
+| J | Final disposition | Verify, dedupe, grade and compute the verdict |
 
-The two items that catch AI-written code most often are **A** and **G**. The classic AI failure is not a wrong line — it is a function that looks implemented while its required branch is missing, paired with a test that only asserts the happy path. Green tests then certify work that was never done. Item G's test is exactly this: *does the test assert the behaviour the requirement demands, or the behaviour the code happens to have?*
+Tools and sub-reviewers do not create alternative standards.
 
-## Install
+## Evidence grades
 
-The skill is a single `SKILL.md`. Drop it into any Agent-Skills-compatible runtime.
+Every P0/P1 finding needs at least E1 evidence.
 
-```bash
-# Claude Code / Codex / Cursor / OpenClaw / Hermes / Gemini CLI — clone into the skills directory
-git clone https://github.com/hg199074jin/code-review.git
-cp -r code-review ~/.claude/skills/code-review        # or the equivalent path for your runtime
-```
+| Grade | Meaning |
+|---|---|
+| **E1** | Code-path proof |
+| **E2** | Deterministic corroboration: tests, CI, static analysis, lint/typecheck |
+| **E3** | Authorized runtime reproduction |
 
-Manual: download this repository and copy the folder so that `<skills-dir>/code-review/SKILL.md` exists. Restart the session so the skill description is picked up.
+~~~text
+[P1][CR-001][A/C][E2] Broken input contract — invoice.py:18
+Impact: ...
+Evidence: ...
+Fix direction: ...
+~~~
+
+This prevents speculative "maybe" concerns from becoming merge blockers.
+
+## Specialist review without voting
+
+For high-risk/large changes, V2 may split review into:
+
+- Intent & Scope
+- Correctness & Regression
+- Security & Reliability
+- Tests & Maintainability
+
+A coordinator then re-reads the code, removes false positives, merges duplicate root causes,
+resolves conflicts, re-grades severity, and owns the final verdict.
+
+Three reviewers agreeing is not sufficient evidence by itself.
+
+## Reference projects
+
+V2 borrows design ideas without making these projects mandatory dependencies:
+
+| Project | Idea adopted |
+|---|---|
+| [Alibaba OpenCodeReview](https://github.com/alibaba/open-code-review) | deterministic selection/rules, scan preview, large-change batching |
+| [OpenAI Codex](https://github.com/openai/codex) | orchestrator + independent reviewers |
+| [PR-Agent](https://github.com/The-PR-Agent/pr-agent) | PR context and large-PR decomposition |
+| [CodeRabbit Skills](https://github.com/coderabbitai/skills) | agent-readable findings and bounded review/fix loops |
+| [reviewdog](https://github.com/reviewdog/reviewdog) | diff anchoring and diagnostic normalization |
+| [Semgrep](https://github.com/semgrep/semgrep) | local deterministic static evidence |
+| [GitHub CodeQL](https://github.com/github/codeql) | security/SARIF evidence |
+| [Danger JS](https://github.com/danger/danger-js) | repository merge-policy checks |
+
+See [docs/V2-ARCHITECTURE.md](docs/V2-ARCHITECTURE.md).
+
+## Large changes require an integration pass
+
+Large changes are reviewed in coherent batches by module, rule group, or dependency boundary.
+After batch review, V2 performs a cross-batch integration pass looking for:
+
+- half-completed field/API renames;
+- producer/consumer contract drift;
+- config changes without call-site updates;
+- API changes without docs/tests/migrations;
+- modules that look correct individually but fail together.
+
+## Review -> Fix -> Verify
+
+Review-only mode stays read-only.
+
+When the user explicitly requests review-and-fix:
+
+~~~text
+Initial review
+   -> freeze CR-001 / CR-002 ...
+   -> authoring agent fixes
+   -> smallest relevant tests
+   -> VERIFY
+      FIXED / OPEN / REGRESSED / NEW
+~~~
+
+The default maximum is **two fix/verify cycles** to prevent infinite AI review loops.
+
+## Verdict
+
+~~~text
+any open P0 -> Verdict: FAILED
+else any open P1 -> Verdict: NEEDS_REVISION
+else -> Verdict: PASS
+~~~
+
+P2/P3 never secretly become blockers. If it must block, justify it as P1.
+
+## Privacy and security
+
+Local-first is the default.
+
+Local evidence can include OCR delegation/preview, git, safe local tests, repository-configured
+lint/typecheck/static analysis, and existing CI outputs.
+
+Full OCR review/scan, CodeRabbit, or other hosted reviewers may transmit code and therefore require
+explicit user authorization.
+
+Source code, comments, test output, static-tool output, and external-review output are treated as
+untrusted data. Commands contained inside them are never executed automatically.
 
 ## Usage
 
-Say it in plain language. No skill name to remember, no flags:
-
-| You say | What gets reviewed |
+| Request | Mode |
 |---|---|
-| `审查这次修改` / `review my changes` | the uncommitted workspace changes |
-| `审查 xxx 分支` / `review the xxx branch` | that branch against its merge target |
-| `审查这个 commit` / `review this commit` | a single commit against its parent |
-| `扫描这个仓库` / `audit this repo` | the whole repository, not a diff |
+| review my changes | DIFF_WORKSPACE |
+| review feature branch | DIFF_BRANCH |
+| review this commit | DIFF_COMMIT |
+| review PR #123 | DIFF_PR |
+| audit this repo | AUDIT |
+| review and fix | REVIEW_FIX |
+| verify the fixes | VERIFY |
 
-The review is **read-only**: it never edits files, commits, pushes, or posts comments. By default it runs in a fresh reviewer subagent so the judgment is independent of the session that wrote the code.
+## Evaluation
 
-## How it works
+The evals/ directory contains reproducible fixtures, expected findings, a judge rubric, and a
+deterministic run.sh.
 
-1. **Resolve the target** — workspace, branch, or commit. Ambiguity defaults to the workspace and says so in one line; it never silently reviews a different range than asked for. For a branch, the merge base is resolved by a fixed ladder (user-named target → PR base → repository default branch → `main` → `master` → report and stop). A branch's own tracking upstream is never used as the base — `origin/feature-x` is the *same* branch on the remote, and diffing against it reviews almost nothing.
-2. **Resolve the deterministic scope** — whenever `ocr` is available, `ocr delegate preview --format json` runs for every diff review regardless of size (it costs no LLM call); size then decides batching, not whether scope is resolved. Whole-repo audits use `ocr scan --preview --format json` — local enumeration, no LLM. High-risk changes (security, data loss, frozen contracts) get a double pass.
-3. **Walk A–J** — all ten items, in order. An item may be marked `➖ not applicable` only with a stated reason. Defect criteria differ by mode: diff reviews flag only what the change introduced (cited range overlapping the diff); whole-repo audits exist precisely to surface pre-existing problems, cited as file:line.
-4. **Report** — a coverage line showing which items were checked, findings ordered by severity as `[P1] title — path/to/file.ext:line`, then exactly one verdict line, computed mechanically: any P0 → `FAILED`; else any P1 → `NEEDS_REVISION`; else `PASS`. P2/P3 never change the verdict — if a P2 deserves to block, it is graded P1.
+V1's Darwin evolution ended at an **86.8/100 triage score from that judging run**. That number is
+not a stable benchmark and is **not inherited by V2**. V2 expands the eval suite and should be
+re-judged with paired comparisons.
 
-The coverage line is the anti-rubber-stamp device: it forces the review to show, item by item, what was actually checked. `⚠️` means "checked but limited — here is why"; `➖` means "not applicable — here is why".
+## V2.0.0
 
-### Failure modes are part of the spec
+- Checklist Reviewer -> Review Control Plane
+- PR review + Context Pack
+- R1-R3 risk routing
+- S1-S3 size routing
+- independent review lenses
+- cross-batch integration review
+- E1-E3 evidence grades
+- multi-tool normalization and de-duplication
+- local static evidence
+- external reviewer opt-in
+- REVIEW_FIX / VERIFY
+- maximum two fix/verify cycles
+- prompt/tool injection boundary
+- expanded V2 eval suite
 
-A skill that only describes the happy path fails the moment reality disagrees. This one encodes its fallbacks explicitly:
-
-| Trigger | First repair | Still failing |
-|---|---|---|
-| `ocr` missing or erroring | confirm with `which ocr`, else plain `git diff` | continue natively, state that selection was not deterministic |
-| `ocr` rejects `--format json` (older CLI) | retry without `--format`, parse the text output | continue; record which output mode was used |
-| Not a git repo / no commits yet | switch to reading the working tree | review the files, state there is no history to compare |
-| Branch / SHA does not resolve | try the configured upstream, then `git merge-base` | report "target unavailable" and stop — never substitute a different range |
-| Tests cannot be run | detect the project-native runner and run the minimal relevant subset | direct-call only when confirmed safe (no fixtures/parametrize/async/import side effects); else mark E and G `⚠️ static review only` — **never write "tests pass" without running them** |
-| Diff too large for one pass | split by directory or module | report which parts were reviewed and which were not |
-| Deviation may be intentional | report as an *unconfirmed deviation* | do not decide intent on the author's behalf |
-| Confidential repo + external mode requested | 🛑 refuse and review locally | escalate to the user |
-
-## Optional dependency
-
-The skill works standalone. It optionally uses [`ocr`](https://github.com/alibaba/open-code-review) (OpenCodeReview) in **delegation mode**, which runs locally and needs no API key, for deterministic file selection and per-path rule resolution.
-
-```bash
-npm install -g @alibaba-group/open-code-review
-ocr delegate preview          # reviewable file list for workspace changes
-ocr delegate rule <files>     # resolved rules per path
-```
-
-Without `ocr`, the skill falls back to `git diff` and says so in the report. Two `ocr` modes are deliberately **not** used by default: `ocr review` and full `ocr scan` require a configured LLM endpoint and transmit content off the machine — the skill refuses them without explicit authorization. `ocr scan --preview` is used: it enumerates files locally with no LLM call, which is exactly what a whole-repo audit needs.
-
-## Project layout
-
-```
-code-review/
-├── SKILL.md                  # the skill — the whole standard, self-contained
-├── evals/                    # reproducible evaluation
-│   ├── run.sh                # one command: rebuild fixtures + deterministic checks
-│   ├── fixtures/             # baseline / changed sources + SPEC.md
-│   ├── test-prompts.json     # 7 scenarios (3 behaviour + 4 regression)
-│   ├── expected-findings.json# per-scenario must-report / must-not-report
-│   └── judge-rubric.md       # 9-dim rubric + paired-majority protocol
-├── docs/
-│   └── darwin-result-card.png
-├── README.md
-├── README.zh-CN.md
-└── LICENSE
-```
-
-## V1.1 changelog (external review round, 2026-09-21)
-
-All nine findings from an external review were verified and adopted:
-
-- **[P1] base resolution**: the branch's tracking upstream is no longer accepted as a merge target — fixed ladder (user-named → PR base → default branch → `main` → `master` → report). The upstream trap is regression-tested in `evals/run.sh`: `git diff @{u}..HEAD` is empty while `main..HEAD` carries the real delta.
-- **[P1] whole-repo vs diff criteria**: §3.4 now defines two modes — diff reviews flag only change-introduced findings overlapping the diff; whole-repo audits surface pre-existing problems as file:line findings.
-- **[P2] `ocr scan --preview`** (verified locally, v1.12.7): whole-repo audits now get deterministic local file enumeration instead of giving up on `ocr` entirely.
-- **[P2] JSON-first**: all `delegate` calls prefer `--format json`, with a documented text fallback for older CLIs.
-- **[P2] routing simplified**: `delegate preview` runs for every diff review regardless of size; size decides batching only.
-- **[P2] test fallback tightened**: native-runner detection first; blind import of test modules is forbidden unless confirmed side-effect-free.
-- **[P2] verdict made mechanical**: `clustered P2` removed — any P0 → FAILED, else any P1 → NEEDS_REVISION, else PASS.
-- **[P3] terminology**: leftover "Critical/Important" wording unified to P0/P1; "read-only" redefined as *source-tree read-only* with explicit test-execution side-effect rules.
-- **[P3] runtime neutrality**: the reviewer-subagent instruction no longer names a runtime-specific agent type.
-- **reproducibility**: `evals/` added — fixtures, expected findings, judge rubric, and a one-command deterministic check.
-
-## Evolution record
-
-This skill was evolved under the [darwin-skill](https://github.com/alchaincyf/darwin-skill) protocol — design test prompts, baseline evaluation, then rounds of change each decided by three independent judges doing a *paired* comparison of before/after (absolute scores are noise; the paired majority is the ratchet).
-
-| Round | Dimension | Change | Verdict |
-|---|---|---|---|
-| baseline | — | — | **74.9** / 100 |
-| 1 | Failure-mode encoding | added the 7-row fallback table | 3-0 better (clear) |
-| 2 | Checkpoint design | 4 explicit 🔴/🛑 markers at decision points | 3-0 better |
-| 3 | Overall architecture | merged a triple-stated prohibition into one authoritative section | 3-0 better |
-| final | — | — | **86.8** / 100 |
-
-Three rounds, three keeps, zero reverts. The closing regression test is the evidence that matters: the reviewer explicitly invoked the excluded-files checkpoint and the no-pytest fallback — the content added in rounds 1 and 2 was *executed*, not merely written down.
-
-See `docs/darwin-result-card.png` for the scorecard.
+All V1.1 hardening remains: correct base resolution, whole-repo audit semantics, JSON-first OCR,
+mechanical verdicts, and runtime-neutral execution.
 
 ## License
 

@@ -1,87 +1,183 @@
 {
-  "comment": "What each eval scenario must and must not surface. Scenario ids match evals/test-prompts.json. 'must_report' items are keyed to planted defects; 'must_not_report' guards the discipline traps. Verdict expectations are mechanical per SKILL.md §4.",
-  "planted_defects": {
-    "spec1_missing_skip":      "SPEC req 1: total() must skip lines without price — NOT implemented (KeyError). Expect P1 in spec'd scenarios.",
-    "spec3_missing_validation":"SPEC req 3: apply_discount must raise ValueError outside 0-100 — NOT implemented. Expect P1 in spec'd scenarios.",
-    "spec2_implemented":       "format_invoice renders 'name x qty = amount' — correctly implemented; must NOT be flagged.",
-    "scope_creep_constants":   "TAX_RATE / ROUND_DP added with no requirement basis and zero references. Expect B-item finding, P2/P3.",
-    "regression_rounding":     "total() now rounds to 2dp, changing return semantics with no requirement. Expect P2/P3 (unconfirmed deviation framing acceptable).",
-    "weak_tests":              "test_apply_discount asserts only the happy path; no ValueError / skip-branch coverage. Expect G-item finding, P2.",
-    "preexisting_legacy_bug":  "legacy.py mutable default arg — PRE-EXISTING, not in diff. Diff modes: residual-risk mention only, NEVER a finding. Audit mode: valid finding."
+  "comment": "Expected behavior for V2 eval scenarios. 'must_report' refers to planted defect keys. Verdicts are computed mechanically from open P0/P1 findings.",
+  "defect_catalog": {
+    "spec1_missing_skip": "total() violates explicit requirement to skip rows without price. P1 when the requirement is available.",
+    "spec3_missing_validation": "apply_discount lacks required 0-100 validation. P1 when requirement is available; can also be a correctness/edge-case defect when extreme pct produces nonsensical results.",
+    "scope_creep_constants": "Unused TAX_RATE / ROUND_DP with no requirement basis. P2/P3.",
+    "regression_rounding": "total() adds rounding without requirement basis. Report only when a concrete compatibility change is demonstrated.",
+    "weak_tests": "Discount tests cover happy path only. P2.",
+    "preexisting_legacy_bug": "Mutable default in legacy.py. Never a diff finding; valid audit finding.",
+    "command_injection": "Untrusted job interpolated into os.system shell command. P0 or strong P1, E1 minimum.",
+    "weak_security_test": "Test mocks os.system and asserts unsafe command construction rather than malicious-input safety. P2.",
+    "crossfile_contract": "Changed producer emits state while unchanged consumer reads status. P1. Allowed diff-mode exception: cite changed contract and broken unchanged call site.",
+    "weak_integration_test": "Producer-only test misses producer->consumer contract. P2."
   },
   "scenarios": {
     "review-workspace-01": {
-      "mode": "diff/workspace",
-      "repo_state": "baseline committed; invoice.py + test_invoice.py modified; SPEC.md untracked",
-      "must_report": ["spec1_missing_skip", "spec3_missing_validation", "weak_tests", "scope_creep_constants"],
-      "may_report": ["regression_rounding"],
-      "must_not_report_as_finding": ["preexisting_legacy_bug"],
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_report": [
+        "spec1_missing_skip",
+        "spec3_missing_validation",
+        "scope_creep_constants",
+        "weak_tests"
+      ],
+      "may_report": [
+        "regression_rounding"
+      ],
+      "must_not_report_as_finding": [
+        "preexisting_legacy_bug"
+      ],
       "must_exhibit": [
-        "ocr delegate preview run; excluded files (test_invoice.py, SPEC.md) manually inspected (§2 CHECKPOINT)",
-        "A–J coverage line present; exactly one verdict line"
+        "deterministic file checklist",
+        "manual inspection of relevant excluded test/spec files",
+        "A-J coverage",
+        "one mechanical verdict"
       ],
       "expected_verdict": "NEEDS_REVISION"
     },
     "review-branch-02": {
-      "mode": "diff/branch",
-      "repo_state": "main=baseline; feature=change committed",
-      "must_report": ["spec1_missing_skip", "spec3_missing_validation", "weak_tests", "scope_creep_constants"],
-      "may_report": ["regression_rounding"],
-      "must_not_report_as_finding": ["preexisting_legacy_bug"],
+      "mode": "DIFF_BRANCH",
+      "risk": "R2",
+      "size": "S1",
+      "must_report": [
+        "spec1_missing_skip",
+        "spec3_missing_validation",
+        "scope_creep_constants",
+        "weak_tests"
+      ],
+      "must_not_report_as_finding": [
+        "preexisting_legacy_bug"
+      ],
       "must_exhibit": [
-        "base resolved via the §2 ladder (user target > PR base > origin/HEAD > main > master) — NOT the branch's tracking upstream",
-        "diff computed from merge-base, not branch tips"
+        "base ladder resolves main",
+        "merge-base delta",
+        "merge-safety answer"
       ],
       "expected_verdict": "NEEDS_REVISION"
     },
     "review-nospec-03": {
-      "mode": "diff/workspace (degraded)",
-      "repo_state": "same change, no SPEC.md anywhere",
-      "must_report": ["scope_creep_constants", "weak_tests"],
-      "must_exhibit": [
-        "item A marked ⚠️ 'no design basis found' — explicitly, never silently skipped or pretended",
-        "C/D items still report testable defects (e.g. apply_discount accepts pct=150 → negative total)"
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_report": [
+        "scope_creep_constants",
+        "weak_tests"
       ],
-      "must_not_exhibit": ["invented spec assumptions stated as fact"],
-      "expected_verdict": "NEEDS_REVISION or PASS is acceptable if findings are graded P2/P3 only — but spec1/spec3 cannot be claimed without a spec; grade on code-internal grounds only"
+      "may_report": [
+        "spec3_missing_validation",
+        "regression_rounding"
+      ],
+      "must_not_exhibit": [
+        "invented requirement stated as fact"
+      ],
+      "must_exhibit": [
+        "A marked limited because no requirement source exists"
+      ],
+      "expected_verdict": "Depends on evidence/severity; no invented spec-based P1"
     },
     "regress-upstream-trap-04": {
-      "mode": "diff/branch (adversarial)",
-      "repo_state": "feature-x committed; bare origin pushed; upstream = origin/feature-x (same-named); origin/HEAD unresolvable",
+      "mode": "DIFF_BRANCH",
       "must_exhibit": [
-        "does NOT diff origin/feature-x..feature-x (empty diff — the trap)",
-        "resolves base to main via ladder; reviews the full feature delta"
+        "tracking upstream is rejected as merge target",
+        "main is selected after ladder fallback",
+        "full feature delta reviewed"
       ],
-      "expected_verdict": "NEEDS_REVISION (same findings as branch-02)"
+      "expected_verdict": "NEEDS_REVISION"
     },
     "regress-whole-repo-audit-05": {
-      "mode": "audit/whole-repo",
-      "repo_state": "feature-x state committed on main",
-      "must_report": ["preexisting_legacy_bug", "spec3_missing_validation"],
-      "must_exhibit": [
-        "ocr scan --preview --format json used for deterministic enumeration (no LLM)",
-        "audit-mode criteria of §3.4 applied: pre-existing problems ARE findings, cited file:line, no diff-overlap requirement",
-        "report states audit mode was run"
+      "mode": "AUDIT",
+      "must_report": [
+        "preexisting_legacy_bug",
+        "spec3_missing_validation"
       ],
-      "expected_verdict": "computed mechanically from severities (any P1 → NEEDS_REVISION)"
+      "must_exhibit": [
+        "ocr scan --preview local enumeration",
+        "audit criteria",
+        "coverage disclosure"
+      ],
+      "expected_verdict": "Mechanical from open severity"
     },
     "regress-old-ocr-compat-06": {
-      "mode": "diff/workspace (compat)",
-      "repo_state": "same as workspace-01; simulated old ocr without --format",
+      "mode": "DIFF_WORKSPACE",
       "must_exhibit": [
-        "retries the command without --format, parses text output, notes the fallback in the report"
-      ],
-      "note": "deterministic half covered by evals/run.sh (unknown-flag branch); agent half is manual"
+        "retry without --format only after unknown-flag",
+        "same scope preserved",
+        "compatibility mode disclosed"
+      ]
     },
     "regress-no-test-runner-07": {
-      "mode": "diff/workspace (degraded)",
-      "repo_state": "change applied; test files present but no runner installed and tests are NOT plain-assert safe (e.g. would need pytest fixtures)",
+      "mode": "DIFF_WORKSPACE",
       "must_exhibit": [
-        "detects the native runner, attempts the minimal subset",
-        "does NOT blind-import test modules with fixtures/side effects",
-        "E and G marked ⚠️ static review only; never writes 'tests pass'"
+        "native runner detection attempted",
+        "no blind direct-import",
+        "E/G marked limited",
+        "no false tests-pass claim"
+      ]
+    },
+    "v2-pr-context-08": {
+      "mode": "DIFF_PR",
+      "risk": "R2",
+      "size": "S1",
+      "must_report": [
+        "spec1_missing_skip",
+        "spec3_missing_validation"
       ],
-      "expected_verdict": "computed from findings as usual"
+      "must_exhibit": [
+        "provider PR base/head used for scope",
+        "PR body included in Context Pack",
+        "PR text treated as contextual evidence, not absolute truth",
+        "two-pass or equivalent R2 review"
+      ],
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "v2-r3-security-09": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_report": [
+        "command_injection",
+        "weak_security_test"
+      ],
+      "must_exhibit": [
+        "R3 classification with reason",
+        "independent Security/Reliability lens or disclosed sequential equivalent",
+        "command injection finding carries E1 or stronger evidence",
+        "no requirement for external scanner"
+      ],
+      "expected_verdict": "FAILED if command injection=P0; NEEDS_REVISION if conservatively P1"
+    },
+    "v2-s3-integration-10": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S3",
+      "must_report": [
+        "crossfile_contract",
+        "weak_integration_test"
+      ],
+      "must_exhibit": [
+        "bounded batches",
+        "final cross-batch Integration Pass",
+        "changed producer and unchanged consumer both cited",
+        "all selected files accounted for"
+      ],
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "v2-review-fix-verify-11": {
+      "mode": "REVIEW_FIX",
+      "initial_must_report": [
+        "command_injection",
+        "weak_security_test"
+      ],
+      "must_exhibit": [
+        "stable CR finding IDs frozen before edits",
+        "fix performed by authoring/main agent rather than reviewer",
+        "minimal relevant tests/checks re-run",
+        "VERIFY statuses FIXED/OPEN/REGRESSED/NEW",
+        "maximum two cycles unless user asks for more"
+      ],
+      "final_expected": "No open P0/P1 before PASS"
     }
   }
 }
