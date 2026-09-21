@@ -5,4 +5,4 @@ meta-review	2026-09-21	c190ea2	7d59505	GateB1 regression×7				PASS 7/7（必报
 meta-review	2026-09-21	c190ea2	7d59505	GateB2 acceptance×4				PASS 4/4（R3注入P0实证；S3漂移捕获；REVIEW_FIX 1/2轮）
 meta-review	2026-09-21	c190ea2	7d59505	GateB3 paired 3-judge				V2 4/4胜（8 V2-better/2 V1.1-better/2 tie = 12票，全slight；6:6 counterbalance）
 meta-review	2026-09-21	c190ea2	7d59505	deterministic run.sh				with-ocr 19/19；without-ocr 14/14（与PR声称一致）
-meta-review	2026-09-21	c190ea2	7d59505	follow-ups				OR-007 Mode枚举漏REVIEW_FIX(P2)；OR-002 三声称零覆盖(P2)；OR-003 PR场景不可复现(P2)；另OR-008..013(P3)
+meta-review	2026-09-21	c190ea2	7d59505	follow-ups				13 post-release follow-ups: P2=OR-007/002/003；P3=OR-001/004/005/006/008/009/010/011/012/013（canonical backlog = issue #2 body）
