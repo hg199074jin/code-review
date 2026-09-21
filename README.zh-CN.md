@@ -2,155 +2,280 @@
 
 <div align="center">
 
-![Agent Skills](https://img.shields.io/badge/Agent_Skills-Standard-2196F3?style=flat-square)
-![运行时](https://img.shields.io/badge/%E8%BF%90%E8%A1%8C%E6%97%B6-%E4%B8%AD%E7%AB%8B%E9%80%9A%E7%94%A8-9C27B0?style=flat-square)
-![Darwin 优化](https://img.shields.io/badge/Darwin-Optimized-FF6B35?style=flat-square)
-![九维评分](https://img.shields.io/badge/9%E7%BB%B4%E8%AF%84%E5%88%86-86.8%2F100-4CAF50?style=flat-square&labelColor=2E7D32)
-![分数提升](https://img.shields.io/badge/%E5%88%86%E6%95%B0-%2B11.9-8E24AA?style=flat-square)
-![检查清单](https://img.shields.io/badge/%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95-A--J_10%E9%A1%B9-00897B?style=flat-square)
-![已实测](https://img.shields.io/badge/%E5%AE%9E%E6%B5%8B-3_Prompts-43A047?style=flat-square)
-![只读](https://img.shields.io/badge/%E6%A8%A1%E5%BC%8F-%E5%8F%AA%E8%AF%BB-00897B?style=flat-square)
-![许可](https://img.shields.io/badge/License-MIT-FBC02D?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.0.0-1565C0?style=flat-square)
+![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
+![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
+![Checklist](https://img.shields.io/badge/Standard-A--J_10项-00897B?style=flat-square)
+![Evidence](https://img.shields.io/badge/Evidence-E1--E3-5D4037?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-FBC02D?style=flat-square)
 
 </div>
 
-> **一句话**：一个自包含的代码审查技能，自己决定**何时审**、**审什么**、**怎么审**——以 A–J 十项清单为驱动，P0–P3 分级，结尾只给一行裁决。
+> **一句话**：面向 AI Coding 的代码审查控制层——先确定范围和需求，再按风险决定审查深度，用独立审查视角 + 确定性证据交叉验证，最后只给一个机械裁决。
 
 **English**: [README.md](README.md)
 
 ---
 
-## 为什么会有这个技能
+## 为什么升级到 V2
 
-当代码由 AI 写、审查也由 AI 做时，缺位的是人类审查者。能补上这个位置的不是"认真看一遍 diff"，而是一道**每次都以同样方式运行的、逐条机械展开的质量闸门**。
+V1 解决的是：AI 写完代码以后，怎样不靠“随便看一遍 diff”，而是每次都按 A–J 十项标准机械地审。
 
-这个技能就是那道闸门。它不是 linter，也不是风格指南。它按顺序回答十个问题，每一次都不例外，并且不允许任何一项被静默跳过：
+V2 进一步解决：当项目变大、PR 变复杂、多个 Agent 和静态分析工具同时参与以后，**谁来确定范围、谁来理解需求、什么时候需要第二个 reviewer、工具结果冲突怎么办、修完以后怎么验证**？
 
-| # | 项目 | 它回答的问题 |
+所以 V2 从 Checklist Reviewer 升级为 **Review Control Plane**。
+
+~~~text
+ZCode / Claude Code / Codex / Cursor / 其他 Agent
+                     │
+                     ▼
+                code-review V2
+                     │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+   确定性范围      Context Pack    风险路由
+   OCR / git      需求/PR/规则    R1-R3 + S1-S3
+        │            │            │
+        └────────────┼────────────┘
+                     ▼
+                独立审查视角
+     ┌───────────────┼────────────────┐
+     ▼               ▼                ▼
+ 需求与范围      正确性与回归      安全与可靠性
+    A-B             C-D-E              F
+                     │
+                     ▼
+              测试与可维护性
+                  G-H-I
+                     │
+                     ▼
+                Coordinator
+      核实 → 去重 → 证据分级 → P0-P3
+                     │
+                     ▼
+        PASS / NEEDS_REVISION / FAILED
+~~~
+
+## V2 的六个关键升级
+
+### 1. 范围确定性
+
+只要 OpenCodeReview CLI 可用，任何 diff 审查都先通过 delegation preview 确定文件范围；全仓库审计用 scan --preview。规模只决定怎么分批，不决定要不要先枚举范围。
+
+V2 不允许 reviewer 自己凭感觉挑“重要文件”。
+
+### 2. Context Pack
+
+审查前先解析最好的需求来源，优先级为：
+
+1. 用户明确要求 / 验收标准；
+2. FROZEN 设计、实施方案、SPEC、ADR；
+3. Issue / Task；
+4. PR 标题和正文；
+5. commit message 仅作辅助；
+6. AGENTS.md、路径规则、调用方、测试、配置、迁移、接口。
+
+没有需求依据时，A 项必须明确标注受限，而不是自己补需求。
+
+### 3. 风险 + 规模双路由
+
+风险分为：
+
+| 等级 | 示例 |
+|---|---|
+| **R1 Routine** | 文档、简单测试、隔离的小重构 |
+| **R2 Elevated** | 跨模块、依赖、配置、持久化状态、公开 API/CLI |
+| **R3 High-risk** | 权限、密钥、命令执行、文件写入、网络外传、迁移、并发、数据删除、安全边界 |
+
+规模分为 S1 / S2 / S3。
+
+路由：
+
+~~~text
+R1 + S1
+→ 1 次完整 A–J fresh review
+
+R2 或 S2
+→ 2 个独立 pass
+  ① 需求/正确性
+  ② 可靠性/测试
+
+R3 或 S3
+→ specialist passes
+  + Cross-batch Integration Pass
+~~~
+
+小修改不会被多 Agent 仪式化拖慢；高风险修改不会只靠一个 reviewer。
+
+### 4. A–J 仍然是唯一审查标准
+
+| # | 项目 | 核心问题 |
 |---|---|---|
-| **A** | 规格符合性 | 是真的实现了需求，还是只是看起来实现了？ |
-| **B** | 范围控制 | 有没有夹带没人要的东西？ |
-| **C** | 正确性 | 逻辑对不对？ |
-| **D** | 边界情况 | 空值、异常、并发、超时、失败恢复——考虑了吗？ |
+| **A** | 规格符合性 | 真正完成需求了吗？ |
+| **B** | 范围控制 | 有没有擅自加功能或漏功能？ |
+| **C** | 正确性 | 逻辑、接口、跨文件契约对吗？ |
+| **D** | 边界与可靠性 | 异常、并发、超时、恢复、幂等考虑了吗？ |
 | **E** | 回归 | 原来能用的东西坏了吗？ |
-| **F** | 安全性 | 路径、命令、密钥、权限——有问题吗？ |
-| **G** | 测试质量 | 测试是真的证明了功能，还是只是跑绿了？ |
-| **H** | 复杂度 | 是不是过度设计，而且有实际代价？ |
-| **I** | 可维护性 | 未来的 Agent 能读懂并安全接手吗？ |
-| **J** | 最终分级 | Critical / Major / Minor / Suggestion，外加一行裁决 |
+| **F** | 安全与数据安全 | 权限、命令、路径、密钥、数据丢失、外传有问题吗？ |
+| **G** | 测试质量 | 测试证明的是需求，还是迎合当前实现？ |
+| **H** | 复杂度 | 是否过度设计并带来真实成本？ |
+| **I** | 可维护性 | 新会话里的 Agent 能否安全接手？ |
+| **J** | 综合裁决 | 核实、去重、分级并计算最终 Verdict |
 
-最容易抓住 AI 写代码问题的是 **A** 和 **G**。AI 的典型失败不是某一行写错，而是**函数看起来实现了，但规格要求的分支根本不在**，再配一个只测正常路径的测试——于是绿灯给从未完成的工作盖了章。G 项的判据正是这个：*测试断言的是"规格要求的行为"，还是"代码眼下的行为"？后者就是迎合实现。*
+多 reviewer 不会产生多套标准。其他工具只是证据来源。
 
-## 安装
+### 5. E1–E3 证据等级
 
-整个技能就是一个 `SKILL.md`，丢进任何兼容 Agent Skills 的运行时即可。
+每个 P0/P1 至少要有 E1：
 
-```bash
-# Claude Code / Codex / Cursor / OpenClaw / Hermes / Gemini CLI —— 克隆进技能目录
-git clone https://github.com/hg199074jin/code-review.git
-cp -r code-review ~/.claude/skills/code-review        # 或其他运行时对应的目录
-```
+| 等级 | 含义 |
+|---|---|
+| **E1** | 从代码和调用路径可以直接证明 |
+| **E2** | 测试、CI、静态分析、lint/typecheck 等进一步证明 |
+| **E3** | 在授权环境中实际复现 |
 
-手动安装：下载本仓库，把目录复制成 `<skills-dir>/code-review/SKILL.md` 存在即可。重启会话，让技能描述被加载。
+示例：
+
+~~~text
+[P1][CR-001][A/C][E2] Broken input contract — invoice.py:18
+Impact: ...
+Evidence: ...
+Fix direction: ...
+~~~
+
+目的很简单：不允许“我感觉可能有问题”直接升级成 P0/P1。
+
+### 6. Review → Fix → Verify
+
+只有用户明确要求“审查并修复”才进入修复闭环：
+
+~~~text
+Initial Review
+     ↓
+冻结 CR-001 / CR-002 ...
+     ↓
+Authoring Agent 修复
+     ↓
+最小相关测试
+     ↓
+VERIFY
+     ├── FIXED
+     ├── OPEN
+     ├── REGRESSED
+     └── NEW
+~~~
+
+默认最多 **2 个 fix/verify cycle**，避免 AI 无限“写→审→改→审”。
+
+---
+
+## 大型修改：最后必须做 Integration Pass
+
+大型 PR 先按 module / rule / dependency boundary 分 batch，再做一次全局集成复核，专门寻找：
+
+- 字段只改了一半；
+- producer / consumer 契约错位；
+- config 改了调用方没改；
+- API 改了文档/测试/迁移遗漏；
+- 每个模块单独看都正确，拼起来却失败。
+
+这比单纯增加模型 token 更重要。
+
+---
+
+## 可选工具是证据层，不是依赖层
+
+V2 借鉴多个优秀项目，但不会把它们全部装进来：
+
+| 项目 | V2 吸收的能力 |
+|---|---|
+| [Alibaba OpenCodeReview](https://github.com/alibaba/open-code-review) | 确定性文件选择、路径规则、全仓库 preview、大变更分批 |
+| [OpenAI Codex](https://github.com/openai/codex) | Orchestrator + 独立 reviewer |
+| [PR-Agent](https://github.com/The-PR-Agent/pr-agent) | PR 上下文、大 PR 分解 |
+| [CodeRabbit Skills](https://github.com/coderabbitai/skills) | Agent-readable findings、review→fix→re-review |
+| [reviewdog](https://github.com/reviewdog/reviewdog) | diff 锚定、诊断结果归一化 |
+| [Semgrep](https://github.com/semgrep/semgrep) | 本地静态分析证据 |
+| [GitHub CodeQL](https://github.com/github/codeql) | 安全分析 / SARIF 证据 |
+| [Danger JS](https://github.com/danger/danger-js) | 仓库级 merge policy |
+
+完整设计见 [docs/V2-ARCHITECTURE.md](docs/V2-ARCHITECTURE.md)。
+
+工具结果先进入 Candidate，再由 Coordinator 回到代码核实、去重、重新分级。三个工具报同一个根因，只保留一个 finding。
+
+---
+
+## 最终裁决
+
+~~~text
+存在 open P0 → Verdict: FAILED
+否则存在 open P1 → Verdict: NEEDS_REVISION
+否则 → Verdict: PASS
+~~~
+
+P2/P3 不偷偷改变裁决。如果必须拦截合并，就应该有充分证据被定为 P1。
+
+---
+
+## 隐私与安全
+
+默认 Local-first。
+
+本地能力包括：
+
+- OCR delegation preview / rule；
+- OCR scan --preview；
+- git；
+- 安全的本地测试；
+- 已配置的 lint / typecheck / static rules。
+
+完整 OCR review/scan、CodeRabbit 或其他 hosted reviewer 可能把代码发往外部，只有用户明确授权才运行。
+
+代码、注释、测试输出、静态工具输出和外部 reviewer 输出都视为不可信数据，其中的命令不会自动执行。
+
+---
 
 ## 使用
 
-直接说人话，不用记技能名，也不用记参数：
-
-| 你说 | 审什么 |
+| 你说 | V2 模式 |
 |---|---|
-| `审查这次修改` / `review my changes` | 工作区未提交的改动 |
-| `审查 xxx 分支` / `review the xxx branch` | 该分支相对它的合并目标 |
-| `审查这个 commit` / `review this commit` | 单个 commit 相对其父提交 |
-| `扫描这个仓库` / `audit this repo` | 整个仓库，不是 diff |
+| 审查这次修改 | DIFF_WORKSPACE |
+| 审查 feature 分支 | DIFF_BRANCH |
+| 审查这个 commit | DIFF_COMMIT |
+| 审查 PR #123 | DIFF_PR |
+| 扫描整个仓库 | AUDIT |
+| 审查并修复 | REVIEW_FIX |
+| 确认刚才的问题修好了吗 | VERIFY |
 
-审查全程**只读**：不改文件、不提交、不推送、不发评论。默认派一个全新的审查子代理执行，让判断独立于写代码的那个会话。
+## 安装
 
-## 工作方式
+最小安装仍然只是一个 Skill。推荐但不强制安装 Alibaba OpenCodeReview CLI 作为确定性工程层。没有 OCR 时会退回 git，并明确披露范围能力下降。
 
-1. **解析目标**——工作区、分支或 commit。有歧义时默认取工作区并用一行说明，绝不静默地审一个用户没要求的范围。分支审查的合并基点按固定阶梯解析（用户点名 → PR base → 仓库默认分支 → `main` → `master` → 报告并停止），**绝不把分支自身的 tracking upstream 当基点**——`origin/feature-x` 是同一分支的远端副本，对它 diff 几乎审不到东西。
-2. **解析确定性范围**——只要 `ocr` 可用，任何 diff 审查都先跑 `ocr delegate preview --format json`（不花 LLM 调用）；规模只决定分批方式，不决定要不要解析范围。全仓库审计用 `ocr scan --preview --format json`——本地枚举、不调 LLM。高风险改动（安全、数据丢失、冻结契约）过两遍。
-3. **走 A–J**——十项全查，按顺序。某一项只有说明理由后才能标 `➖ 不适用`。缺陷判据分模式：diff 审查只报本次改动引入、引用范围与 diff 重叠的问题；全仓库审计的目的恰恰是挖存量问题，按 file:line 引用。
-4. **出报告**——一行"检查覆盖"说明每项查了没查；findings 按严重度排成 `[P1] 标题 — path/to/file.ext:line`；结尾恰好一行裁决，**机械计算**：有 P0 → `FAILED`；否则有 P1 → `NEEDS_REVISION`；否则 `PASS`。P2/P3 不影响裁决——该拦的 P2 就该定级为 P1。
+## 可复现评估
 
-那行"检查覆盖"就是防橡皮图章的装置：它逼着审查逐项摊开到底查了什么。`⚠️` 表示"查了但受限，原因如下"；`➖` 表示"不适用，原因如下"。
+evals/ 包含 fixture、预期 findings、judge rubric 和确定性 run.sh。
 
-### 失败模式写进了规格
+V1 的 Darwin 终态曾得到 **86.8/100 的当次 triage score**；这不是稳定 benchmark。V2 改动范围很大，因此 **不继承 86.8 作为 V2 分数**，而是扩展 eval 后重新做 paired judging。
 
-只描述 happy path 的技能，一旦现实不配合就会崩。这个技能把兜底路径显式编码了：
+## V2.0.0
 
-| 触发条件 | 一线修复 | 仍失败 |
-|---|---|---|
-| `ocr` 缺失或报错 | `which ocr` 确认，否则退回 `git diff` | 继续原生审查，并说明文件筛选不是确定性的 |
-| `ocr` 拒绝 `--format json`（旧版 CLI） | 去掉 `--format` 重试，解析文本输出 | 继续；报告注明用了哪种输出模式 |
-| 不是 git 仓库 / 还没有 commit | 改为直接读工作区文件 | 审这些文件，并说明无历史可比 |
-| 分支 / SHA 解析不到 | 试配置的上游，再 `git merge-base` | 报告"目标不可用"并停下——**绝不静默换范围** |
-| 测试跑不起来 | 探测项目原生 runner，运行最小相关子集 | 仅在确认安全（无 fixture/参数化/异步/导入副作用）时才直接调用测试函数；否则 E、G 标 `⚠️ 仅静态审阅`——**没跑过就绝不写"测试通过"** |
-| diff 太大一次审不完 | 按目录或模块分批 | 报告哪些部分审了、哪些没审 |
-| 分不清某处偏离是有意还是失误 | 报为"待确认偏离" | 不替作者判定意图 |
-| 涉密仓库 + 要求外传型模式 | 🛑 拒绝，改本地审查 | 上报用户，不擅自继续 |
+- Checklist Reviewer → Review Control Plane
+- PR review + Context Pack
+- R1–R3 风险路由
+- S1–S3 规模路由
+- 多 reviewer / 多 pass
+- Cross-batch Integration Pass
+- E1–E3 证据等级
+- 多工具 finding 归一化 + 去重
+- Local static evidence
+- External reviewer opt-in
+- REVIEW_FIX / VERIFY
+- 最多两轮 fix/verify
+- Prompt/tool injection 边界
+- V2 eval suite
 
-## 可选依赖
+V1.1 的 base-resolution、whole-repo audit、JSON-first OCR、机械 Verdict、runtime-neutral 等修订全部保留。
 
-技能可独立运行。它可选地用 [`ocr`](https://github.com/alibaba/open-code-review)（OpenCodeReview）的 **delegation 模式**做确定性文件筛选和按路径的规则解析——该模式本地运行、无需 API key。
-
-```bash
-npm install -g @alibaba-group/open-code-review
-ocr delegate preview          # 工作区改动的可审查文件清单
-ocr delegate rule <files>     # 按路径解析出的规则
-```
-
-没有 `ocr` 就退回 `git diff`，并在报告里说明。`ocr` 有两个模式被**刻意不用**：`ocr review` 和完整 `ocr scan` 需要配置 LLM 端点、会把内容传出本机——未经用户明确授权，技能拒绝执行。`ocr scan --preview` **在用**：它在本地枚举文件、不调 LLM，正是全仓库审计需要的确定性能力。
-
-## 目录结构
-
-```
-code-review/
-├── SKILL.md                  # 技能本体——完整标准，自包含
-├── evals/                    # 可复现评估
-│   ├── run.sh                # 一条命令：重建 fixtures + 确定性检查
-│   ├── fixtures/             # baseline / changed 源文件 + SPEC.md
-│   ├── test-prompts.json     # 7 个场景（3 行为 + 4 回归）
-│   ├── expected-findings.json# 每场景的必报 / 禁报清单
-│   └── judge-rubric.md       # 9 维 rubric + paired 多数决协议
-├── docs/
-│   └── darwin-result-card.png
-├── README.md
-├── README.zh-CN.md
-└── LICENSE
-```
-
-## V1.1 变更记录（外部评审轮，2026-09-21）
-
-外部评审的九条发现全部核实后采纳：
-
-- **[P1] base 解析**：不再接受分支的 tracking upstream 作为合并目标——改为固定阶梯（用户点名 → PR base → 默认分支 → `main` → `master` → 报告）。upstream 陷阱已做回归测试：`evals/run.sh` 实测 `git diff @{u}..HEAD` 为空、`main..HEAD` 才有真实增量。
-- **[P1] 全仓库与 diff 判据解耦**：§3.4 分两套模式——diff 审查只报改动引入且与 diff 重叠的问题；全仓库审计专门挖存量问题，按 file:line 引用。
-- **[P2] `ocr scan --preview`**（本机 v1.12.7 实测验证）：全仓库审计获得本地确定性文件枚举，不再整体放弃 `ocr`。
-- **[P2] JSON 优先**：所有 `delegate` 调用优先 `--format json`，旧版 CLI 有文档化的文本回退。
-- **[P2] 路由简化**：`delegate preview` 对任何规模的 diff 审查都跑；规模只决定分批。
-- **[P2] 测试兜底收紧**：先探测原生 runner；禁止盲目 import 测试模块，除非确认无副作用。
-- **[P2] 裁决机械化**：删除 `clustered P2`——有 P0 → FAILED，否则有 P1 → NEEDS_REVISION，否则 PASS。
-- **[P3] 术语统一**：遗留的 "Critical/Important" 措辞统一为 P0/P1；"read-only" 重定义为*源码树只读*，并明确测试执行的副作用规则。
-- **[P3] runtime 中立**：审查子代理的指令不再点名某运行时专属的 agent 类型。
-- **可复现性**：新增 `evals/`——fixtures、期望发现、judge rubric、一条命令的确定性检查。
-
-## 进化记录
-
-本技能按 [darwin-skill](https://github.com/alchaincyf/darwin-skill) 协议进化：先设计测试 prompt 与基线评估，再逐轮改动，每轮由**三个独立 judge 对改前/改后做 paired 比较**决定去留（绝对分数是噪音，paired 多数决才是棘轮）。
-
-| 轮次 | 维度 | 改动 | 裁决 |
-|---|---|---|---|
-| 基线 | — | — | **74.9** / 100 |
-| 1 | 失败模式编码 | 新增 7 行三段式兜底表 | 3-0 better（clear） |
-| 2 | 检查点设计 | 4 处 🔴/🛑 显性标记 | 3-0 better |
-| 3 | 整体架构 | 三处重复的禁令合并为一处权威表述 | 3-0 better |
-| 终态 | — | — | **86.8** / 100 |
-
-三轮，三轮保留，零回滚。真正有说服力的是收尾回归测试：审查者显式调用了"排除文件必读"检查点和"无 pytest 时直接调用测试函数"的兜底——前两轮加的内容**被真正执行了**，不只是写在纸上。
-
-评分卡见 `docs/darwin-result-card.png`。
-
-## 许可
+## License
 
 [MIT](LICENSE)
