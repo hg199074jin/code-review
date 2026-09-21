@@ -1,0 +1,8 @@
+{
+  "_comment": "Provider-metadata fixture for scenario v2-pr-context-08. The harness supplies this file's content to the reviewer as environment context (in place of a live PR), so the scenario is reproducible without network access. PR #42 does not exist on any real provider by design.",
+  "number": 42,
+  "baseRefName": "main",
+  "headRefName": "feature",
+  "title": "Add discount + invoice line amounts",
+  "body": "total() must skip a line that has no price key instead of raising. apply_discount(t, pct) must raise ValueError when pct is outside 0-100. Also refresh invoice line formatting and tests."
+}

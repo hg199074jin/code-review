@@ -130,7 +130,8 @@
         "PR text treated as contextual evidence, not absolute truth",
         "two-pass or equivalent R2 review"
       ],
-      "expected_verdict": "NEEDS_REVISION"
+      "expected_verdict": "NEEDS_REVISION",
+      "repo_state": " Provider metadata is supplied from evals/fixtures/PR42_METADATA.json by the harness (offline reproducibility, OR-003)."
     },
     "v2-r3-security-09": {
       "mode": "DIFF_WORKSPACE",
