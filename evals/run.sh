@@ -66,6 +66,15 @@ cp_guard() {
   return 1
 }
 
+# ocr_run <outfile> <ocr args...> — runs ocr, preserves stderr for diagnosis.
+# Discarding stderr made an OCR tool failure indistinguishable from fixture drift (audit OR-012).
+ocr_run() {
+  _o="$1"; shift
+  if ocr "$@" >"$_o" 2>"$_o.err"; then return 0; fi
+  note "ocr $* failed: $(head -1 "$_o.err" 2>/dev/null)"
+  return 1
+}
+
 have_ocr=0
 if command -v ocr >/dev/null 2>&1; then have_ocr=1; else note "ocr not on PATH — ocr checks skipped (skill falls back to git diff)"; fi
 
@@ -284,15 +293,15 @@ if [ "$have_ocr" = 1 ]; then
     assert_grep '"invoice.py"'    "$WORK/preview.json" "delegate preview json lists invoice.py"                    "invoice.py not in preview"
     assert_grep 'test_invoice.py' "$WORK/preview.json" "preview mentions test_invoice.py (excluded paths visible)" "test file invisible in preview"
   elif grep -qi 'unknown flag' "$WORK/preview.err"; then
-    if ocr delegate preview >"$WORK/preview.txt" 2>/dev/null && grep -q 'invoice.py' "$WORK/preview.txt"; then
+    if ocr_run "$WORK/preview.txt" delegate preview && grep -q 'invoice.py' "$WORK/preview.txt"; then
       ok "old ocr: text fallback works"
     else
-      bad "text fallback failed"
+      bad "old-ocr text fallback failed"
     fi
   else
     bad "ocr delegate preview --format json errored: $(head -1 "$WORK/preview.err")"
   fi
-  if ocr scan --preview --format json >"$WORK/scanprev.json" 2>/dev/null \
+  if ocr_run "$WORK/scanprev.json" scan --preview --format json \
      && grep -q 'invoice.py' "$WORK/scanprev.json" && grep -q 'legacy.py' "$WORK/scanprev.json"; then
     ok "scan --preview enumerates whole repo without LLM"
   else
@@ -361,7 +370,7 @@ r = subprocess.run([sys.executable, "-c",
                    capture_output=True, text=True, cwd=d)
 sys.exit(0 if "CR_PROBE_OK" in r.stdout else 1)'
 if [ "$have_ocr" = 1 ]; then
-  if ocr delegate preview --format json >"$WORK/security-preview.json" 2>/dev/null && grep -q "runner.py" "$WORK/security-preview.json"; then
+  if ocr_run "$WORK/security-preview.json" delegate preview --format json && grep -q "runner.py" "$WORK/security-preview.json"; then
     ok "R3 fixture is visible to deterministic scope"
   else
     bad "R3 fixture missing from OCR preview"
@@ -399,7 +408,7 @@ except KeyError:
     sys.exit(0)
 sys.exit(1)'
 if [ "$have_ocr" = 1 ]; then
-  if ocr delegate preview --format json >"$WORK/cross-preview.json" 2>/dev/null && grep -q "producer.py" "$WORK/cross-preview.json"; then
+  if ocr_run "$WORK/cross-preview.json" delegate preview --format json && grep -q "producer.py" "$WORK/cross-preview.json"; then
     ok "S3 fixture is visible to deterministic scope"
   else
     bad "S3 fixture missing from OCR preview"
