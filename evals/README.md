@@ -29,7 +29,7 @@ evaluated separately with test-prompts.json + expected-findings.json.
 | File | Purpose |
 |---|---|
 | run.sh | Builds temporary git repos and checks deterministic V2 plumbing. |
-| fixtures/ | Baseline/changed source files for invoice, R3 security, and cross-file contract scenarios, plus scenario-supply fixtures: `PR42_METADATA.json` (offline provider metadata for the PR-context case), `TOOL_REPORT.txt` (static-tool output with 1 true / 2 false findings for tool-fusion eval), `INJECTION_NOTE.txt` (embedded reviewer-directed instructions for the injection-boundary eval), `SECRET_CONFIG.ini` (obviously-fake credential for the egress opt-in eval). |
+| fixtures/ | Baseline/changed source files for invoice, R3 security, and cross-file contract scenarios, plus scenario-supply fixtures: `PR42_METADATA.json` (offline provider metadata for the PR-context case), `TOOL_REPORT.txt` (static-tool output with 1 true / 2 false findings for tool-fusion eval), `INJECTION_NOTE.txt` (embedded reviewer-directed instructions for the injection-boundary eval), `SECRET_CONFIG.ini` (synthetic credential, realistic-looking but never a real secret, for the egress opt-in eval). |
 | test-prompts.json | Agent-level scenarios (11 original + 3 added in 2.0.1 for tool fusion, egress opt-in, injection boundary). |
 | expected-findings.json | Must-report / must-not-report / routing expectations. |
 | judge-rubric.md | V2 evaluation rubric and paired-majority protocol. |
