@@ -2,7 +2,7 @@
 name: code-review
 description: The single entry point for code review. Resolves scope deterministically, builds intent context, routes by risk and change size, runs independent review lenses, fuses tool evidence, deduplicates findings, and returns one mechanical PASS / NEEDS_REVISION / FAILED verdict. Use for workspace/branch/commit/PR review, merge-safety checks, whole-repo audits, review-and-fix, or post-fix verification.
 metadata:
-  version: "2.0.0"
+  version: "2.0.2"
 ---
 
 # Code Review V2 — Review Control Plane
@@ -45,6 +45,8 @@ finding IDs, evidence grades, and verdict lines verbatim.
 - **External egress is opt-in.** Do not send repository content to an external reviewer or LLM
   endpoint without explicit authorization.
 - **No unbounded review/fix loops.** Verification cycles are bounded (§7).
+- **This file is the sole review standard.** Do not load or defer to a legacy same-named review
+  skill (for example a superseded `review-agent`); where a pointer file exists, follow it here.
 
 ---
 
@@ -85,8 +87,10 @@ Run git/OCR commands from the repository root unless a directory audit was expli
 | workspace | `ocr delegate preview --format json` |
 | branch | `ocr delegate preview --format json --from <base> --to <head>` |
 | commit | `ocr delegate preview --format json --commit <sha>` |
+| PR | `ocr delegate preview --format json --from <base> --to <head>`, with `<base>`/`<head>` from provider metadata (§3.3) |
 | whole repo | `ocr scan --preview --format json` |
 | directory audit | `ocr scan --preview --format json --path <path>` |
+| VERIFY | union of (a) the fix diff: `ocr delegate preview --format json` on the fix commit range, and (b) every path cited in the frozen initial report |
 
 Then run:
 
@@ -187,7 +191,7 @@ The thresholds are routing heuristics, not defect criteria.
 | Route | Required execution |
 |---|---|
 | R1 + S1 | one fresh A–J pass |
-| R2 or S2 | two independent passes: Intent/Correctness + Reliability/Tests |
+| R2 or S2 | two independent passes: pass 1 = Lenses 1-2 (Intent/Scope, Correctness/Regression → A-E); pass 2 = Lenses 3-4 (Security & Data Safety, Tests/Maintainability → F-I) |
 | R3 or S3 | specialist passes + final integration pass |
 | any R3 security/data-loss path | independent re-read of the critical path even if another tool already flagged it |
 
@@ -408,7 +412,7 @@ Start with:
 
 ```text
 ## 目标与意图
-Mode: <DIFF_WORKSPACE | DIFF_BRANCH | DIFF_COMMIT | DIFF_PR | AUDIT | VERIFY>
+Mode: <DIFF_WORKSPACE | DIFF_BRANCH | DIFF_COMMIT | DIFF_PR | AUDIT | REVIEW_FIX | VERIFY>
 Target: <workspace | base..head | commit | PR | path>
 Requirement source: <source or "none found">
 Scope: <reviewable/reviewed/skipped counts; excluded files and reasons>

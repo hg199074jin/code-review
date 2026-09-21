@@ -46,8 +46,8 @@ User / ZCode / Claude Code / Codex / Cursor / other Agent
           +--------------+---------------+
           |              |               |
           v              v               v
-   Intent & Scope   Correctness &    Security /
-   A-B              Regression C-E   Reliability F
+   Intent & Scope   Correctness &    Security & Data
+   A-B              Regression C-E   Safety F
                          |
                          v
                  Tests / Maintainability

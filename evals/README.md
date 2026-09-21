@@ -3,7 +3,8 @@
 Reproducible evaluation for code-review V2.
 
 ~~~bash
-sh ./run.sh
+sh ./run.sh            # healthy path: must be green
+sh ./mutation-test.sh  # injected failures: every case must go red
 ~~~
 
 The shell harness is intentionally deterministic: no LLM calls are required. Agent behavior is
@@ -28,11 +29,16 @@ evaluated separately with test-prompts.json + expected-findings.json.
 
 | File | Purpose |
 |---|---|
-| run.sh | Builds temporary git repos and checks deterministic V2 plumbing. |
-| fixtures/ | Baseline/changed source files for invoice, R3 security, and cross-file contract scenarios. |
-| test-prompts.json | 11 agent-level scenarios. |
+| run.sh | Builds temporary git repos and checks deterministic V2 plumbing. Cleans up on exit unless `CR_EVAL_KEEP=1`. |
+| mutation-test.sh | Failure-injection counterpart: proves `run.sh` turns RED when its condition stops holding (fixture deleted, spec deleted, upstream unarmed, defect fixed, defect respelled, scenario desynced). |
+| fixtures/ | Baseline/changed source files for invoice, R3 security, and cross-file contract scenarios, plus scenario-supply fixtures: `PR42_METADATA.json` (offline provider metadata for the PR-context case), `TOOL_REPORT.txt` (static-tool output with 1 true / 2 false findings for tool-fusion eval), `INJECTION_NOTE.txt` (embedded reviewer-directed instructions for the injection-boundary eval), `SECRET_CONFIG.ini` (synthetic credential, realistic-looking but never a real secret, for the egress opt-in eval). |
+| test-prompts.json | Agent-level scenarios (11 original + 3 added in 2.0.1 for tool fusion, egress opt-in, injection boundary). |
 | expected-findings.json | Must-report / must-not-report / routing expectations. |
 | judge-rubric.md | V2 evaluation rubric and paired-majority protocol. |
+
+PR-context scenarios take provider metadata from the fixture file, supplied by the harness as
+environment context — they never fetch from a live provider, so they run offline and
+reproducibly.
 
 ## Deterministic fixtures
 
@@ -54,7 +60,7 @@ implementation rather than safety.
 
 Expected V2 behavior:
 - classify R3;
-- invoke the Security/Reliability lens;
+- invoke the Security & Data Safety lens;
 - produce E1 or stronger evidence;
 - block merge without needing an external hosted scanner.
 

@@ -1,8 +1,14 @@
-protocol	release_evals	paired_release_comparison	non-darwin（V2为多维重写，不适用一轮一维度归因）
-record	timestamp	base_sha	head_sha	check						result
-meta-review	2026-09-21	c190ea23142175e28b8472f5e50146e1cdf6055b	7d595052c69602928283a6af20b7b826b0952bea	GateA blind×2				PASS（双PASS=oracle期望；零漏报零虚构；Amendment#1 +7 findings）
-meta-review	2026-09-21	c190ea2	7d59505	GateB1 regression×7				PASS 7/7（必报项全中；upstream拒绝；shim回退触发；不盲import）
-meta-review	2026-09-21	c190ea2	7d59505	GateB2 acceptance×4				PASS 4/4（R3注入P0实证；S3漂移捕获；REVIEW_FIX 1/2轮）
-meta-review	2026-09-21	c190ea2	7d59505	GateB3 paired 3-judge				V2 4/4胜（8 V2-better/2 V1.1-better/2 tie = 12票，全slight；6:6 counterbalance）
-meta-review	2026-09-21	c190ea2	7d59505	deterministic run.sh				with-ocr 19/19；without-ocr 14/14（与PR声称一致）
-meta-review	2026-09-21	c190ea2	7d59505	follow-ups				13 post-release follow-ups: P2=OR-007/002/003；P3=OR-001/004/005/006/008/009/010/011/012/013（canonical backlog = issue #2 body）
+record	timestamp	base_sha	head_sha	check	result
+meta-review	2026-09-21	c190ea23142175e28b8472f5e50146e1cdf6055b	7d595052c69602928283a6af20b7b826b0952bea	GateA blind x2	PASS - double PASS equals oracle expectation; zero missed and zero unsupported qualifying findings; Amendment #1 +7 findings
+meta-review	2026-09-21	c190ea2	7d59505	GateB1 regression x7	PASS 7/7 - must-report items all caught; upstream trap refused; shim-triggered --format fallback; no blind test import
+meta-review	2026-09-21	c190ea2	7d59505	GateB2 acceptance x4	PASS 4/4 - R3 injection graded P0 with runtime proof; S3 contract drift captured; REVIEW_FIX converged in 1 of 2 cycles
+meta-review	2026-09-21	c190ea2	7d59505	GateB3 paired 3-judge	V2 wins 4/4 scenarios - 8 V2-better / 2 V1.1-better / 2 tie = 12 votes, all slight; 6:6 counterbalance
+meta-review	2026-09-21	c190ea2	7d59505	deterministic run.sh	with-ocr 19/19; without-ocr 14/14 - matches the PR claim
+meta-review	2026-09-21	c190ea2	7d59505	follow-ups	13 post-release follow-ups: P2 = OR-007/002/003; P3 = OR-001/004/005/006/008/009/010/011/012/013. Canonical backlog = issue #2 body
+meta-review	2026-09-21	main:v2.0.1-followups	-	V2.0.1 patch validation	OR-007/002/003 fixed and behaviourally validated: s12 tool fusion PASS, s13 egress opt-in PASS after one fixture iteration, s14 injection boundary PASS; run.sh 24/24; shellcheck 0
+meta-review	2026-09-21	main:v2.0.1-followups	-	audit 2026-09-21	Whole-repo AUDIT: 15 discrete findings (3 P1 in release/eval infrastructure, 4 P2, 8 P3). Canonical record: release-evals/audit-2026-09-21-findings.md
+meta-review	2026-09-21	main:v2.0.1-followups	-	V2.0.2 phase 1 restore trust	CR-001/002/003 fixed with behavioural assertions. At a1825b7 this measured run.sh 35/35 with ocr and 30/30 without; mutation-test 8/8. Superseded by the merge-safety round below.
+meta-review	2026-09-21	main:v2.0.1-followups	-	V2.0.2 phase 2 reproducibility	CR-004/005/006/008 + OR-013 fixed; run.sh 35/35; mutation-test 8/8; shellcheck 0
+meta-review	2026-09-21	main:v2.0.1-followups	-	V2.0.2 phases 2-3 + OR-008/012	Scenario reproducibility (CR-004/005/006/008, OR-013) and hygiene (CR-007/009/010/011, CR-012..015, OR-005/010/011). At 61716ef: run.sh 35/35 with ocr, 30/30 without; mutation-test 8/8.
+meta-review	2026-09-21	main:v2.0.1-followups	-	merge-safety round 1	DIFF_PR review against main with main SKILL.md as authority. Found MS-001 P1: mutation-test M4 never ran the harness (exec bit dropped by sed+mv; exit 126 counted as "red as required"). Fixed with sh invocation + attributable-red guard + M4b root-cause assertion. Head measured: run.sh 34/34 with ocr, 29/29 without; mutation-test 9/9.
+meta-review	2026-09-21	main:v2.0.1-followups	-	merge-safety round 2 (re-verify)	VERIFY of MS-001: genuinely closed, proven four ways (guard revert -> M4 FAIL; mutation removal -> M4 FAIL; old mechanics rejected by attribution; pre-fix script still false-greens). Verdict PASS, P0=0 P1=0. New P3s MS-004..MS-009 closed in the same commit.

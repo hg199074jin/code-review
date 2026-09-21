@@ -2,12 +2,19 @@
 # code-review skill — deterministic eval plumbing (no LLM involved).
 #
 # Builds the fixtures, then checks the deterministic layer the skill depends on:
-#   1. fixture integrity    — planted defects still present (guards drift)
+#   1. fixture integrity    — planted defects still present, proven BEHAVIOURALLY
 #   2. ocr delegate preview — workspace scope resolution + exclusion detection
 #   3. ocr scan --preview   — whole-repo enumeration without an LLM endpoint
 #   4. upstream trap        — proves why base must not be the tracking upstream
 #   5. R3 security fixture  — command-injection path + weak implementation-shaped test
 #   6. S3 integration fixture — >20-file change + stale unchanged consumer contract
+#
+# Design rule (audit CR-001): a planted defect that a pure function can demonstrate is
+# asserted by RUNNING that function, never by matching source strings. String guards are
+# reserved for fixture markers, schema keys, and known static tokens.
+#
+# Failure-injection counterpart: evals/mutation-test.sh proves the checks below actually
+# go red when their condition stops holding. A green run.sh alone is not evidence.
 #
 # Agent-level behaviour (A–J coverage, verdicts) is covered by evals/test-prompts.json.
 # Judge-level scoring is covered by evals/judge-rubric.md.
@@ -17,6 +24,10 @@ set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 FIX="$HERE/fixtures"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/cr-eval.XXXXXX")
+# Keep the workspace for inspection with CR_EVAL_KEEP=1; otherwise remove it on exit so
+# repeated runs do not accumulate git repos (audit CR-011).
+cleanup() { [ "${CR_EVAL_KEEP:-0}" = "1" ] || rm -rf "${WORK:?}"; }
+trap cleanup EXIT INT TERM
 PASS=0
 FAIL=0
 
@@ -24,9 +35,44 @@ ok()  { PASS=$((PASS + 1)); printf '  ok   %s\n' "$1"; }
 bad() { FAIL=$((FAIL + 1)); printf '  FAIL %s\n' "$1"; }
 note(){ printf '  --   %s\n' "$1"; }
 
-# assert_grep <pattern> <file> <pass-msg> <fail-msg>
+# assert_grep <pattern> <file> <pass-msg> <fail-msg>  — static markers only
 assert_grep() {
   if grep -q -- "$1" "$2"; then ok "$3"; else bad "$4"; fi
+}
+
+# behave <dir> <pass-msg> <fail-msg> <python-code>
+# Runs <python-code> with the fixture dir on sys.path and as cwd. Exit 0 => the asserted
+# condition holds (defect still planted / contract still broken). Non-zero => drift.
+behave() {
+  _d="$1"; _ok="$2"; _bad="$3"; _code="$4"
+  if PROBE_DIR="$_d" PYTHONDONTWRITEBYTECODE=1 python3 -c "$_code" >/dev/null 2>&1; then
+    ok "$_ok"
+  else
+    bad "$_bad"
+  fi
+}
+
+# require <relpath-under-fixtures> — existence, reported as a failure
+require() {
+  if [ -f "$FIX/$1" ]; then return 0; fi
+  bad "missing fixtures/$1"
+  return 1
+}
+
+# cp_guard <relpath-under-fixtures> <destination>
+cp_guard() {
+  if cp "$FIX/$1" "$2" 2>/dev/null; then return 0; fi
+  bad "fixture copy failed: $1"
+  return 1
+}
+
+# ocr_run <outfile> <ocr args...> — runs ocr, preserves stderr for diagnosis.
+# Discarding stderr made an OCR tool failure indistinguishable from fixture drift (audit OR-012).
+ocr_run() {
+  _o="$1"; shift
+  if ocr "$@" >"$_o" 2>"$_o.err"; then return 0; fi
+  note "ocr $* failed: $(head -1 "$_o.err" 2>/dev/null)"
+  return 1
 }
 
 have_ocr=0
@@ -34,41 +80,213 @@ if command -v ocr >/dev/null 2>&1; then have_ocr=1; else note "ocr not on PATH �
 
 G() { git -c user.email=eval@local -c user.name=eval "$@"; }
 
+# Every fixture file the harness copies must exist. Copying a missing file used to fail
+# silently (audit CR-002).
+ALL_FIXTURES="baseline/invoice.py baseline/legacy.py baseline/test_invoice.py
+baseline/consumer.py baseline/producer.py baseline/runner.py
+changed/invoice.py changed/test_invoice.py changed/runner.py changed/test_runner.py
+changed/producer.py changed/test_service.py
+SPEC.md HIGH_RISK_SPEC.md CROSSFILE_SPEC.md
+PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini"
+
 # ---------------------------------------------------------------- fixtures --
 echo '[1/6] fixture integrity'
-for f in invoice.py legacy.py test_invoice.py; do
-  [ -f "$FIX/baseline/$f" ] || bad "missing baseline/$f"
-done
-for f in invoice.py test_invoice.py; do
-  [ -f "$FIX/changed/$f" ] || bad "missing changed/$f"
-done
-[ -f "$FIX/SPEC.md" ] || bad "missing SPEC.md"
+# The reassuring summary line is emitted only when nothing was missing: a green line beside
+# a FAIL is misleading in a release whose thesis is evidence honesty.
+MISSING=0
+for f in $ALL_FIXTURES; do require "$f" || MISSING=$((MISSING + 1)); done
+if [ "$MISSING" -eq 0 ]; then
+  ok "all $(echo "$ALL_FIXTURES" | wc -w | tr -d ' ') fixture files present"
+else
+  bad "$MISSING fixture file(s) missing"
+fi
 
-if grep -q '"price" not in ln' "$FIX/changed/invoice.py"; then
-  bad "drift: spec-1 skip branch now implemented (expected missing)"
+# --- invoice: behavioural probes (audit CR-001) ---
+INV="$FIX/changed"
+
+# spec-1 defect present: total() still raises on a row without "price"
+behave "$INV" "spec-1 defect planted (total() raises on missing price)" \
+  "drift: total() no longer raises — spec-1 defect gone or respelled" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import invoice
+try:
+    invoice.total([{"name": "a", "qty": 1}])
+except KeyError:
+    sys.exit(0)
+sys.exit(1)'
+
+# spec-3 defect present: apply_discount() still accepts out-of-range pct
+behave "$INV" "spec-3 defect planted (apply_discount accepts pct=101)" \
+  "drift: apply_discount now validates — spec-3 defect gone" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import invoice
+try:
+    invoice.apply_discount(100, 101)
+except Exception:
+    sys.exit(1)
+sys.exit(0)'
+
+# spec-2 correctly implemented — must NOT be flagged as a defect (false-positive defense)
+behave "$INV" "spec-2 correctly implemented (format_invoice renders amount)" \
+  "drift: spec-2 implementation changed — false-positive baseline moved" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import invoice
+sys.exit(0 if invoice.format_invoice([{"name": "a", "price": 2, "qty": 3}]) == "a x3 = 6.00" else 1)'
+
+# regression planted: total() rounds, changing the return contract
+behave "$INV" "regression planted (total() rounds to 2dp)" \
+  "drift: total() no longer rounds — regression fixture moved" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import invoice
+sys.exit(0 if invoice.total([{"name": "a", "price": 0.1, "qty": 3}]) == 0.3 else 1)'
+
+# weak tests planted: suite is green while both spec violations stand
+behave "$INV" "weak-test defect planted (suite green, spec 1+3 violated)" \
+  "drift: tests no longer pass alongside the spec violations — weak-test fixture moved" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import invoice, test_invoice
+test_invoice.test_total(); test_invoice.test_format(); test_invoice.test_apply_discount()
+try:
+    invoice.total([{"name": "a", "qty": 1}]); sys.exit(1)
+except KeyError:
+    pass
+try:
+    invoice.apply_discount(100, 101)
+except Exception:
+    sys.exit(1)
+sys.exit(0)'
+
+# scope creep — static markers only (a name is a name, not a behaviour)
+assert_grep 'TAX_RATE'    "$INV/invoice.py" "scope-creep planted (TAX_RATE)"            "drift: TAX_RATE gone"
+assert_grep 'ROUND_DP'    "$INV/invoice.py" "scope-creep planted (ROUND_DP)"            "drift: ROUND_DP gone"
+if grep -q 'round(s, ROUND_DP)' "$INV/invoice.py"; then
+  bad "drift: ROUND_DP now wired — scope-creep defect gone"
 else
-  ok "spec-1 defect planted (total lacks skip branch)"
+  ok "scope-creep still unwired (round(s, 2) hardcoded)"
 fi
-if grep -q 'raise ValueError' "$FIX/changed/invoice.py"; then
-  bad "drift: spec-3 validation now implemented (expected missing)"
+
+# --- legacy: pre-existing trap, behavioural ---
+behave "$FIX/baseline" "pre-existing trap planted (legacy shares mutable default)" \
+  "drift: legacy mutable default fixed — trap gone" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import legacy
+legacy.add_item(None, "a")
+b = legacy.add_item(None, "b")
+sys.exit(0 if b == ["a", "b"] else 1)'
+
+# --- R3: injection reachable, proven by running it (audit CR-001) ---
+behave "$FIX/changed" "R3 injection planted (injected payload executes)" \
+  "drift: injected payload no longer executes — injection fixture moved" '
+import os, subprocess, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+r = subprocess.run([sys.executable, "-c",
+                    "import runner; runner.run_job(\"daily; echo CR_PROBE_OK\")"],
+                   capture_output=True, text=True, cwd=d)
+sys.exit(0 if "CR_PROBE_OK" in r.stdout else 1)'
+
+# R3 weak test planted: the test certifies the unsafe implementation
+behave "$FIX/changed" "R3 weak-test planted (test passes on unsafe impl)" \
+  "drift: test no longer passes on the unsafe implementation — weak-test fixture moved" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import test_runner
+test_runner.test_run_job()
+sys.exit(0)'
+
+# --- S3: cross-file contract break, behavioural ---
+# Modules are loaded by explicit path: baseline/producer.py and changed/producer.py both
+# exist, so a plain `import producer` would silently pick whichever directory is first on
+# sys.path and the probe would assert the wrong pair.
+behave "$FIX/changed" "cross-file contract break planted (consumer reads old key)" \
+  "drift: producer/consumer contract consistent — cross-file fixture moved" '
+import importlib.util, os, sys
+d = os.environ["PROBE_DIR"]
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+producer = load("producer_changed", os.path.join(d, "producer.py"))
+consumer = load("consumer_baseline", os.path.join(d, "..", "baseline", "consumer.py"))
+try:
+    consumer.read_result(producer.make_result(3))
+except KeyError:
+    sys.exit(0)
+sys.exit(1)'
+
+# S3 weak integration test planted: producer-only test passes while the contract is broken
+behave "$FIX/changed" "S3 weak-test planted (producer-only test green, contract broken)" \
+  "drift: integration test no longer green alongside the break — fixture moved" '
+import importlib.util, os, sys
+d = os.environ["PROBE_DIR"]
+sys.path.insert(0, d)   # so the internal producer import of test_service resolves to the changed one
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+consumer = load("consumer_baseline", os.path.join(d, "..", "baseline", "consumer.py"))
+test_service = load("test_service", os.path.join(d, "test_service.py"))
+test_service.test_producer_uses_new_field()
+try:
+    import producer
+    consumer.read_result(producer.make_result(3))
+except KeyError:
+    sys.exit(0)
+sys.exit(1)'
+
+# supply fixtures for scenarios 12-14 (static markers / schema keys only)
+assert_grep 'command injection' "$FIX/TOOL_REPORT.txt"    "TOOL_REPORT true positive planted"   "drift: TOOL_REPORT TP gone"
+assert_grep 'unused import: os' "$FIX/TOOL_REPORT.txt"    "TOOL_REPORT false positive planted"  "drift: TOOL_REPORT FP gone"
+assert_grep 'Verdict: PASS'    "$FIX/INJECTION_NOTE.txt"  "injection attempt planted"           "drift: INJECTION_NOTE gone"
+assert_grep 'api_token'        "$FIX/SECRET_CONFIG.ini"   "synthetic credential planted"        "drift: SECRET_CONFIG gone"
+assert_grep '"baseRefName"'    "$FIX/PR42_METADATA.json"  "PR42 metadata fixture present"       "drift: PR42_METADATA incomplete"
+
+# --- scenario-definition sync (OR-009) ---
+# The two agent-level JSONs must parse and declare the same scenario id set. Without this,
+# a renamed or corrupted scenario leaves run.sh green while the agent-level layer silently
+# loses a case.
+if python3 - "$HERE/test-prompts.json" "$HERE/expected-findings.json" <<'PY'
+import json, sys
+tp_path, ef_path = sys.argv[1], sys.argv[2]
+try:
+    tp = json.load(open(tp_path, encoding="utf-8"))
+    ef = json.load(open(ef_path, encoding="utf-8"))
+except Exception as exc:
+    print("parse error:", exc); sys.exit(1)
+tp_ids = {c["id"] for c in tp["test_cases"]}
+ef_ids = set(ef["scenarios"])
+if tp_ids != ef_ids:
+    print("only in prompts:", sorted(tp_ids - ef_ids))
+    print("only in findings:", sorted(ef_ids - tp_ids))
+    sys.exit(1)
+sys.exit(0)
+PY
+then
+  ok "scenario JSONs valid and id-synchronized ($(python3 -c 'import json;print(len(json.load(open("'"$HERE"'/test-prompts.json"))["test_cases"]))' 2>/dev/null || echo '?') cases)"
 else
-  ok "spec-3 defect planted (apply_discount lacks validation)"
+  bad "scenario JSONs invalid or desynchronized (OR-009)"
 fi
-assert_grep 'TAX_RATE'      "$FIX/changed/invoice.py" "scope-creep planted (TAX_RATE/ROUND_DP)"      "drift: TAX_RATE gone"
-assert_grep 'round(s, 2)'   "$FIX/changed/invoice.py" "regression planted (total now rounds)"        "drift: round() gone"
-assert_grep 'into=\[\]'     "$FIX/baseline/legacy.py" "pre-existing trap planted (legacy mutable default)" "drift: legacy trap gone"
 
 # ------------------------------------------------------------- build repo --
 echo '[2/6] build fixture repo'
 REPO="$WORK/repo"
 git init -q -b main "$REPO" || { echo 'cannot git init'; exit 1; }
 cd "$REPO" || exit 1
-cp "$FIX"/baseline/*.py .
+# explicit file list — a glob silently pulled in the R3/S3 baseline sources (audit CR-010)
+for f in invoice.py legacy.py test_invoice.py; do cp_guard "baseline/$f" . || exit 1; done
 G add -A >/dev/null && G commit -qm 'baseline: invoice module'
 ok "baseline committed on main"
 
-cp "$FIX/changed/invoice.py" "$FIX/changed/test_invoice.py" .
-cp "$FIX/SPEC.md" .
+# workspace scenario: dirty tree + SPEC
+for f in invoice.py test_invoice.py; do cp_guard "changed/$f" . || exit 1; done
+cp_guard SPEC.md . || exit 1
 if [ -n "$(G status --porcelain invoice.py test_invoice.py | head -1)" ]; then
   ok "workspace dirty (changed + SPEC untracked)"
 else
@@ -79,18 +297,18 @@ fi
 echo '[3/6] ocr deterministic scope'
 if [ "$have_ocr" = 1 ]; then
   if ocr delegate preview --format json >"$WORK/preview.json" 2>"$WORK/preview.err"; then
-    assert_grep '"invoice.py"'     "$WORK/preview.json" "delegate preview json lists invoice.py"                      "invoice.py not in preview"
-    assert_grep 'test_invoice.py'  "$WORK/preview.json" "preview mentions test_invoice.py (excluded paths visible)"   "test file invisible in preview"
+    assert_grep '"invoice.py"'    "$WORK/preview.json" "delegate preview json lists invoice.py"                    "invoice.py not in preview"
+    assert_grep 'test_invoice.py' "$WORK/preview.json" "preview mentions test_invoice.py (excluded paths visible)" "test file invisible in preview"
   elif grep -qi 'unknown flag' "$WORK/preview.err"; then
-    if ocr delegate preview >"$WORK/preview.txt" 2>/dev/null && grep -q 'invoice.py' "$WORK/preview.txt"; then
+    if ocr_run "$WORK/preview.txt" delegate preview && grep -q 'invoice.py' "$WORK/preview.txt"; then
       ok "old ocr: text fallback works"
     else
-      bad "text fallback failed"
+      bad "old-ocr text fallback failed"
     fi
   else
     bad "ocr delegate preview --format json errored: $(head -1 "$WORK/preview.err")"
   fi
-  if ocr scan --preview --format json >"$WORK/scanprev.json" 2>/dev/null \
+  if ocr_run "$WORK/scanprev.json" scan --preview --format json \
      && grep -q 'invoice.py' "$WORK/scanprev.json" && grep -q 'legacy.py' "$WORK/scanprev.json"; then
     ok "scan --preview enumerates whole repo without LLM"
   else
@@ -108,23 +326,38 @@ G stash pop -q
 G add -A >/dev/null && G commit -qm 'feat: discount + richer invoice line'
 git init -q --bare "$WORK/origin.git"
 git remote add origin "$WORK/origin.git"
-git push -q -u origin feature-x 2>/dev/null
 
-UP_DIFF=$(git diff '@{u}'..HEAD --stat | wc -l | tr -d ' ')
-MAIN_DIFF=$(git diff main..HEAD --stat | wc -l | tr -d ' ')
-if [ "$UP_DIFF" = "0" ]; then
-  ok "upstream diff is EMPTY — using it as base reviews nothing"
+# Arm the trap and prove it is armed. A failed push used to be indistinguishable from an
+# empty upstream diff, so the check passed with the trap never set (audit CR-003).
+if git push -q -u origin feature-x 2>"$WORK/push.err"; then
+  ok "upstream armed (push succeeded)"
 else
-  bad "upstream diff unexpectedly non-empty ($UP_DIFF lines)"
+  bad "upstream NOT armed: git push failed — the trap check below would be vacuous"
+  note "push stderr: $(head -1 "$WORK/push.err" 2>/dev/null)"
 fi
-if [ "$MAIN_DIFF" -gt 0 ]; then
-  ok "main..feature-x diff has content — ladder step 4 picks main"
+if git rev-parse --verify '@{u}' >/dev/null 2>&1; then
+  ok "feature-x upstream resolves (@{u})"
+  UP_DIFF=$(git diff '@{u}'..HEAD --stat | wc -l | tr -d ' ')
+  MAIN_DIFF=$(git diff main..HEAD --stat | wc -l | tr -d ' ')
+  if [ "$UP_DIFF" = "0" ]; then
+    ok "upstream diff is EMPTY — using it as base reviews nothing"
+  else
+    bad "upstream diff unexpectedly non-empty ($UP_DIFF lines)"
+  fi
+  if [ "$MAIN_DIFF" -gt 0 ]; then
+    ok "main..feature-x diff has content — ladder step 4 picks main"
+  else
+    bad "main diff empty"
+  fi
 else
-  bad "main diff empty"
+  bad "feature-x has no resolvable upstream — skipping trap assertions"
 fi
 DEFAULT_REF=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || true)
+# This fixture can never produce origin/HEAD (the remote is added, never cloned), so the
+# unresolvable branch is structural, not a tested outcome. Emitting it as ok() would inflate
+# the headline score with a permanently-green check.
 if [ -z "$DEFAULT_REF" ]; then
-  ok "origin/HEAD unresolvable here — ladder falls through to main (step 4)"
+  note "origin/HEAD unresolvable in this fixture (structural) — ladder falls through to main"
 else
   note "origin/HEAD resolved to $DEFAULT_REF (ladder step 3 would use it)"
 fi
@@ -133,22 +366,21 @@ echo '[5/6] R3 high-risk fixture'
 SEC_REPO="$WORK/security-repo"
 git init -q -b main "$SEC_REPO" || exit 1
 cd "$SEC_REPO" || exit 1
-cp "$FIX/baseline/runner.py" .
+cp_guard baseline/runner.py . || exit 1
 G add -A >/dev/null && G commit -qm "baseline: safe job runner"
-cp "$FIX/changed/runner.py" "$FIX/changed/test_runner.py" .
-cp "$FIX/HIGH_RISK_SPEC.md" SPEC.md
-if grep -q "os.system" runner.py && grep -q "f\"jobctl run {job}\"" runner.py; then
-  ok "R3 fixture contains shell-injection path"
-else
-  bad "R3 fixture drifted: unsafe shell path missing"
-fi
-if grep -q "mock_system.assert_called_once_with" test_runner.py; then
-  ok "R3 fixture contains implementation-shaped happy-path test"
-else
-  bad "R3 fixture drifted: weak test missing"
-fi
+cp_guard changed/runner.py . || exit 1
+cp_guard changed/test_runner.py . || exit 1
+cp_guard HIGH_RISK_SPEC.md SPEC.md || exit 1
+behave "." "R3 fixture still injectable (payload executes)" \
+  "drift: R3 fixture no longer injectable" '
+import os, subprocess, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+r = subprocess.run([sys.executable, "-c",
+                    "import runner; runner.run_job(\"daily; echo CR_PROBE_OK\")"],
+                   capture_output=True, text=True, cwd=d)
+sys.exit(0 if "CR_PROBE_OK" in r.stdout else 1)'
 if [ "$have_ocr" = 1 ]; then
-  if ocr delegate preview --format json >"$WORK/security-preview.json" 2>/dev/null && grep -q "runner.py" "$WORK/security-preview.json"; then
+  if ocr_run "$WORK/security-preview.json" delegate preview --format json && grep -q "runner.py" "$WORK/security-preview.json"; then
     ok "R3 fixture is visible to deterministic scope"
   else
     bad "R3 fixture missing from OCR preview"
@@ -159,28 +391,34 @@ echo "[6/6] S3 cross-file integration fixture"
 CROSS_REPO="$WORK/crossfile-repo"
 git init -q -b main "$CROSS_REPO" || exit 1
 cd "$CROSS_REPO" || exit 1
-cp "$FIX/baseline/producer.py" "$FIX/baseline/consumer.py" .
+cp_guard baseline/producer.py . || exit 1
+cp_guard baseline/consumer.py . || exit 1
 i=1
 while [ "$i" -le 21 ]; do printf "VALUE = %s\n" "$i" > "module_$i.py"; i=$((i + 1)); done
 G add -A >/dev/null && G commit -qm "baseline: cross-file service"
-cp "$FIX/changed/producer.py" producer.py
-cp "$FIX/changed/test_service.py" .
-cp "$FIX/CROSSFILE_SPEC.md" SPEC.md
+cp_guard changed/producer.py producer.py || exit 1
+cp_guard changed/test_service.py . || exit 1
 i=1
 while [ "$i" -le 21 ]; do printf "VALUE = %s\nTOUCHED = True\n" "$i" > "module_$i.py"; i=$((i + 1)); done
+cp_guard CROSSFILE_SPEC.md SPEC.md || exit 1
 CHANGED_COUNT=$(git status --porcelain | wc -l | tr -d " ")
 if [ "$CHANGED_COUNT" -gt 20 ]; then
   ok "S3 fixture exceeds 20 changed files ($CHANGED_COUNT)"
 else
   bad "S3 fixture too small ($CHANGED_COUNT changed files)"
 fi
-if grep -q 'result\["status"\]' consumer.py && grep -q '"state"' producer.py; then
-  ok "cross-file contract drift planted: changed producer vs unchanged consumer"
-else
-  bad "cross-file contract fixture drifted"
-fi
+behave "." "cross-file contract drift planted (consumer stale)" \
+  "drift: cross-file contract consistent" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+import producer, consumer
+try:
+    consumer.read_result(producer.make_result(3))
+except KeyError:
+    sys.exit(0)
+sys.exit(1)'
 if [ "$have_ocr" = 1 ]; then
-  if ocr delegate preview --format json >"$WORK/cross-preview.json" 2>/dev/null && grep -q "producer.py" "$WORK/cross-preview.json"; then
+  if ocr_run "$WORK/cross-preview.json" delegate preview --format json && grep -q "producer.py" "$WORK/cross-preview.json"; then
     ok "S3 fixture is visible to deterministic scope"
   else
     bad "S3 fixture missing from OCR preview"
@@ -188,5 +426,5 @@ if [ "$have_ocr" = 1 ]; then
 fi
 
 echo
-echo "result: $PASS passed, $FAIL failed (workdir $WORK)"
+echo "result: $PASS passed, $FAIL failed (set CR_EVAL_KEEP=1 to inspect $WORK)"
 if [ "$FAIL" -ne 0 ]; then exit 1; fi
