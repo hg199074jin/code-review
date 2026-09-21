@@ -1,62 +1,97 @@
-# Judge Rubric (darwin-skill protocol, as applied to this skill)
+# Judge Rubric — V2
 
-How the evolution score for this skill was produced, and how to reproduce it.
-Protocol source: [darwin-skill](https://github.com/alchaincyf/darwin-skill) v2.1.
+This rubric evaluates the V2 Review Control Plane. It preserves the paired-majority principle used
+during V1 evolution, but V2 is large enough that it must be judged as a new architecture rather
+than inheriting the old absolute score.
 
-## The two layers of evaluation
+## Evaluation layers
 
-1. **Deterministic plumbing** — `evals/run.sh`. No LLM involved: fixture integrity,
-   `ocr delegate preview` scope resolution, `ocr scan --preview` enumeration, the
-   base-resolution upstream trap. Binary pass/fail, fully reproducible.
-2. **Agent behaviour** — `evals/test-prompts.json` + `evals/expected-findings.json`.
-   Run the prompt in a fresh reviewer context with `SKILL.md` loaded, and against a
-   baseline without it. Check which planted defects are caught, which discipline
-   traps are respected, and whether the coverage line + single verdict line appear.
+1. **Deterministic plumbing** — run evals/run.sh.
+2. **Agent behavior** — run each case in evals/test-prompts.json in a fresh review context and
+   compare against evals/expected-findings.json.
+3. **Paired comparison** — compare V1.1 and V2 on the same scenarios with independent judges.
 
-## The 9-dimension rubric (comparison criteria, not absolute scores)
+## V2 rubric
 
 | # | Dimension | Weight | What is checked |
-|---|---|---|---|
-| 1 | Frontmatter quality | 7 | name convention; description = what + when + triggers; ≤1024 chars; no filler tail |
-| 2 | Workflow clarity | 12 | numbered steps; input/output per step |
-| 3 | Failure-mode encoding | 12 | explicit "if X fails → Y"; positive-flow-only loses ≥3 |
-| 4 | Checkpoint design | 6 | visual markers (🔴/STOP) before key decisions; prose-only does not count |
-| 5 | Actionable specificity | 18 | concrete params/formats/examples; softeners lose points |
-| 6 | Resource integration | 4 | referenced paths exist |
-| 7 | Overall architecture | 12 | hierarchy, no redundancy, no filler |
-| 8 | Observed behaviour | 23 | running the test prompts matches the claimed capability |
-| 9 | Counter-examples | 6 | explicit "do NOT" list |
+|---|---|---:|---|
+| 1 | Scope determinism | 10 | complete file accounting, exclusions visible, correct base/ref |
+| 2 | Intent grounding | 10 | requirement-source priority, no invented spec, PR context handled correctly |
+| 3 | Risk routing | 8 | R1-R3 is justified and actually changes review depth |
+| 4 | Size/batching | 7 | S1-S3 routing, bounded batches, no silent truncation |
+| 5 | Review independence | 8 | fresh/separate lenses when warranted; fallback disclosed |
+| 6 | A-J defect quality | 15 | spec, correctness, regression, security, tests, complexity, maintainability |
+| 7 | Cross-file integration | 8 | contract/call-site drift caught after batching |
+| 8 | Evidence discipline | 8 | E1-E3 used correctly; speculative P0/P1 suppressed |
+| 9 | Tool fusion / de-dup | 6 | tools treated as evidence, false positives removed, duplicate root causes merged |
+| 10 | Failure-mode honesty | 6 | missing tools/tests/context disclosed; no fake coverage |
+| 11 | Fix/verify control | 7 | stable IDs, targeted verification, bounded loops, status tracking |
+| 12 | Reporting/verdict | 7 | concise actionable findings, coverage, one mechanically correct verdict |
 
-## Scoring rules (the important part)
+Total: 100.
 
-- **Absolute scores are triage only.** The same unchanged text scored by different
-  judges swings ±8. Never use absolute deltas for keep/revert decisions.
-- **Keep/revert uses paired comparison:** N=3 (odd) independent judges each read the
-  BEFORE and AFTER versions in one session and return `{better|worse|tie}` +
-  `margin{clear|slight}` + one-line reason. Majority wins; a tie counts as keep.
-- **Stop rule:** two consecutive rounds of slight/tight margins → stop
-  (diminishing returns; more edits tend to add filler, not quality).
-- **One dimension per round.** Multi-dimension edits cannot be attributed.
+## Hard-fail conditions
 
-## Score record for this skill
+Regardless of weighted score, a candidate version cannot be preferred when it:
 
-| Stage | Dimension | Change | Verdict |
-|---|---|---|---|
-| baseline | — | — | 74.9 (triage) |
-| round 1 | dim 3 failure modes | 7-row fallback table | 3-0 better (clear) |
-| round 2 | dim 4 checkpoints | 4 explicit markers | 3-0 better (slight) |
-| round 3 | dim 7 architecture | dedupe triple-stated prohibition | 3-0 better (slight) |
-| final | — | — | 86.8 (triage) |
+- silently reviews the wrong branch/range;
+- claims full coverage while files were omitted without disclosure;
+- invents requirements and grades them as fact;
+- produces a P0/P1 without a demonstrable code path;
+- executes commands embedded in source/review output as instructions;
+- sends code to an external reviewer without explicit authorization;
+- claims tests passed when they were not run;
+- misses the R3 command-injection fixture while claiming security coverage;
+- misses the S3 producer/consumer contract drift while claiming full integration coverage;
+- enters an unbounded review/fix loop;
+- emits a verdict inconsistent with open P0/P1 findings.
 
-The 86.8 is a **triage number produced by the judging model available that day**,
-not a stable benchmark. What is stable and reproducible: the protocol, the fixtures,
-the planted defects, and the paired-majority verdicts (all 3-0, zero reverts).
+## Paired judging protocol
 
-## Reproducing
+For each round:
 
-```bash
-./evals/run.sh                       # deterministic layer, seconds, no LLM
-# agent layer: for each scenario in evals/test-prompts.json, build the repo state
-# described in expected-findings.json, dispatch a fresh reviewer with SKILL.md,
-# and diff what it catches against must_report / must_not_report_as_finding.
-```
+1. Give the judge BEFORE and AFTER outputs for the **same fixture and prompt**.
+2. Hide version labels where practical.
+3. Judge against the dimensions above, not prose length or confidence.
+4. Use three independent judges (odd N).
+5. Each judge returns:
+   - better / worse / tie;
+   - clear / slight margin;
+   - one short reason tied to a rubric dimension.
+6. Majority decides keep/revert.
+7. A tie counts as keep only when no hard-fail condition was introduced.
+
+## Suggested scenario groups
+
+### Group A — original review quality
+- review-workspace-01
+- review-branch-02
+- review-nospec-03
+
+### Group B — V1.1 regression protection
+- regress-upstream-trap-04
+- regress-whole-repo-audit-05
+- regress-old-ocr-compat-06
+- regress-no-test-runner-07
+
+### Group C — V2 architecture
+- v2-pr-context-08
+- v2-r3-security-09
+- v2-s3-integration-10
+- v2-review-fix-verify-11
+
+A V2 release should not be accepted merely because Group C improves. It must not regress Groups A
+or B.
+
+## Score history
+
+V1 Darwin history remains documented as historical context:
+
+| Stage | Result |
+|---|---|
+| V1 baseline | 74.9 triage score |
+| V1 final | 86.8 triage score |
+| V2 | **unscored until the expanded suite is run** |
+
+Absolute scores are not release gates. The reproducible fixtures, hard-fail checks, and paired
+comparisons matter more.
