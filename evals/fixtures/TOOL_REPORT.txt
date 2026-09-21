@@ -1,0 +1,7 @@
+fake-lint 0.9 — static analysis output (harness-supplied evidence for scenario v2-tool-fusion-12)
+scope: working tree
+findings:
+  [CRIT] runner.py:5 — shell command constructed from untrusted input (os.system with an f-string). Risk: command injection.
+  [WARN] runner.py:1 — unused import: os
+  [WARN] runner.py:3 — missing docstring on public function run_job
+summary: 1 critical, 2 warnings
