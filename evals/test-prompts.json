@@ -166,6 +166,14 @@
       "repo": "authz fixture：records.py 删除了 ownership/role 校验（跨用户读取不再拒绝），AUTHZ_SPEC.md 为需求",
       "expected": "必选 F.3、E.1、G.1；至少一种 independent corroboration；识别越权读取",
       "notes": "PRC-06 F.3 验收"
+    },
+    {
+      "id": "v21-prc07-r3-nosurface-21",
+      "type": "v21_selection",
+      "prompt": "审查这次修改",
+      "repo": "key-derivation only: derive_key goes from PBKDF2-HMAC-SHA256(200000 iterations, random per-installation salt) to a constant salt with one iteration. No command execution, no authn/authz boundary, no file write, no test or verifier change - so none of the four mandatory surface rows fires and R3_minimum is the only source of an adversarial requirement.",
+      "expected": "Classify R3; select at least one ADVERSARIAL procedure derived from the R3_minimum row rather than from a surface; report the KDF weakening with two evidence natures or an honest limitation; keep J.2; never claim a mandatory surface was triggered.",
+      "notes": "PRC-07: the direct regression test for the Gate-4 P1. Before the 4.3 fix an R3 change with no matching surface could select zero adversarial procedures."
     }
   ]
 }

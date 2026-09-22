@@ -366,6 +366,28 @@
       ],
       "must_exhibit_sufficiency": "SUFFICIENT (ownership bypass demonstrated)",
       "must_not_select_procedures": []
+    },
+    "v21-prc07-r3-nosurface-21": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_select_procedures": [
+        "F.1",
+        "J.2"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit": [
+        "R3 classification with reason",
+        "no mandatory surface claimed as triggered (command_execution / auth_permission / file_destructive / verifier_harness all absent)",
+        "at least one ADVERSARIAL procedure selected, executed and evidenced",
+        "the KDF weakening reported (constant salt, single iteration) with two evidence natures or an honest limitation",
+        "R3_minimum identified as the source of the adversarial requirement"
+      ],
+      "must_exhibit_selection_reason": [
+        "R3_minimum row (>=1 ADVERSARIAL; >=1 corroboration) drives the adversarial requirement, not a surface row"
+      ],
+      "must_exhibit_sufficiency": "SUFFICIENT or LIMITED, stated and consistent with what ran",
+      "expected_verdict": "NEEDS_REVISION or FAILED per severity ladder"
     }
   }
 }

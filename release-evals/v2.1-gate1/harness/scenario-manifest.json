@@ -1,8 +1,8 @@
 {
   "candidate": {
-    "SKILL.md": "41e10ff4fe8fc326b44b6b9d1e38f91d87301a886f4148b06b39f0a2d36d3d6f",
-    "README.md": "070bf7bc50e3ec7e8a90525c8090b080ddccf46b0665ea43dbf07bbde2dd01cd",
-    "README.zh-CN.md": "730856f8216c8141555cf2af3dbc7ba4ce9f426bbf65fbcbf7de135cc2aa4ace"
+    "SKILL.md": "348946aec2e3b39388920bf862b8755f2323383f045f3ef44a2cfe5ee1a33455",
+    "README.md": "2abb627b1fa8fa7f16d60f2ee98a1d7c71353cebee850eaf0dffbf6c431fb9ba",
+    "README.zh-CN.md": "9ec14e88fa92d04076ce68452fed2e2f0933c9195bd4c1713f4ac00d1d3d4376"
   },
   "scenarios": {
     "regress-no-test-runner-07": {
@@ -90,7 +90,7 @@
       "file_count": 4
     },
     "v21-prc01-minimal-15": {
-      "head": "e41f9bada2b637890a63249416b2d169c50e5b37",
+      "head": "519fb2f0c80a73f4eb07aca16c619dec346d95d0",
       "worktree_sha256": "6d65a15cb6639574e47a73151c7b9cd8fdaad7206f6275d0960d0f7932659dd4",
       "dirty": " M README.md\n M app.py\n",
       "file_count": 3
@@ -108,22 +108,28 @@
       "file_count": 25
     },
     "v21-prc04-verifier-18": {
-      "head": "e00c0d78ef27448a25ba396028ca2320ccf7cad3",
+      "head": "fc03cb470ca0b1e3c5f09e6bf113cf71fb19cda1",
       "worktree_sha256": "7ec470eb9eed81971bdb98746e59455df5f9df850072397a40d8278f4718c0fe",
       "dirty": " M check.sh\n?? check_test.sh\n",
       "file_count": 4
     },
     "v21-prc05-dynamic-19": {
-      "head": "7826053be9cbcc07d252ce42e9d73a041c917aa1",
+      "head": "0e243d66f703ee42dd3a0c011ecb35d37bd08ffc",
       "worktree_sha256": "ff4cbbe58ebdc3e14b42e6fe080ded0de162091d16fc5c54f7d62f8ce3e3bd8e",
       "dirty": " M runner.py\n?? test_runner.py\n",
       "file_count": 3
     },
     "v21-prc06-authz-20": {
-      "head": "f868016f29b4bbf7c6808f8d67eeec804ffd3dea",
+      "head": "857fadde6319fdb7227e452843c6230164a2082e",
       "worktree_sha256": "71e86a84b3f7b0e780015d2fcb49ed01c12d996dab9402fc0a126d0b0a17d5aa",
       "dirty": " M records.py\n?? test_records.py\n",
       "file_count": 3
+    },
+    "v21-prc07-r3-nosurface-21": {
+      "head": "ca3d5c02eb1e5a0df3e1ddbce3f276706e412912",
+      "worktree_sha256": "e2a9c2e000686522e04066eda780ae0dc8ec0ebe522aa451bd28560ec02fb003",
+      "dirty": " M derive.py\n",
+      "file_count": 2
     }
   }
 }

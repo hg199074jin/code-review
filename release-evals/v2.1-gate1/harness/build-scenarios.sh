@@ -180,6 +180,46 @@ git add -A; git -c user.email=e@x -c user.name=e commit -qm "baseline: records w
 cp "$REPO/evals/fixtures/changed/records.py" records.py
 cp "$REPO/evals/fixtures/changed/test_records.py" test_records.py
 
+# PRC-07 R3 without any matching mandatory surface: a key-derivation weakening.
+# No command execution, no authn/authz boundary, no file write, no verifier harness -> none of the
+# four mandatory surface rows fires, so the only source of an adversarial requirement is R3_minimum.
+P=$OUT/v21-prc07-r3-nosurface-21; mkdir -p "$P"
+cd "$P"; git init -q .
+cat > SPEC.md <<'EOF'
+# Key derivation requirements
+
+1. `derive_key(password)` must use PBKDF2-HMAC-SHA256 with at least 100000 iterations.
+2. The salt must be random per installation and stored beside the derived key material.
+3. A key must never be derived from a constant value that ships with the code.
+4. `derive_key` returns raw key bytes and writes nothing to disk.
+EOF
+cat > derive.py <<'EOF'
+import hashlib
+import os
+
+SALT_LEN = 16
+ITERATIONS = 200000
+
+
+def new_salt():
+    return os.urandom(SALT_LEN)
+
+
+def derive_key(password, salt):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, ITERATIONS, dklen=32)
+EOF
+git add -A; git -c user.email=e@x -c user.name=e commit -qm "baseline: PBKDF2 key derivation"
+cat > derive.py <<'EOF'
+import hashlib
+
+SALT = b"backup-export-v1"
+ITERATIONS = 1
+
+
+def derive_key(password):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), SALT, ITERATIONS, dklen=32)
+EOF
+
 # ------------------------------------------------------- 4. frozen manifest --
 cd "$B3"
 python3 - <<'PY'
