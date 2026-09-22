@@ -87,7 +87,9 @@ baseline/consumer.py baseline/producer.py baseline/runner.py
 changed/invoice.py changed/test_invoice.py changed/runner.py changed/test_runner.py
 changed/producer.py changed/test_service.py
 SPEC.md HIGH_RISK_SPEC.md CROSSFILE_SPEC.md
-PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini"
+PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini
+baseline/check.sh changed/check.sh changed/check_test.sh
+baseline/records.py changed/records.py changed/test_records.py AUTHZ_SPEC.md"
 
 # ---------------------------------------------------------------- fixtures --
 echo '[1/6] fixture integrity'
@@ -106,7 +108,7 @@ echo '[1b/6] V2.1 procedure registry & disclosure universe'
 SKILL_FILE="$HERE/../SKILL.md"
 # Both READMEs are checked (EN + zh); a dotted procedure ID in either must be a registry
 # member, and legacy bare IDs must be absent (E1/E2/E3 excluded - they are evidence grades).
-if python3 - "$SKILL_FILE" "$HERE/../README.md" "$HERE/../README.zh-CN.md" "$FIX/procedure-selection.json" >"$WORK/v21-registry.txt" 2>&1 <<'PY'
+if python3 - "$SKILL_FILE" "$HERE/../README.md" "$HERE/../README.zh-CN.md" "$FIX/procedure-selection.json" "$HERE/test-prompts.json" "$HERE/expected-findings.json" >"$WORK/v21-registry.txt" 2>&1 <<'PY'
 import json, os, re, sys
 skill_path, readme_en, readme_zh = sys.argv[1:4]
 def ok(n): print("GUARD_OK " + n)
@@ -183,6 +185,20 @@ if dotted_bad: fail("readme_dotted_procedure_ids_valid", str(dotted_bad))
 else: ok("readme_dotted_procedure_ids_valid")
 if legacy_bad: fail("readme_legacy_procedure_ids_absent", str(legacy_bad))
 else: ok("readme_legacy_procedure_ids_absent")
+
+# Group E machine-readable contract fields must exist on every v21- scenario
+try:
+    tp = json.load(open(sys.argv[5], encoding="utf-8")) if len(sys.argv) > 5 else None
+    ef = json.load(open(sys.argv[6], encoding="utf-8")) if len(sys.argv) > 5 else None
+except Exception as exc:
+    tp = ef = None; fail("group_e_contract_fields_present", f"json parse: {exc}")
+if tp is not None:
+    need = ("must_select_procedures", "must_not_select_procedures", "must_exhibit_sufficiency", "must_exhibit_selection_reason")
+    v21 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v21-")]
+    miss = [sid for sid in v21 if sid not in ef.get("scenarios", {})
+            or any(f not in ef["scenarios"][sid] for f in need)]
+    if miss: fail("group_e_contract_fields_present", f"missing fields/entries: {miss}")
+    else: ok("group_e_contract_fields_present")
 
 # --- M2: Selection Matrix vs frozen expectation (evaluator-only JSON) ---
 sel_path = sys.argv[4] if len(sys.argv) > 4 else None
