@@ -26,17 +26,37 @@ HONESTY_MUT = "Procedures that cannot run are still marked `DONE` when the overa
 SUF_CONTRACT = "Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>"
 SUF_CONTRACT_MUT = "Review conclusion: <done>"
 SUF_DEF_1 = "- **`SUFFICIENT`**："
-SUF_NOTE = ('`Review Sufficiency` is the statement "were the required procedures enough", never a verdict — the\n'
-            'verdict stays mechanical over open P0/P1.')
-SUF_NOTE_MUT = "The verdict stays mechanical over open P0/P1.\n"
+SUF_CRITERIA = '''`Review Sufficiency` answers "were the required procedures enough" and is never a verdict — the
+verdict stays mechanical over open P0/P1. `SUFFICIENT`: floor, matched surface rows and selected
+additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete.
+`LIMITED`: some required procedure is `LIMITED/BLOCKED` while findings and verdict still stand, with
+residual risk stated. `INSUFFICIENT`: a critical risk path was unchecked, scope materially
+incomplete, an R3 critical path lacks even E1, or the target is unresolvable — never call such a
+review complete. Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.'''
+SUF_CRITERIA_MUT = "Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.\n"
+
+R_5A_DISCLOSURE = '''**Negative-control disclosure**: procedures with the `ADVERSARIAL` or `DYNAMIC` attribute form the
+disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a procedure is
+`NOT_SELECTED`, it must be listed under `Not selected by routing` with a reason (intersection with
+this universe, deduplicated, sorted by ID). R1 may use the compressed one-line form.'''
+R_43_R1_NOTE = '''minimum — static source→sink reading is cheap, and skipping it on R2 risks under-review. On R1 the
+disclosure-eligible universe procedures (§5a) are all `NOT_SELECTED` and appear under
+`Not selected by routing`.'''
+R_8_BLOCK = '''Not selected by routing:
+<every NOT_SELECTED procedure carrying the ADVERSARIAL or DYNAMIC attribute — one reason each;
+see §5a disclosure rule>
+
+'''
 
 MUTATIONS = {
     "AM1": {"desc": "delete the command_execution mandatory surface row",
             "target": "SELECTION_GUARD_FAIL:F.2", "scenario": "v21-prc02-r3-16",
             "edits": [(COMMAND_ROW, "")]},
-    "AM2": {"desc": "delete the verifier_harness mandatory surface row",
-            "target": "SELECTION_GUARD_FAIL:G.2/G.4", "scenario": "v21-prc04-verifier-18",
-            "edits": [(VERIFIER_ROW, "")]},
+    "AM2R": {"desc": "remove the negative-control disclosure rule (5a rule + 4.3 note + 8 report block)",
+             "target": "DISCLOSURE_GUARD_FAIL", "scenario": "v21-prc01-minimal-15",
+             "edits": [(R_5A_DISCLOSURE, "**Procedure attributes** are informational: `ADVERSARIAL` marks a bypass-hunting procedure and `DYNAMIC`\nmarks one that executes code."),
+                       (R_43_R1_NOTE, "minimum — static source→sink reading is cheap, and skipping it on R2 risks under-review."),
+                       (R_8_BLOCK, "")]},
     "AM3": {"desc": "add F.2, G.2 to R1_S1_minimum (R1 default fan-out into adversarial/dynamic)",
             "target": "OVER_REVIEW_GUARD_FAIL", "scenario": "v21-prc01-minimal-15",
             "edits": [(R1_ROW, R1_ROW_MUT)]},
@@ -45,7 +65,7 @@ MUTATIONS = {
             "edits": [(HONESTY, HONESTY_MUT)]},
     "AM5": {"desc": "remove the Review Sufficiency reporting contract",
             "target": "SUFFICIENCY_CONTRACT_FAIL", "scenario": "v21-prc05-dynamic-19",
-            "edits": [(SUF_CONTRACT, SUF_CONTRACT_MUT), (SUF_NOTE, SUF_NOTE_MUT)]},
+            "edits": [(SUF_CONTRACT, SUF_CONTRACT_MUT), (SUF_CRITERIA, SUF_CRITERIA_MUT)]},
 }
 
 src = CANON.read_text(encoding="utf-8")
@@ -60,12 +80,17 @@ OUT.mkdir(exist_ok=True)
 fail = 0
 for am, spec in MUTATIONS.items():
     text = src
+    broken = False
     for old, new in spec["edits"]:
         if text.count(old) != 1:
             print(f"FAIL {am}: anchor not unique ({text.count(old)}x): {old[:60]!r}")
             fail = 1
+            broken = True
             continue
         text = text.replace(old, new, 1)
+    if broken:
+        print(f"     {am}: NOT written (a mutation with a missing anchor is not a mutation)")
+        continue
     if am == "AM5":
         for line in SUF_DEF_BLOCK:
             text = text.replace(line, "", 1)

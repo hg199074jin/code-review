@@ -75,6 +75,8 @@ sc("v21-prc05-dynamic-19", "审查这次修改",
    "https://jobctl.internal/v2 and no credentials for it, so nothing that requires that "
    "endpoint can be executed from here.")
 sc("v21-prc06-authz-20", "审查这次修改")
+sc("v21-prc07-r3-nosurface-21", "审查这次修改",
+   "`hashlib` from the Python standard library is available; no third-party crypto library is installed.")
 
 COMMON_RULES = """\
 - The authority skill and the target repository are the only inputs you have. Do not search
@@ -187,13 +189,13 @@ def main():
         sys.stdout.write(body)
         return
     skill = f"{CAND}/SKILL.md"
-    for kind, outdir in (("clean", f"{B3}/runs/clean"), ("mutated", f"{B3}/runs/mutated")):
+    for outdir in (f"{B3}/runs/v2", f"{B3}/runs/v2/mutated"):
         os.makedirs(outdir, exist_ok=True)
     os.makedirs(f"{B3}/harness/briefs", exist_ok=True)
     for sid in S:
         p = f"{B3}/harness/briefs/{sid}.md"
         with open(p, "w", encoding="utf-8") as fh:
-            fh.write(build(sid, skill, f"{B3}/scenarios", f"{B3}/runs/clean"))
+            fh.write(build(sid, skill, f"{B3}/scenarios", f"{B3}/runs/v2"))
     print(f"wrote {len(S)} briefs to {B3}/harness/briefs")
 
 
