@@ -13,7 +13,7 @@
 #   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
 #   M8  restore everything         -> PASS
 #
-#   DM1-DM15 (M6a, V2.1): every procedure-framework guard has its own injected failure,
+#   DM1-DM16 (M6a, V2.1): every procedure-framework guard has its own injected failure,
 #   and each red must be attributable to the target guard name (MS-001 discipline).
 #
 # Isolation rule: harness mutations run against throwaway copies under $WORK; the repo is
@@ -176,7 +176,7 @@ say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
 expect "M8 restored harness is green" pass "$rc"
 
-# ---- M6a: deterministic mutations (DM1-DM15) ----
+# ---- M6a: deterministic mutations (DM1-DM16) ----
 
 say '[DM1] duplicate a procedure ID in the registry'
 M="$WORK/dm1.py"
@@ -360,6 +360,19 @@ assert old in s, "anchor missing"
 open(p, "w", encoding="utf-8").write(s.replace(old, new, 1))
 DMEOF
 dm_case dm15 "drift: check.sh no longer passes unconditionally" evals/fixtures/changed/check.sh "$M"
+
+say '[DM16] the guard block crashes halfway (partial green must read as red)'
+M="$WORK/dm16.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[-1]
+s = open(p, encoding="utf-8").read()
+anchor = 'ok("procedure_count_exactly_30")'
+assert anchor in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(
+    s.replace(anchor, anchor + '\nimport sys as _s; _s.stdout.flush(); import os as _o; _o._exit(3)', 1))
+DMEOF
+dm_case dm16 "v21 registry guard block did not run to completion" evals/run.sh "$M"
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"

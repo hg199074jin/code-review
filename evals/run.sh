@@ -306,15 +306,22 @@ if sel_path and os.path.isfile(sel_path):
                 ok("r1_forbidden_defaults_in_sync")
         except Exception as exc:
             fail("selection_matrix_expected_sync", repr(exc))
+print("GUARDS_COMPLETE")
 PY
 then :; fi
+# a guard block that crashes halfway must not read as green: require the completion
+# sentinel, not just "some output" (Gate-4 CR-003; proven by DM16)
+guards_complete=0
 while IFS= read -r line; do
   case "$line" in
     GUARD_OK*) ok "${line#GUARD_OK }" ;;
     GUARD_FAIL*) bad "${line#GUARD_FAIL }" ;;
+    GUARDS_COMPLETE) guards_complete=1 ;;
   esac
 done < "$WORK/v21-registry.txt"
-if ! grep -q "GUARD_" "$WORK/v21-registry.txt" 2>/dev/null; then
+if [ "$guards_complete" != 1 ]; then
+  bad "v21 registry guard block did not run to completion (crash mid-block is not a green)"
+elif ! grep -q "GUARD_" "$WORK/v21-registry.txt" 2>/dev/null; then
   bad "v21 registry guards produced no result (python3 failed?)"
 fi
 
