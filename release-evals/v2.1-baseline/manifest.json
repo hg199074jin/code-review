@@ -1,0 +1,36 @@
+{
+  "milestone": "M0 Baseline Freeze (V2.1)",
+  "frozen_at": "2026-09-22",
+  "baseline_product_version": "V2.0.2",
+  "BASE_SHA": "05dd293cebbc9863b885e55de4f0fbb9da5a73be",
+  "blob_shas": {
+    "SKILL.md": "4ebbbb151f21f7dc9b7778a3d63f5ce6405adf30b3760b667cdd17531330968d",
+    "evals/test-prompts.json": "202bca0f91626db3792135d0f64d947ce5f700c02aacf548cafd15529dbd9153",
+    "evals/expected-findings.json": "83d20ec970b1bfacd2131cc172d190531098d05133b40aae789a3abf3eb9ddca",
+    "evals/judge-rubric.md": "c9c63beec97b1e26f578da8f6ad02c5746aebad2501b330a647ba8059a242c97",
+    "evals/run.sh": "a06a5caffbba6f1fec4c76eadf75e71330ae443f331045671459d627a0dbad56",
+    "evals/mutation-test.sh": "e80a5562eb0f67869e30892bf8f5e2d3b794f8d64ca12314f2a8e5565843ed52"
+  },
+  "counts": {
+    "agent_scenarios": 14,
+    "defect_catalog": 12,
+    "skill_md_lines": 510
+  },
+  "runtime_skill_sha256_prefix": "4ebbbb15",
+  "runtime_separation": "runtime contains SKILL.md only; no evals/answers",
+  "baseline_results": {
+    "run_with_ocr": "34 passed / 0 failed",
+    "run_without_ocr": "29 passed / 0 failed",
+    "mutation": "14/14",
+    "shellcheck": "0 findings (both scripts)"
+  },
+  "open_deferred_issue": "hg199074jin/code-review#2 (OR-001/OR-004/OR-006 DEFERRED)",
+  "outputs": [
+    "run-with-ocr.txt",
+    "run-without-ocr.txt",
+    "mutation.txt",
+    "shellcheck.txt",
+    "baseline-report-contract.txt"
+  ],
+  "record_note": "BASE_SHA and blob_shas were recorded as empty placeholders in the M0 commit and completed at M7 Gate 1 from the frozen V2.0.2 tree (git show 05dd293:<path>); values are sha256 of the file content at BASE_SHA."
+}

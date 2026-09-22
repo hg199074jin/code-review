@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.2-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.1.0-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -108,6 +108,31 @@ R3 or S3
 ~~~
 
 Small changes stay simple. High-risk changes gain reviewer independence.
+
+### Review procedures and selection
+
+V2.1 turns each A-J objective into named **procedures** (30 of them, `A.1` … `J.3`). Routing decides
+which procedures are `SELECTED`; every selected procedure then carries one execution status
+(`DONE` / `LIMITED` / `BLOCKED` / `NOT_APPLICABLE`). `NOT_SELECTED` is a routing decision, never an
+execution status.
+
+- **Minimum, not maximum**: R1/S1 runs a ten-procedure minimum; higher risk and larger size add
+  passes instead of fanning out everything. Expensive adversarial/dynamic procedures (injection
+  probes, mutation challenges) run when a surface demands them, not by default.
+- **Mandatory surfaces**: command/process execution, auth/permission, file/destructive operations,
+  and verifier/acceptance harnesses each force their own procedures.
+- **Negative control, disclosed**: the `ADVERSARIAL`/`DYNAMIC` procedures that routing did *not*
+  select are listed in the report with a reason — what was deliberately not run is part of the
+  evidence.
+- **Triangulation**: an R3/P0 finding carries at least two different natures of evidence (code path,
+  runtime reproduction, tool signal, test/mutation). When a second nature is impossible here, the
+  finding says so and its procedure drops to `LIMITED`.
+- **Review Sufficiency**: the report closes with `SUFFICIENT` / `LIMITED` / `INSUFFICIENT` — were the
+  selected procedures enough for this change. It is never the verdict; the verdict stays mechanical
+  over open P0/P1.
+
+The Selection Matrix is a Markdown table in `SKILL.md`, checked against a frozen expectation by the
+harness, so "why this review depth" is machine-verifiable rather than prose.
 
 ## The A-J standard remains authoritative
 
@@ -247,8 +272,12 @@ discloses the reduced scope capability.
 
 ## Evaluation
 
-The evals/ directory contains reproducible fixtures, expected findings, a judge rubric, and a
-deterministic run.sh.
+The evals/ directory contains reproducible fixtures, expected findings, a judge rubric, a
+deterministic run.sh, a deterministic mutation suite, and the agent-level mutation definitions.
+
+`release-evals/` records the evidence a release is signed with: deterministic outputs, mutation
+results, and the fresh agent-level runs (Groups A-D regression, Group E procedure-selection
+acceptance, isolated agent-level mutations).
 
 V1's Darwin evolution ended at an **86.8/100 triage score from that judging run**. That number is
 not a stable benchmark and is **not inherited by V2**. V2 expands the eval suite and should be
@@ -305,6 +334,36 @@ injected failure**.
   lens-name drift across five files are all corrected
 
 `run.sh` 34/34 with `ocr`, 29/29 without; `mutation-test.sh` 14/14; `shellcheck` clean.
+
+## V2.1 — Risk-Based Review Procedure Framework
+
+Goal: make "why this review depth" explicit and machine-checkable, without touching the A-J
+standard, the severity ladder, or the verdict rule.
+
+- 30 dotted review procedures (`A.1` … `J.3`) under the existing A-J objectives, with static
+  attributes (`CORE` / `EXTENDED` / `ADVERSARIAL` / `DYNAMIC`)
+- selection and execution kept separate; Selection Matrix under stable markers, synced to
+  `evals/fixtures/procedure-selection.json` and checked by `run.sh`
+- negative-control disclosure: unselected adversarial/dynamic procedures are reported with reasons
+- evidence triangulation folded into the evidence rules; Review Sufficiency added to the reporting
+  contract
+- seven Group E acceptance scenarios (including an R3 change that triggers no mandatory surface),
+  deterministic guards, deterministic mutations DM1-DM16, and agent-level mutations executed against
+  isolated mutated copies of the skill (the frozen `SKILL.md` is never mutated)
+
+Release evidence in `release-evals/v2.1-gate1/` (two recorded cycles): `run.sh` 59/59 with `ocr`,
+54/54 without; `mutation-test.sh` 25/25 failure injections (DM1-DM16); `shellcheck` clean;
+`SKILL.md` 637 lines against a 640-line hard budget; and 20 + 12 clean fresh agent runs across
+Groups A-E plus isolated agent-level mutations.
+
+**Fix cycle complete; awaiting the Human Merge Gate.** The first merge-safety review (stable-main
+authority) returned `P0 = 0, P1 = 1`: the Selection Matrix never stated that its base row is the
+floor for every route, carried no R3 minimum, and its S3 row could not change any selection. The fix
+cycle made the floor and the R3 minimum normative text, bound the guards to the document itself,
+added the no-surface R3 acceptance case, and re-executed 16 fresh agent runs on the fixed artifact.
+The final independent review (`05dd293..eab62b9`) returned **PASS, `P0 = 0, P1 = 0`** (2 P2 + 1 P3
+recorded as non-blocking follow-ups). Full record: `release-evals/v2.1-gate1/m7-gate-report.md`,
+cycle 2.
 
 ## License
 

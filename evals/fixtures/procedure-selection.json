@@ -1,0 +1,167 @@
+{
+  "_comment": "Evaluator-only frozen expectation for the V2.1 Selection Matrix (SKILL.md, PROCEDURE_SELECTION markers). Not runtime authority; never synced to ~/.agents/skills/code-review. run.sh normalizes the SKILL.md matrix and compares it to this file row-by-row (audit trail: OR-009-class sync guard). Constraint rows carry `constraints` instead of `ids`; run.sh compares both fields.",
+  "rows": [
+    {
+      "key": "R1_S1_minimum",
+      "class": "route",
+      "ids": [
+        "A.1",
+        "A.2",
+        "B.1",
+        "C.2",
+        "E.1",
+        "G.1",
+        "I.1",
+        "J.1",
+        "J.2",
+        "J.3"
+      ]
+    },
+    {
+      "key": "R2_S2_pass_1_AE",
+      "class": "route",
+      "ids": [
+        "A.3",
+        "B.2",
+        "B.3",
+        "C.1",
+        "C.3",
+        "D.1",
+        "D.2",
+        "E.2"
+      ]
+    },
+    {
+      "key": "R2_S2_pass_2_FI",
+      "class": "route",
+      "ids": [
+        "F.1",
+        "G.1",
+        "G.3",
+        "H.1",
+        "I.2"
+      ]
+    },
+    {
+      "key": "S3_additions",
+      "class": "route",
+      "ids": [
+        "C.2",
+        "E.1",
+        "G.3",
+        "J.1"
+      ]
+    },
+    {
+      "key": "command_execution",
+      "class": "mandatory",
+      "ids": [
+        "F.1",
+        "F.2",
+        "G.1"
+      ]
+    },
+    {
+      "key": "auth_permission",
+      "class": "mandatory",
+      "ids": [
+        "F.3",
+        "E.1",
+        "G.1"
+      ]
+    },
+    {
+      "key": "file_destructive",
+      "class": "mandatory",
+      "ids": [
+        "F.4",
+        "D.2",
+        "G.1"
+      ]
+    },
+    {
+      "key": "verifier_harness",
+      "class": "mandatory",
+      "ids": [
+        "G.2",
+        "G.4",
+        "J.2"
+      ]
+    },
+    {
+      "key": "network_egress",
+      "class": "advisory",
+      "ids": [
+        "F.5",
+        "D.2"
+      ]
+    },
+    {
+      "key": "migration_schema",
+      "class": "advisory",
+      "ids": [
+        "E.2",
+        "E.3",
+        "D.2",
+        "G.3"
+      ]
+    },
+    {
+      "key": "concurrency",
+      "class": "advisory",
+      "ids": [
+        "D.3",
+        "D.2"
+      ]
+    },
+    {
+      "key": "retry_cache",
+      "class": "advisory",
+      "ids": [
+        "D.2",
+        "C.1"
+      ]
+    },
+    {
+      "key": "serializer_protocol",
+      "class": "advisory",
+      "ids": [
+        "C.2",
+        "E.2",
+        "C.3"
+      ]
+    },
+    {
+      "key": "agent_tool_execution",
+      "class": "advisory",
+      "ids": [
+        "F.5",
+        "F.1",
+        "G.1"
+      ]
+    },
+    {
+      "key": "R3_minimum",
+      "class": "route",
+      "ids": [],
+      "constraints": [
+        ">= 1 ADVERSARIAL",
+        ">= 1 corroboration",
+        "critical-path reread"
+      ],
+      "_comment": "constraint row: not an ID set (frozen design section 8.3)"
+    }
+  ],
+  "disclosure_eligible_universe": [
+    "D.3",
+    "F.1",
+    "F.2",
+    "F.3",
+    "F.5",
+    "G.2"
+  ],
+  "r1_forbidden_defaults": [
+    "F.2",
+    "G.2"
+  ]
+}

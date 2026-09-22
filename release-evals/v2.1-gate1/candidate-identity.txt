@@ -1,0 +1,11 @@
+V2.1 candidate identity (evidence-chain record) — corrected after the fix cycle
+
+superseded candidate : SKILL.md sha256 41e10ff4fe8fc326b44b6b9d1e38f91d87301a886f4148b06b39f0a2d36d3d6f
+  (metadata.version "2.0.2"; the artifact the FIRST 26 runs read - M7 cycle 1, Gate 4 FAIL)
+released  candidate : SKILL.md sha256 348946aec2e3b39388920bf862b8755f2323383f045f3ef44a2cfe5ee1a33455
+  (metadata.version "2.1.0"; the artifact the F1a/F2 fix produced and the 16 cycle-2 runs read;
+   git identity: `git show 47c85a6:SKILL.md | shasum -a 256` differs from HEAD's SKILL.md exactly
+   by the F1a/F2 edits; line count 637 <= 640)
+
+The first 26 runs remain valid history for the superseded candidate only. Cycle-2 evidence
+(16 runs, this directory's results-v2.tsv) is the release evidence for 348946ae.

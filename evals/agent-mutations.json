@@ -1,0 +1,46 @@
+{
+  "_comment": "M6b agent-level procedure mutations. Each AM removes exactly one rule from an ISOLATED COPY of the frozen SKILL.md (the canonical file is never mutated; integrity is proven by the SHA-unchanged check), then runs one fresh agent review against the paired Group E scenario and requires the named contract failure. The clean baseline is reused from the corresponding Gate-3 run, so each AM costs one new run.",
+  "_refinement": "The frozen plan's AM table targeted (a) 'R3 -> F.1' and (b) 'S3 required C.2/E.1/G.3'. Both are selection-redundant against the frozen Selection Matrix: F.1 is also required by the unconditional R2 pass-2 row, and all four S3_additions members are already required by the base plus R2 rows, so no single-rule removal can make them unselectable (set-arithmetic proof in release-evals/v2.1-gate1/m6b-results.md). AM1 and AM2 target uniquely-sourced requirements instead. AM2 was first attempted as the verifier_harness row deletion and was NOT attributable - the reviewer selected G.2/G.4 on its own judgment, so the removal changed nothing observable - and was replaced by AM2R; that negative result is recorded in m6b-results.md.",
+  "mutations": [
+    {
+      "id": "AM1",
+      "mutation": "delete the command_execution mandatory surface row (F.1, F.2, G.1)",
+      "scenario": "v21-prc02-r3-16",
+      "expected_failure": "SELECTION_GUARD_FAIL:F.2 (F.2 is uniquely sourced by that row; the reviewer's selected procedures omit it)"
+    },
+    {
+      "id": "AM2R",
+      "mutation": "remove the negative-control disclosure rule (the universe definition in section 5a, its R1 note in 4.3, and the 'Not selected by routing' block in the section 8 contract)",
+      "scenario": "v21-prc01-minimal-15",
+      "expected_failure": "DISCLOSURE_GUARD_FAIL (no universe-scoped disclosure with ADVERSARIAL/DYNAMIC attribution)"
+    },
+    {
+      "id": "AM3",
+      "mutation": "add F.2 and G.2 to R1_S1_minimum",
+      "scenario": "v21-prc01-minimal-15",
+      "expected_failure": "OVER_REVIEW_GUARD_FAIL (R1 selects expensive adversarial/dynamic procedures without a triggering surface)"
+    },
+    {
+      "id": "AM4",
+      "mutation": "reverse the execution-honesty rule (a procedure that cannot run may be recorded DONE)",
+      "scenario": "v21-prc05-dynamic-19",
+      "expected_failure": "EXECUTION_HONESTY_FAIL (DONE recorded for a procedure whose required runtime is unavailable)"
+    },
+    {
+      "id": "AM5",
+      "mutation": "remove the Review Sufficiency reporting contract (the report line and its explanatory note)",
+      "scenario": "v21-prc05-dynamic-19",
+      "expected_failure": "SUFFICIENCY_CONTRACT_FAIL (the report carries no Sufficiency statement)"
+    }
+  ],
+  "not_attributable": [
+    {
+      "id": "AM2",
+      "mutation": "delete the verifier_harness mandatory surface row (G.2, G.4, J.2)",
+      "scenario": "v21-prc04-verifier-18",
+      "expected_failure": "SELECTION_GUARD_FAIL:G.2/G.4",
+      "observed": "reviewer selected G.2 and G.4 anyway and ran a three-mutant challenge",
+      "why": "the registry plus the discretionary-addition clause let a reviewer reach the same procedures from the change itself; removing a surface row is therefore not a single-rule mutation that the selection contract can detect"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.2-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.1.0-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -57,7 +57,7 @@ ZCode / Claude Code / Codex / Cursor / 其他 Agent
         PASS / NEEDS_REVISION / FAILED
 ~~~
 
-## V2 的六个关键升级
+## V2 的七个关键升级
 
 ### 1. 范围确定性
 
@@ -113,7 +113,26 @@ R3 或 S3
 
 小修改不会被多 Agent 仪式化拖慢；高风险修改不会只靠一个 reviewer。
 
-### 4. A–J 仍然是唯一审查标准
+### 4. 审查程序与选择
+
+V2.1 把每个 A–J 目标拆成具名**程序**（30 个，`A.1` … `J.3`）。路由决定哪些程序被 `SELECTED`；
+每个被选中的程序只有一个执行状态（`DONE` / `LIMITED` / `BLOCKED` / `NOT_APPLICABLE`）。
+`NOT_SELECTED` 是路由决定，不是执行状态。
+
+- **最小充分，而非全量**：R1/S1 只跑十项最低集；风险更高、改动更大时是**增加 pass**，不是把 30
+  项全跑一遍。高成本的对抗/动态程序（注入探测、变异挑战）只在表面触发时运行。
+- **强制表面**：命令/进程执行、鉴权/权限、文件写入或删除、验证器/验收 harness 各自强制对应程序。
+- **负控制必须披露**：本轮**未**被选中的 `ADVERSARIAL`/`DYNAMIC` 程序要在报告里逐条给出理由——
+  "故意没跑什么"也是证据的一部分。
+- **三角验证**：R3/P0 finding 至少要有两种不同性质的证据（代码路径、运行时复现、工具信号、
+  测试/变异）。本环境拿不到第二种性质时，必须说明并把该程序降为 `LIMITED`。
+- **Review Sufficiency**：报告以 `SUFFICIENT` / `LIMITED` / `INSUFFICIENT` 收尾，回答"选中的程序
+  够不够"。它永远不是裁决；裁决仍然只由未关闭的 P0/P1 机械决定。
+
+Selection Matrix 是 `SKILL.md` 里的一张 Markdown 表，由 harness 与冻结期望逐行比对，因此
+"为什么是这个审查深度"是可机械核对的，而不是散文。
+
+### 5. A–J 仍然是唯一审查标准
 
 | # | 项目 | 核心问题 |
 |---|---|---|
@@ -130,7 +149,7 @@ R3 或 S3
 
 多 reviewer 不会产生多套标准。其他工具只是证据来源。
 
-### 5. E1–E3 证据等级
+### 6. E1–E3 证据等级
 
 每个 P0/P1 至少要有 E1：
 
@@ -151,7 +170,7 @@ Fix direction: ...
 
 目的很简单：不允许“我感觉可能有问题”直接升级成 P0/P1。
 
-### 6. Review → Fix → Verify
+### 7. Review → Fix → Verify
 
 只有用户明确要求“审查并修复”才进入修复闭环：
 
@@ -273,7 +292,11 @@ P2/P3 不偷偷改变裁决。如果必须拦截合并，就应该有充分证�
 
 ## 可复现评估
 
-evals/ 包含 fixture、预期 findings、judge rubric 和确定性 run.sh。
+evals/ 包含 fixture、预期 findings、judge rubric、确定性 run.sh、确定性 mutation 套件，以及
+agent 级 mutation 定义。
+
+`release-evals/` 记录每个版本签字所依据的证据：确定性输出、mutation 结果，以及 fresh agent 级
+运行（Group A–D 回归、Group E 程序选择验收、隔离的 agent 级 mutation）。
 
 V1 的 Darwin 终态曾得到 **86.8/100 的当次 triage score**；这不是稳定 benchmark。V2 改动范围很大，因此 **不继承 86.8 作为 V2 分数**，而是扩展 eval 后重新做 paired judging。
 
@@ -322,6 +345,30 @@ PR #1 元评审的后续修补：
   lens 命名漂移
 
 `run.sh` 有 ocr 34/34、无 ocr 29/29；`mutation-test.sh` 14/14；`shellcheck` 干净。
+
+## V2.1 — 基于风险的审查程序框架
+
+目标：把"为什么是这个审查深度"变成显式、可机械核对的东西，同时不动 A–J 标准、严重度阶梯和裁决规则。
+
+- 在既有 A–J 目标下新增 30 个点号程序（`A.1` … `J.3`），属性静态
+  （`CORE` / `EXTENDED` / `ADVERSARIAL` / `DYNAMIC`）
+- Selection 与 Execution 两层语义分离；Selection Matrix 放在稳定 marker 内，并与
+  `evals/fixtures/procedure-selection.json` 同步、由 `run.sh` 机械核对
+- 负控制披露：未选中的对抗/动态程序必须逐条给出理由
+- 三角验证并入证据规则；Review Sufficiency 进入报告契约
+- 7 个 Group E 验收场景（含一个不触发任何强制表面的 R3 改动）、确定性守卫、确定性 mutation
+  DM1–DM16，以及针对**隔离的变异副本**执行的 agent 级 mutation（冻结的 `SKILL.md` 永不被变异）
+
+发布证据在 `release-evals/v2.1-gate1/`（两个周期均有记录）：`run.sh` 有 ocr 59/59、无 ocr 54/54；
+`mutation-test.sh` 25/25 个故障注入全部转红（DM1–DM16）；`shellcheck` 干净；`SKILL.md` 637 行
+（硬预算 640）；以及 20 + 12 次 clean fresh agent run（Group A–E）与隔离的 agent 级 mutation。
+
+**修复周期已完成，等待 Human Merge Gate。** 第一轮 merge-safety review（权威 = 稳定 main）返回
+`P0 = 0、P1 = 1`：Selection Matrix 从未写明基础行是所有路由的地板、没有 R3 最低集行、S3 行无法
+改变任何选择。修复周期把地板与 R3 最低集写成运行时规范文本、把守卫绑定到文档本身、新增"无触发
+表面的 R3"验收场景，并在修复后的工件上重跑了 16 次 fresh agent run。最终独立 review
+（`05dd293..eab62b9`）返回 **PASS，P0 = 0、P1 = 0**（2 个 P2 + 1 个 P3 记录为不阻断的跟进项）。
+完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycle 2。
 
 ## License
 

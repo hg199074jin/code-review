@@ -1,0 +1,25 @@
+[M1] baseline: unmutated harness must be green
+  ok   M1 normal harness is green
+[M2] mutation: delete a copied fixture (changed/test_service.py)
+  ok   M2 deleting a fixture turns the harness RED
+  ok   M2b the red came from the missing-fixture guard
+[M3] mutation: delete a requirement SPEC (HIGH_RISK_SPEC.md)
+  ok   M3 deleting a requirement spec turns the harness RED
+  ok   M3b the red came from the missing-spec guard
+[M4] mutation: break the upstream push (trap never armed)
+  ok   M4 an unarmed upstream trap turns the harness RED
+  ok   M4b the red came from the arming guard, not an unrelated crash
+[M5] mutation: fix a planted defect (spec-1 skip branch, respelled)
+  ok   M5 fixing spec-1 turns the harness RED
+  ok   M5b the red came from the spec-1 drift guard
+[M6] mutation: respell a planted defect (assert instead of raise ValueError)
+  ok   M6 respelling spec-3 still turns the harness RED
+  ok   M6b the red came from the spec-3 drift guard
+[M7] mutation: desync the two scenario JSONs (rename one id)
+  ok   M7 a desynced scenario id turns the harness RED
+  ok   M7b the red came from the JSON-sync guard
+[M8] restore: a fresh copy must be green again (no residue)
+  ok   M8 restored harness is green
+
+mutation test: 14/14 cases behaved as required
+All failure paths are armed: the harness goes red exactly when its condition stops holding.

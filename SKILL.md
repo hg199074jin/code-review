@@ -2,7 +2,7 @@
 name: code-review
 description: The single entry point for code review. Resolves scope deterministically, builds intent context, routes by risk and change size, runs independent review lenses, fuses tool evidence, deduplicates findings, and returns one mechanical PASS / NEEDS_REVISION / FAILED verdict. Use for workspace/branch/commit/PR review, merge-safety checks, whole-repo audits, review-and-fix, or post-fix verification.
 metadata:
-  version: "2.0.2"
+  version: "2.1.0"
 ---
 
 # Code Review V2 — Review Control Plane
@@ -30,20 +30,20 @@ finding IDs, evidence grades, and verdict lines verbatim.
 ## 1. Non-negotiable invariants
 
 - **Scope before reasoning.** Never start from an arbitrary subset of changed files.
-- **Intent before judgment.** A reviewer cannot test specification compliance without identifying
-  the best available requirement source.
+- **Intent before judgment.** Specification compliance cannot be tested without the best available
+  requirement source.
 - **Risk changes depth, not honesty.** Low-risk changes may use fewer passes; no risk tier may skip
   the A–J standard.
 - **Coverage is explicit.** Every selected file is reviewed or listed as skipped with a reason.
 - **Findings need evidence.** No speculative P0/P1.
 - **Tools are witnesses, not judges.** A static analyzer or external reviewer output becomes a
   finding only after the coordinator verifies it against the code and scope.
-- **Reviewer independence matters.** For elevated/high-risk work, use fresh contexts or separate
-  passes; do not let the authoring conversation rubber-stamp itself.
+- **Reviewer independence matters.** Elevated/high-risk work uses fresh contexts or separate passes;
+  never let the authoring conversation rubber-stamp itself.
 - **The reviewer is source-tree read-only.** Fixes are performed only after an initial report is
   frozen and only when the user requested review-and-fix.
-- **External egress is opt-in.** Do not send repository content to an external reviewer or LLM
-  endpoint without explicit authorization.
+- **External egress is opt-in.** Repository content reaches an external reviewer or LLM only with
+  explicit authorization.
 - **No unbounded review/fix loops.** Verification cycles are bounded (§7).
 - **This file is the sole review standard.** Do not load or defer to a legacy same-named review
   skill (for example a superseded `review-agent`); where a pointer file exists, follow it here.
@@ -186,17 +186,50 @@ Use OCR/git stats where available.
 
 The thresholds are routing heuristics, not defect criteria.
 
-### 4.3 Execution plan
+### 4.3 Procedure selection
 
-| Route | Required execution |
-|---|---|
-| R1 + S1 | one fresh A–J pass |
-| R2 or S2 | two independent passes: pass 1 = Lenses 1-2 (Intent/Scope, Correctness/Regression → A-E); pass 2 = Lenses 3-4 (Security & Data Safety, Tests/Maintainability → F-I) |
-| R3 or S3 | specialist passes + final integration pass |
-| any R3 security/data-loss path | independent re-read of the critical path even if another tool already flagged it |
+```text
+required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)
+```
 
-If the runtime supports fresh/isolated subagents, use them. If not, run the same lenses sequentially
-in the current context and disclose that context isolation was unavailable.
+The **route minimum is the floor for every route**: `R1_S1_minimum` is always required, and R2/S2,
+R3 and S3 add their rows on top of it. The floor plus `R3_minimum` is what "route minimum" means.
+
+<!-- PROCEDURE_SELECTION_BEGIN -->
+| Scope / surface | Required procedures | Class |
+|---|---|---|
+| R1_S1_minimum | A.1, A.2, B.1, C.2, E.1, G.1, I.1, J.1, J.2, J.3 | route |
+| R2_S2_pass_1_AE | A.3, B.2, B.3, C.1, C.3, D.1, D.2, E.2 | route |
+| R2_S2_pass_2_FI | F.1, G.1, G.3, H.1, I.2 | route |
+| S3_additions | C.2, E.1, G.3, J.1 | route |
+| R3_minimum | >= 1 ADVERSARIAL; >= 1 corroboration; critical-path reread | route |
+| command_execution | F.1, F.2, G.1 | mandatory |
+| auth_permission | F.3, E.1, G.1 | mandatory |
+| file_destructive | F.4, D.2, G.1 | mandatory |
+| verifier_harness | G.2, G.4, J.2 | mandatory |
+| network_egress | F.5, D.2 | advisory |
+| migration_schema | E.2, E.3, D.2, G.3 | advisory |
+| concurrency | D.3, D.2 | advisory |
+| retry_cache | D.2, C.1 | advisory |
+| serializer_protocol | C.2, E.2, C.3 | advisory |
+| agent_tool_execution | F.5, F.1, G.1 | advisory |
+<!-- PROCEDURE_SELECTION_END -->
+
+Notes: E.3 is selected only when a migration/compatibility surface is present (it arrives via the
+migration_schema row). F.1 in pass 2 covers the untrusted-input→sink surface and is kept in the R2
+minimum — static source→sink reading is cheap, and skipping it on R2 risks under-review. On R1 the
+disclosure-eligible universe procedures (§5a) are all `NOT_SELECTED` and appear under
+`Not selected by routing`.
+
+`S3_additions` restates S3's requirements: the floor and the pass rows already require its members,
+so it changes no selection by itself. `R3_minimum` is a constraint row, not an ID set — every R3
+review must select at least one `ADVERSARIAL` procedure, must obtain or honestly record the absence
+of a different-nature corroboration, and must re-read the critical path independently. A matched
+surface row satisfies the surface requirement but never substitutes for those two.
+
+Execution structure: R1+S1 = one fresh pass over its minimum; R2/S2 = the two passes above; R3/S3 =
+specialist passes + final integration pass; any R3 security/data-loss path gets an independent
+re-read of the critical path even if another tool already flagged it.
 
 For S3, partition by module, rule group, dependency boundary, or coherent feature slice. Do not
 blindly split by token count. After all batches, run a **cross-batch integration pass** for broken
@@ -276,6 +309,74 @@ R3 findings require a demonstrated attack/failure path, not a generic warning.
 
 ---
 
+## 5a. Review Procedure Framework
+
+Procedures are the **how** beneath each A–J objective (**what**). A procedure is not a finding, not
+a severity, and not bound to any specific tool. Procedure IDs use the dotted form (`A.1`); evidence
+grades keep the bare form (`E1`/`E2`/`E3`) — the two token classes never share a parser.
+
+### Selection and execution
+
+Every procedure is first `SELECTED` or `NOT_SELECTED` by routing (§4.3). `NOT_SELECTED` is a
+routing decision, not an execution status. A `SELECTED` procedure then carries exactly one
+execution status:
+
+| Status | Meaning |
+|---|---|
+| `DONE` | executed and evidence obtained |
+| `LIMITED` | executed, but evidence or environment limited |
+| `BLOCKED` | should run, but environment/authorization prevents it |
+| `NOT_APPLICABLE` | selected, but the code path makes it inapplicable |
+
+Never fabricate evidence; a `BLOCKED` procedure is never recorded as `DONE`.
+
+### Registry (30 procedures; attributes are static)
+
+| ID | Procedure | Attributes |
+|---|---|---|
+| A.1 | Requirement Trace | CORE |
+| A.2 | Negative & Partial Implementation | CORE |
+| A.3 | Contradiction & Missing Behavior | EXTENDED |
+| B.1 | Unrequested Behavior | CORE |
+| B.2 | Missing Support Change | EXTENDED |
+| B.3 | Dependency / Config / Generated Drift | EXTENDED |
+| C.1 | State & Invariant | EXTENDED |
+| C.2 | Call-chain & Contract | CORE |
+| C.3 | Differential & Error Semantics | EXTENDED |
+| D.1 | Boundary Values | CORE |
+| D.2 | Failure / Retry / Idempotency / Recovery | EXTENDED |
+| D.3 | Concurrency & Resource Exhaustion | ADVERSARIAL |
+| E.1 | Call-site & Stale Reference | CORE |
+| E.2 | Public Contract / Schema / Serialization | EXTENDED |
+| E.3 | Old Behavior / Migration Compatibility | EXTENDED |
+| F.1 | Source→Sink Analysis | ADVERSARIAL |
+| F.2 | Injection Probe | ADVERSARIAL, DYNAMIC |
+| F.3 | Authn / Authz Boundary | ADVERSARIAL |
+| F.4 | File / Destructive Data Safety | EXTENDED |
+| F.5 | Secret / Egress / Prompt-Tool Injection | ADVERSARIAL |
+| G.1 | Fail-before-fix & Negative Path | CORE |
+| G.2 | Mutation Challenge | ADVERSARIAL, DYNAMIC |
+| G.3 | Integration & Mock Integrity | EXTENDED |
+| G.4 | Harness Reliability | CORE |
+| H.1 | Complexity / Duplicate Control Plane | EXTENDED |
+| I.1 | Dead Code / Docs Drift | CORE |
+| I.2 | Diagnostics / Ownership / Blast Radius | CORE |
+| J.1 | Finding Verification & Dedup | CORE |
+| J.2 | Evidence Sufficiency & Residual Risk | CORE |
+| J.3 | Mechanical Verdict | CORE |
+
+Attributes are static: `CORE` = low-cost, broadly applicable; `EXTENDED` = needs more context or
+runtime evidence; `ADVERSARIAL` = actively hunts bypasses; `DYNAMIC` = executes code and obeys the
+§10 sandbox/side-effect boundaries. Conditional selection lives in the Selection Matrix (§4.3),
+never in this table.
+
+**Negative-control disclosure**: procedures with the `ADVERSARIAL` or `DYNAMIC` attribute form the
+disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a procedure is
+`NOT_SELECTED`, it must be listed under `Not selected by routing` with a reason (intersection with
+this universe, deduplicated, sorted by ID). R1 may use the compressed one-line form.
+
+---
+
 ## 6. Finding admission, evidence, severity, and de-duplication
 
 ### 6.1 Finding admission
@@ -312,6 +413,13 @@ Every P0/P1 finding and every disputed P2 includes an evidence grade:
 
 P0/P1 require at least E1. Prefer E2/E3 when practical. A direct, decisive code-path proof can still
 support P0 when reproduction would be unsafe or destructive.
+
+**Evidence triangulation.** On R3 critical paths, candidate P0s, command-execution, authz,
+destructive/data-loss findings and verifier P1s, prefer two evidences of **different nature**
+(`E1+E2`, `E1+E3`, `E2 mutation + E1 guard reading`). Two reviewers statically reading the same code
+raises independence only — it is not triangulation. When a second
+evidence is unsafe or unavailable, do not force it: record `LIMITED/BLOCKED` on the procedure, state
+the residual risk, and do not auto-downgrade the severity.
 
 ### 6.3 Severity
 
@@ -426,13 +534,31 @@ External egress: <none | explicitly authorized tool>
 ## 检查覆盖
 A 规格符合性 ✅ | B 范围控制 ✅ | C 正确性 ✅ | D 边界/可靠性 ✅ | E 回归 ✅ |
 F 安全/数据安全 ✅ | G 测试质量 ✅ | H 复杂度 ✅ | I 可维护性 ✅ | J 综合裁决 ✅
-（✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明））
+（✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明）｜无选中程序的目标一律 ➖ 并写明理由，不得 ✅）
+
+## 审查程序
+Selected:
+<each selected procedure: ID name — DONE/LIMITED/BLOCKED/NOT_APPLICABLE (+ reason if not DONE)>
+
+Not selected by routing:
+<every NOT_SELECTED procedure carrying the ADVERSARIAL or DYNAMIC attribute — one reason each;
+see §5a disclosure rule>
+
+Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>
 ```
+
+`Review Sufficiency` answers "were the required procedures enough" and is never a verdict — the
+verdict stays mechanical over open P0/P1. `SUFFICIENT`: floor, matched surface rows and selected
+additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete.
+`LIMITED`: some required procedure is `LIMITED/BLOCKED` while findings and verdict still stand, with
+residual risk stated. `INSUFFICIENT`: a critical risk path was unchecked, scope materially
+incomplete, an R3 critical path lacks even E1, or the target is unresolvable — never call such a
+review complete. Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.
 
 Then findings first, ordered P0 → P3:
 
 ```text
-[P1][CR-001][A/C][E2] Imperative finding title — path/to/file.ext:line
+[P1][CR-001][A/C][F.1][E2] Imperative finding title — path/to/file.ext:line
 Impact: <concrete affected scenario / blast radius>
 Evidence: <code path + test/tool/runtime evidence>
 Fix direction: <smallest safe direction; not a full patch unless asked>

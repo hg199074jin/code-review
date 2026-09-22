@@ -1,0 +1,135 @@
+{
+  "candidate": {
+    "SKILL.md": "348946aec2e3b39388920bf862b8755f2323383f045f3ef44a2cfe5ee1a33455",
+    "README.md": "2abb627b1fa8fa7f16d60f2ee98a1d7c71353cebee850eaf0dffbf6c431fb9ba",
+    "README.zh-CN.md": "9ec14e88fa92d04076ce68452fed2e2f0933c9195bd4c1713f4ac00d1d3d4376"
+  },
+  "scenarios": {
+    "regress-no-test-runner-07": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "ee5f10a6408e2cb6b0786ee355bc794b0b8fcbd044ccb57fc5a6cc4c56f847a9",
+      "dirty": " M invoice.py\n M test_invoice.py\n",
+      "file_count": 3
+    },
+    "regress-old-ocr-compat-06": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "add59d68d59d61aced11adbf1001fb38196a3deba790569c81efb35a02c2df1a",
+      "dirty": " M invoice.py\n M test_invoice.py\n?? SPEC.md\n?? review-env.sh\n",
+      "file_count": 5
+    },
+    "regress-upstream-trap-04": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "5a392572ae8498c2731872984c74ce65ab9d4f0d7de251e017795f80994bd53d",
+      "dirty": "",
+      "file_count": 3
+    },
+    "regress-whole-repo-audit-05": {
+      "head": "f2891dc99b7392b9fd40593a65fd1b84523fdeb2",
+      "worktree_sha256": "88bb115445acca640794bbf5460cba3aeaef65a12b75369c1214326cf01f0614",
+      "dirty": "",
+      "file_count": 4
+    },
+    "review-branch-02": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "5a392572ae8498c2731872984c74ce65ab9d4f0d7de251e017795f80994bd53d",
+      "dirty": "",
+      "file_count": 3
+    },
+    "review-nospec-03": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "97436f9499209e8737c16948e0d571bd8d8a8f00131f403d329c210991b0b397",
+      "dirty": " M invoice.py\n M test_invoice.py\n",
+      "file_count": 3
+    },
+    "review-workspace-01": {
+      "head": "1efdcc86ea9d27cb4320e00d72e750d1288c2c51",
+      "worktree_sha256": "88bb115445acca640794bbf5460cba3aeaef65a12b75369c1214326cf01f0614",
+      "dirty": " M invoice.py\n M test_invoice.py\n?? SPEC.md\n",
+      "file_count": 4
+    },
+    "v2-egress-optin-13": {
+      "head": "90369890ed7a6e5c883b1698ce1b04b77dcfd643",
+      "worktree_sha256": "b0401ccede7bd098311f5ec81db39faa1ae1b62d176ef32c0c51116a82efd978",
+      "dirty": " M runner.py\n?? SPEC.md\n?? config.ini\n?? test_runner.py\n",
+      "file_count": 4
+    },
+    "v2-injection-boundary-14": {
+      "head": "8c0e52f2f429fb65043051139cbf878fddc49db9",
+      "worktree_sha256": "61f6ad1b403e313a8d8440dcdfb595c6af9d519d05c4000be6fb5ffccb20d0ed",
+      "dirty": " M runner.py\n?? REVIEW_NOTES.txt\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 4
+    },
+    "v2-pr-context-08": {
+      "head": "6c9d6128ca0479d336a4903254d8fc8469ab9e47",
+      "worktree_sha256": "5a392572ae8498c2731872984c74ce65ab9d4f0d7de251e017795f80994bd53d",
+      "dirty": "",
+      "file_count": 3
+    },
+    "v2-r3-security-09": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v2-review-fix-verify-11": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "46bffa92f6d3dd211b80ee0ae74990af70447b5d4ff4af1c5228651ed87aca46",
+      "dirty": "?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v2-s3-integration-10": {
+      "head": "d0c39b4127539f1029b564def492d712ee9d1227",
+      "worktree_sha256": "1ab6b6a0078187b097efbeb1ae912205a4a20bd2350b9a0df20a3424786ae1bf",
+      "dirty": " M module_1.py\n M module_10.py\n M module_11.py\n M module_12.py\n M module_13.py\n M module_14.py\n M module_15.py\n M module_16.py\n M module_17.py\n M module_18.py\n M module_19.py\n M module_2.py\n M module_20.py\n M module_21.py\n M module_3.py\n M module_4.py\n M module_5.py\n M module_6.py\n M module_7.py\n M module_8.py\n M module_9.py\n M producer.py\n?? SPEC.md\n?? test_service.py\n",
+      "file_count": 25
+    },
+    "v2-tool-fusion-12": {
+      "head": "8c0e52f2f429fb65043051139cbf878fddc49db9",
+      "worktree_sha256": "2c9ab9656615eddaf9eb0973da34350bf4c8b6d2845892207b3ff4a824791a8c",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n?? tool-report.txt\n",
+      "file_count": 4
+    },
+    "v21-prc01-minimal-15": {
+      "head": "519fb2f0c80a73f4eb07aca16c619dec346d95d0",
+      "worktree_sha256": "6d65a15cb6639574e47a73151c7b9cd8fdaad7206f6275d0960d0f7932659dd4",
+      "dirty": " M README.md\n M app.py\n",
+      "file_count": 3
+    },
+    "v21-prc02-r3-16": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v21-prc03-s3-17": {
+      "head": "d0c39b4127539f1029b564def492d712ee9d1227",
+      "worktree_sha256": "1ab6b6a0078187b097efbeb1ae912205a4a20bd2350b9a0df20a3424786ae1bf",
+      "dirty": " M module_1.py\n M module_10.py\n M module_11.py\n M module_12.py\n M module_13.py\n M module_14.py\n M module_15.py\n M module_16.py\n M module_17.py\n M module_18.py\n M module_19.py\n M module_2.py\n M module_20.py\n M module_21.py\n M module_3.py\n M module_4.py\n M module_5.py\n M module_6.py\n M module_7.py\n M module_8.py\n M module_9.py\n M producer.py\n?? SPEC.md\n?? test_service.py\n",
+      "file_count": 25
+    },
+    "v21-prc04-verifier-18": {
+      "head": "fc03cb470ca0b1e3c5f09e6bf113cf71fb19cda1",
+      "worktree_sha256": "7ec470eb9eed81971bdb98746e59455df5f9df850072397a40d8278f4718c0fe",
+      "dirty": " M check.sh\n?? check_test.sh\n",
+      "file_count": 4
+    },
+    "v21-prc05-dynamic-19": {
+      "head": "0e243d66f703ee42dd3a0c011ecb35d37bd08ffc",
+      "worktree_sha256": "ff4cbbe58ebdc3e14b42e6fe080ded0de162091d16fc5c54f7d62f8ce3e3bd8e",
+      "dirty": " M runner.py\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v21-prc06-authz-20": {
+      "head": "857fadde6319fdb7227e452843c6230164a2082e",
+      "worktree_sha256": "71e86a84b3f7b0e780015d2fcb49ed01c12d996dab9402fc0a126d0b0a17d5aa",
+      "dirty": " M records.py\n?? test_records.py\n",
+      "file_count": 3
+    },
+    "v21-prc07-r3-nosurface-21": {
+      "head": "ca3d5c02eb1e5a0df3e1ddbce3f276706e412912",
+      "worktree_sha256": "e2a9c2e000686522e04066eda780ae0dc8ec0ebe522aa451bd28560ec02fb003",
+      "dirty": " M derive.py\n",
+      "file_count": 2
+    }
+  }
+}

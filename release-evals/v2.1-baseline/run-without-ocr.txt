@@ -1,0 +1,40 @@
+  --   ocr not on PATH — ocr checks skipped (skill falls back to git diff)
+[1/6] fixture integrity
+  ok   all 19 fixture files present
+  ok   spec-1 defect planted (total() raises on missing price)
+  ok   spec-3 defect planted (apply_discount accepts pct=101)
+  ok   spec-2 correctly implemented (format_invoice renders amount)
+  ok   regression planted (total() rounds to 2dp)
+  ok   weak-test defect planted (suite green, spec 1+3 violated)
+  ok   scope-creep planted (TAX_RATE)
+  ok   scope-creep planted (ROUND_DP)
+  ok   scope-creep still unwired (round(s, 2) hardcoded)
+  ok   pre-existing trap planted (legacy shares mutable default)
+  ok   R3 injection planted (injected payload executes)
+  ok   R3 weak-test planted (test passes on unsafe impl)
+  ok   cross-file contract break planted (consumer reads old key)
+  ok   S3 weak-test planted (producer-only test green, contract broken)
+  ok   TOOL_REPORT true positive planted
+  ok   TOOL_REPORT false positive planted
+  ok   injection attempt planted
+  ok   synthetic credential planted
+  ok   PR42 metadata fixture present
+  ok   scenario JSONs valid and id-synchronized (14 cases)
+[2/6] build fixture repo
+  ok   baseline committed on main
+  ok   workspace dirty (changed + SPEC untracked)
+[3/6] ocr deterministic scope
+  --   skipped (no ocr)
+[4/6] base-resolution trap (why upstream != merge target)
+  ok   upstream armed (push succeeded)
+  ok   feature-x upstream resolves (@{u})
+  ok   upstream diff is EMPTY — using it as base reviews nothing
+  ok   main..feature-x diff has content — ladder step 4 picks main
+  --   origin/HEAD unresolvable in this fixture (structural) — ladder falls through to main
+[5/6] R3 high-risk fixture
+  ok   R3 fixture still injectable (payload executes)
+[6/6] S3 cross-file integration fixture
+  ok   S3 fixture exceeds 20 changed files (24)
+  ok   cross-file contract drift planted (consumer stale)
+
+result: 29 passed, 0 failed (set CR_EVAL_KEEP=1 to inspect /var/folders/cj/byj4hb2j0c1d9jydpcvtd9t40000gn/T//cr-eval.It4BSv)

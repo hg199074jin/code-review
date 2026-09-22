@@ -11,22 +11,30 @@ than inheriting the old absolute score.
    compare against evals/expected-findings.json.
 3. **Paired comparison** — compare V1.1 and V2 on the same scenarios with independent judges.
 
-## V2 rubric
+## V2.1 rubric
+
+Weights redistributed within 100 (total unchanged). V2.1 shifts weight from static description
+(architecture prose) toward procedure selection and honesty: 3 → Procedure selection quality,
+8 → Evidence triangulation, 10 → Over-review discipline, 11 → Execution honesty. The first V2.1
+draft of this table silently dropped V2.0.2's "Fix/verify control" dimension while the text above
+claimed the changes were renames only; dimension 13 restores it at 5 points, funded by trimming
+dimensions 6/8/11/12 (no dimension's meaning changed).
 
 | # | Dimension | Weight | What is checked |
 |---|---|---:|---|
-| 1 | Scope determinism | 10 | complete file accounting, exclusions visible, correct base/ref |
-| 2 | Intent grounding | 10 | requirement-source priority, no invented spec, PR context handled correctly |
-| 3 | Risk routing | 8 | R1-R3 is justified and actually changes review depth |
-| 4 | Size/batching | 7 | S1-S3 routing, bounded batches, no silent truncation |
-| 5 | Review independence | 8 | fresh/separate lenses when warranted; fallback disclosed |
-| 6 | A-J defect quality | 15 | spec, correctness, regression, security, tests, complexity, maintainability |
+| 1 | Scope determinism | 8 | complete file accounting, exclusions visible, correct base/ref |
+| 2 | Intent grounding | 8 | requirement-source priority, no invented spec, PR context handled correctly |
+| 3 | Procedure selection quality | 10 | required set per R/S/surface selected; no silent omission of a mandatory procedure |
+| 4 | Size/batching | 6 | S1-S3 routing, bounded batches, no silent truncation |
+| 5 | Review independence | 7 | fresh/separate lenses when warranted; fallback disclosed |
+| 6 | A-J defect quality | 13 | spec, correctness, regression, security, tests, complexity, maintainability |
 | 7 | Cross-file integration | 8 | contract/call-site drift caught after batching |
-| 8 | Evidence discipline | 8 | E1-E3 used correctly; speculative P0/P1 suppressed |
-| 9 | Tool fusion / de-dup | 6 | tools treated as evidence, false positives removed, duplicate root causes merged |
-| 10 | Failure-mode honesty | 6 | missing tools/tests/context disclosed; no fake coverage |
-| 11 | Fix/verify control | 7 | stable IDs, targeted verification, bounded loops, status tracking |
-| 12 | Reporting/verdict | 7 | concise actionable findings, coverage, one mechanically correct verdict |
+| 8 | Evidence triangulation | 9 | R3/P0 findings carry >=2 evidence natures; LIMITED + residual when second unavailable |
+| 9 | Tool fusion / de-dup | 5 | tools treated as evidence, false positives removed, duplicate root causes merged |
+| 10 | Over-review discipline | 6 | R1/S1 stays minimal; expensive procedures only on surface/justification |
+| 11 | Execution honesty | 7 | procedures DONE only when actually executed; LIMITED/BLOCKED disclosed |
+| 12 | Reporting/verdict | 8 | procedure block complete, Sufficiency correct, one mechanically correct verdict |
+| 13 | Fix/verify control | 5 | stable finding IDs, targeted verification of the fix, bounded loops, FIXED/OPEN/REGRESSED status tracking |
 
 Total: 100.
 
