@@ -388,6 +388,82 @@
       ],
       "must_exhibit_sufficiency": "SUFFICIENT or LIMITED, stated and consistent with what ran",
       "expected_verdict": "NEEDS_REVISION or FAILED per severity ladder"
+    },
+    "v22-prc08-author-conflict-22": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_report": [
+        "command_injection",
+        "weak_security_test"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit": [
+        "R3 classification",
+        "command injection reported with attributable evidence"
+      ],
+      "must_exhibit_selection_reason": [
+        "command_execution surface (F.1/F.2/G.1)"
+      ],
+      "expected_verdict": "FAILED or NEEDS_REVISION per severity ladder",
+      "must_select_procedures": [
+        "F.1",
+        "F.2",
+        "G.1",
+        "J.2"
+      ],
+      "must_exhibit_review_independence": "author-self-review (author conflict confirmed; an isolated fresh pass may exist and must be noted in the reason)",
+      "must_exhibit_sufficiency": "LIMITED (capped by the author-self-review independence limitation)"
+    },
+    "v22-r3a-sequential-23": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_report": [
+        "command_injection",
+        "weak_security_test"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit": [
+        "R3 classification",
+        "command injection reported with attributable evidence"
+      ],
+      "must_exhibit_selection_reason": [
+        "command_execution surface (F.1/F.2/G.1)"
+      ],
+      "expected_verdict": "FAILED or NEEDS_REVISION per severity ladder",
+      "must_select_procedures": [
+        "F.1",
+        "G.1",
+        "J.2"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback (author conflict cleared; no fresh reviewer available - single factor)",
+      "must_exhibit_sufficiency": "LIMITED (capped by the sequential-fallback independence limitation)"
+    },
+    "v22-r3b-independent-24": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_report": [
+        "command_injection",
+        "weak_security_test"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit": [
+        "R3 classification",
+        "command injection reported with attributable evidence"
+      ],
+      "must_exhibit_selection_reason": [
+        "command_execution surface (F.1/F.2/G.1)"
+      ],
+      "expected_verdict": "FAILED or NEEDS_REVISION per severity ladder",
+      "must_select_procedures": [
+        "F.1",
+        "G.1",
+        "J.2"
+      ],
+      "must_exhibit_review_independence": "independent-pass (author conflict cleared; runtime-attested fresh isolated context)",
+      "must_exhibit_sufficiency": "SUFFICIENT if all other criteria hold"
     }
   }
 }
