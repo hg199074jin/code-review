@@ -385,7 +385,7 @@ SKILL.md。完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycl
 - 新增三个互斥验收场景：作者冲突、无 fresh reviewer、运行时证明的独立（各证明一条路径）
 
 发布证据见 `release-evals/v2.1-gate1/results-v2.tsv`（v22-m5 行）：确定性 `run.sh` 61/61 + 56/56、
-`mutation-test.sh` **32/32**（DM1–DM22）、`shellcheck` 干净、`SKILL.md` 640/640 行、12 次 fresh
+`mutation-test.sh` **32/32**（DM1–DM22）、`shellcheck` 干净、`SKILL.md` 639/640 行、12 次 fresh
 验收运行。行为学发现如实记录：作者冲突**已确认**时模型能正确封顶，但**缺失型**限制（无 fresh
 reviewer / 来源未知）不能自我执行——封顶因此改由 **runtime 层机械执行**（作者与派发事实归
 runtime 所有）。跟进项：s11 fixture 决策、advisory 行语义澄清。

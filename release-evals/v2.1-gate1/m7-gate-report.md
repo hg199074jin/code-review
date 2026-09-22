@@ -388,3 +388,24 @@ review rounds). Branch `v2.2-review-independence`.
 - All findings fixed (DM20-22 implemented for real, 32/32; contracts corrected; version 2.2.0;
   READMEs; rubric; identity records). CR-005/CR-006 recorded as follow-ups.
 - Final status: awaiting the narrow M6 re-verification + Human Merge Gate.
+
+
+## M6 narrow closure verification (round 2, `9366dd4`)
+
+An independent narrow review verified: CR-001 **CLOSED** (DM20-22 present, mutation 32/32, each red
+attributable); CR-003 **CLOSED** (F.2 in both v22 contracts); CR-004 **CLOSED** (2.2.0 everywhere,
+V2.2 sections, rubric semantics); CR-005/CR-006 **CLOSED** as recorded follow-ups. Residual items
+found and immediately fixed: the V2.2 candidate-identity record was missing (added to
+`candidate-identity.txt`: evaluated `f9547d09` @7dabc6e vs release `d5bc44bb` @9366dd4, delta =
+version line only) and two doc numbers corrected (actual 639 wc / 640-line budget). The reviewer's
+closing statement: no new P0/P1 from the fix delta; all other five findings closed with strong
+empirical evidence.
+
+## Human Merge Gate input (V2.2)
+
+| Item | Status |
+|---|---|
+| Deterministic | 61/0 + 56/0, mutation 32/32, shellcheck 0, 640-line budget (wc 639/640) |
+| M5 targeted acceptance | 12 fresh runs; declared independence paths all behave per contract; the absence-path cap is NOT model-self-enforceable (4 samples) → moved to runtime enforcement, honestly recorded |
+| M6 merge-safety | round 1 NEEDS_REVISION (P1 = claimed-but-absent DM proofs, plus 4 P2/P3) → all fixed → narrow closure verification: 6/6 closed, no new P0/P1; residual = one record file, added |
+| Mergeable? | **Yes by the protocol's bar** (0 P0 / 0 P1 open; findings dispositioned). Merge + runtime sync (SKILL.md only, to 2.2.0) on the user's explicit GO. |

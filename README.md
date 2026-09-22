@@ -386,7 +386,7 @@ and honest about its limits — without changing the A-J standard, severity ladd
 
 Release evidence in `release-evals/v2.1-gate1/results-v2.tsv` (v22-m5 rows): deterministic
 `run.sh` 61/61 + 56/56, `mutation-test.sh` **32/32** (DM1-DM22), `shellcheck` clean, `SKILL.md`
-640/640 lines, 12 fresh acceptance runs. Behavioral finding recorded honestly: model reviewers
+639/640 lines, 12 fresh acceptance runs. Behavioral finding recorded honestly: model reviewers
 apply the independence cap reliably when author conflict is confirmed, but not for absence-based
 limitations - the cap is therefore **enforced by the runtime layer** (which owns authorship and
 dispatch facts), not left to reviewer self-assessment. Open follow-ups: the s11 fixture decision
