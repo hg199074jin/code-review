@@ -1,0 +1,31 @@
+# V2.0.2 report contract sample (frozen per design doc V3 §19)
+# Purpose: prove that V2.1's new "## 审查程序" section does not drift the fields below.
+
+## 目标与意图
+Mode: <DIFF_WORKSPACE | DIFF_BRANCH | DIFF_COMMIT | DIFF_PR | AUDIT | REVIEW_FIX | VERIFY>
+Target: <workspace | base..head | commit | PR | path>
+Requirement source: <source or "none found">
+Scope: <reviewable/reviewed/skipped counts; excluded files and reasons>
+
+## 风险与执行
+Risk: <R1 | R2 | R3> — <one-line reason>
+Size: <S1 | S2 | S3>
+Execution: <passes/batches; isolated reviewers available or not>
+External egress: <none | explicitly authorized tool>
+
+## 检查覆盖
+A 规格符合性 ✅ | B 范围控制 ✅ | C 正确性 ✅ | D 边界/可靠性 ✅ | E 回归 ✅ |
+F 安全/数据安全 ✅ | G 测试质量 ✅ | H 复杂度 ✅ | I 可维护性 ✅ | J 综合裁决 ✅
+（✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明））
+
+Findings block:
+[P0|P1|P2|P3][CR-nnn][A-J objective][E1|E2|E3] Title — path/to/file.ext:line
+Impact: ...
+Evidence: ...
+Fix direction: ...
+
+## 验证与残余风险
+Tests/checks actually run: <commands/results or "not run">
+Residual risk: <material limitations only>
+
+Verdict: PASS | NEEDS_REVISION | FAILED        ← exactly one line

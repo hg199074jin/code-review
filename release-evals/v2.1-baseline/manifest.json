@@ -1,0 +1,29 @@
+{
+  "milestone": "M0 Baseline Freeze (V2.1)",
+  "frozen_at": "2026-09-22",
+  "baseline_product_version": "V2.0.2",
+  "BASE_SHA": "",
+  "blob_shas": {
+    "SKILL.md": "",
+    "evals/test-prompts.json": "",
+    "evals/expected-findings.json": "",
+    "evals/judge-rubric.md": "",
+    "evals/run.sh": "",
+    "evals/mutation-test.sh": ""
+  },
+  "counts": {
+    "agent_scenarios": 14,
+    "defect_catalog": 12,
+    "skill_md_lines": 510
+  },
+  "runtime_skill_sha256_prefix": "4ebbbb15",
+  "runtime_separation": "runtime contains SKILL.md only; no evals/answers",
+  "baseline_results": {
+    "run_with_ocr": "34 passed / 0 failed",
+    "run_without_ocr": "29 passed / 0 failed",
+    "mutation": "14/14",
+    "shellcheck": "0 findings (both scripts)"
+  },
+  "open_deferred_issue": "hg199074jin/code-review#2 (OR-001/OR-004/OR-006 DEFERRED)",
+  "outputs": ["run-with-ocr.txt", "run-without-ocr.txt", "mutation.txt", "shellcheck.txt", "baseline-report-contract.txt"]
+}
