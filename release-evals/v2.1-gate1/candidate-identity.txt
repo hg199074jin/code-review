@@ -6,7 +6,8 @@ released  SKILL.md sha256 : 1dec1b623c79cf01c00f7e95cb2e96b5fe193f033ae40051d888
   (metadata.version "2.1.0")
 
 delta: exactly one line - frontmatter metadata.version. Machine check:
-  git diff 41e10ff4 <release-commit> -- SKILL.md
+  git diff 47c85a6 HEAD -- SKILL.md        -> 1 line, metadata.version only
+  git diff --numstat 47c85a6 HEAD -- SKILL.md -> 1 insertion / 1 deletion
   grep -n '2\.0\.2' SKILL.md   -> no match
   grep -n '2\.1\.0' SKILL.md   -> frontmatter only
 The version token appears nowhere else in SKILL.md and is not referenced by any deterministic

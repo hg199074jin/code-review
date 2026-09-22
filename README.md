@@ -352,13 +352,17 @@ standard, the severity ladder, or the verdict rule.
   `SKILL.md` is never mutated)
 
 Release evidence in `release-evals/v2.1-gate1/`: `run.sh` 52/52 with `ocr`, 47/47 without;
-`mutation-test.sh` 17/17; `shellcheck` clean; 20 clean fresh agent runs across Groups A-D and E, 5
-attributable isolated agent-level mutations, and one independent merge-safety review. `SKILL.md`
-is 625 lines against a 640-line hard budget.
+`mutation-test.sh` 17/17; `shellcheck` clean; 20 clean fresh agent runs across Groups A-D and E;
+4 attributable isolated agent-level mutations (1 non-attributable, recorded); `SKILL.md` 625 lines
+against a 640-line hard budget.
 
-Recorded follow-up (not blocking this release): the Selection Matrix's base row is named
-`R1_S1_minimum`, and 2 of 20 fresh runs read an R2 route as "pass rows only" instead of "base
-minimum plus pass rows"; a one-sentence clarification is queued for the next patch.
+**Merge withheld.** The independent merge-safety review (stable-main authority, `05dd293..c886324`)
+returned `P0 = 0, P1 = 1` -> `NEEDS_REVISION`. The P1 is the Selection Matrix's route-minimum
+semantics: the base row is only named `R1_S1_minimum`, 2 of 20 fresh runs read an R2 route as
+"pass rows only" (16-18 procedures) instead of "base minimum plus pass rows" (22), the matrix
+carries no R3 minimum, and `S3_additions` cannot change any selection. The fix plus the re-run
+scope is a pending decision; full findings, their adjudication and the escalation determination are
+in `release-evals/v2.1-gate1/m7-gate-report.md`.
 
 ## License
 

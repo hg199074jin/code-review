@@ -360,11 +360,14 @@ PR #1 元评审的后续修补：
   agent 级 mutation AM1–AM5（冻结的 `SKILL.md` 永不被变异）
 
 发布证据在 `release-evals/v2.1-gate1/`：`run.sh` 有 ocr 52/52、无 ocr 47/47；`mutation-test.sh`
-17/17；`shellcheck` 干净；20 次 clean fresh agent run（Group A–D + E）、5 个可归因的隔离 agent 级
-mutation、1 次独立 merge-safety review。`SKILL.md` 625 行（硬预算 640）。
+17/17；`shellcheck` 干净；20 次 clean fresh agent run（Group A–D + E）、4 个可归因的隔离 agent 级
+mutation（另 1 个不可归因，已记录）；`SKILL.md` 625 行（硬预算 640）。
 
-已记录但不阻断本次发布的跟进项：Selection Matrix 的基础行名为 `R1_S1_minimum`，20 次 fresh run 中
-有 2 次把 R2 路由读成"只跑 pass 行"而非"基础最低集 + pass 行"；一句话澄清排入下一个补丁。
+**合并已停止。** 独立 merge-safety review（权威 = 稳定 main，范围 `05dd293..c886324`）返回
+`P0 = 0、P1 = 1` → `NEEDS_REVISION`。该 P1 是 Selection Matrix 的 route minimum 语义：基础行只叫
+`R1_S1_minimum`，20 次 fresh run 中有 2 次把 R2 路由读成"只跑 pass 行"（16–18 项）而非"基础最低集 +
+pass 行"（22 项）；矩阵没有 R3 最低集行；`S3_additions` 行无法改变任何选择结果。修复方案与重跑范围
+待定；完整 findings、逐条裁定与升级判定见 `release-evals/v2.1-gate1/m7-gate-report.md`。
 
 ## License
 
