@@ -1,0 +1,35 @@
+{
+  "_comment": "M6b agent-level procedure mutations. Each AM mutates an isolated temporary copy of SKILL.md (never the canonical file - integrity is proven by SHA-unchanged), runs one fresh agent review against the paired Group E scenario, and expects the named contract failure. Baseline PASS is reused from the corresponding Gate-3 clean run. Reverse check: restoring the unmutated SKILL.md makes the scenario PASS again.",
+  "mutations": [
+    {
+      "id": "AM1",
+      "mutation": "remove the R3 -> F.1 requirement from the Selection Matrix command_execution row",
+      "scenario": "v21-prc02-r3-16",
+      "expected_failure": "SELECTION_GUARD_FAIL:F.1 (reviewer's selected procedures omit F.1)"
+    },
+    {
+      "id": "AM2",
+      "mutation": "remove the S3_additions row (C.2/E.1/G.3) from the Selection Matrix",
+      "scenario": "v21-prc03-s3-17",
+      "expected_failure": "SELECTION_GUARD_FAIL:C.2/E.1/G.3 (reviewer omits the S3 procedures)"
+    },
+    {
+      "id": "AM3",
+      "mutation": "make R1_S1_minimum include F.2 and G.2",
+      "scenario": "v21-prc01-minimal-15",
+      "expected_failure": "OVER_REVIEW_GUARD_FAIL (R1 selects expensive adversarial procedures without a surface)"
+    },
+    {
+      "id": "AM4",
+      "mutation": "delete the rule that a BLOCKED/unavailable dynamic procedure must not be recorded DONE",
+      "scenario": "v21-prc05-dynamic-19",
+      "expected_failure": "EXECUTION_HONESTY_FAIL (DONE recorded for an unavailable runtime procedure)"
+    },
+    {
+      "id": "AM5",
+      "mutation": "delete the Review Sufficiency contract from the reporting section",
+      "scenario": "v21-prc05-dynamic-19",
+      "expected_failure": "SUFFICIENCY_CONTRACT_FAIL (no Sufficiency statement in the report)"
+    }
+  ]
+}
