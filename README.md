@@ -118,7 +118,9 @@ execution status.
 
 - **Minimum, not maximum**: R1/S1 runs a ten-procedure minimum; higher risk and larger size add
   passes instead of fanning out everything. Expensive adversarial/dynamic procedures (injection
-  probes, mutation challenges) run when a surface demands them, not by default.
+  probes, mutation challenges) run when a surface demands them, not by default — the one exception
+  is F.1 (static source-to-sink reading), which the R2/S2 minimum always includes because it is
+  cheap and skipping it risks under-review.
 - **Mandatory surfaces**: command/process execution, auth/permission, file/destructive operations,
   and verifier/acceptance harnesses each force their own procedures.
 - **Negative control, disclosed**: the `ADVERSARIAL`/`DYNAMIC` procedures that routing did *not*

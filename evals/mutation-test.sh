@@ -13,7 +13,7 @@
 #   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
 #   M8  restore everything         -> PASS
 #
-#   DM1-DM16 (M6a, V2.1): every procedure-framework guard has its own injected failure,
+#   DM1-DM19b (M6a, V2.1): every procedure-framework guard has its own injected failure,
 #   and each red must be attributable to the target guard name (MS-001 discipline).
 #
 # Isolation rule: harness mutations run against throwaway copies under $WORK; the repo is
@@ -176,7 +176,7 @@ say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
 expect "M8 restored harness is green" pass "$rc"
 
-# ---- M6a: deterministic mutations (DM1-DM16) ----
+# ---- M6a: deterministic mutations (DM1-DM19b) ----
 
 say '[DM1] duplicate a procedure ID in the registry'
 M="$WORK/dm1.py"
@@ -373,6 +373,51 @@ open(p, "w", encoding="utf-8").write(
     s.replace(anchor, anchor + '\nimport sys as _s; _s.stdout.flush(); import os as _o; _o._exit(3)', 1))
 DMEOF
 dm_case dm16 "v21 registry guard block did not run to completion" evals/run.sh "$M"
+
+say '[DM17] the frozen Selection-Matrix expectation deleted (skip must read as red)'
+M="$WORK/dm17.py"
+cat > "$M" <<'DMEOF'
+import os, sys
+os.remove(sys.argv[-1])
+DMEOF
+dm_case dm17 selection_expectation_file_present evals/fixtures/procedure-selection.json "$M"
+
+say '[DM18] disclosure_eligible_universe removed from the frozen expectation'
+M="$WORK/dm18.py"
+cat > "$M" <<'DMEOF'
+import json, sys
+p = sys.argv[-1]
+d = json.load(open(p, encoding="utf-8"))
+del d["disclosure_eligible_universe"]
+json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+DMEOF
+dm_case dm18 frozen_universe_field_in_sync evals/fixtures/procedure-selection.json "$M"
+
+say '[DM18b] r1_forbidden_defaults removed from the frozen expectation'
+M="$WORK/dm18b.py"
+cat > "$M" <<'DMEOF'
+import json, sys
+p = sys.argv[-1]
+d = json.load(open(p, encoding="utf-8"))
+del d["r1_forbidden_defaults"]
+json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+DMEOF
+dm_case dm18b r1_forbidden_defaults_in_sync evals/fixtures/procedure-selection.json "$M"
+
+say '[DM19] a scenario deleted jointly from BOTH JSONs (the frozen set must fire)'
+M="$WORK/dm19.py"
+cat > "$M" <<'DMEOF'
+import json, os, sys
+root = os.path.dirname(sys.argv[-1])          # .../evals
+sid = "v21-prc07-r3-nosurface-21"
+tp = json.load(open(os.path.join(root, "test-prompts.json"), encoding="utf-8"))
+tp["test_cases"] = [c for c in tp["test_cases"] if c["id"] != sid]
+json.dump(tp, open(os.path.join(root, "test-prompts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+ef = json.load(open(os.path.join(root, "expected-findings.json"), encoding="utf-8"))
+ef["scenarios"].pop(sid, None)
+json.dump(ef, open(os.path.join(root, "expected-findings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+DMEOF
+dm_case dm19 "scenario JSONs invalid or desynchronized" evals/test-prompts.json "$M"
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"

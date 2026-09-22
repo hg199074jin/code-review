@@ -42,7 +42,7 @@ selected G.2/G.4 on its own judgment — and is recorded as a negative result in
 1. cp SKILL.md work/AMx-mutated-SKILL.md; apply the AM mutation
 2. dispatch one fresh reviewer: authority = mutated copy, fixture = paired scenario repo
 3. evaluator scores the report against the scenario contract:
-   - AM1: F.1 missing from selected procedures -> SELECTION_GUARD_FAIL:F.1
+   - AM1: F.2 missing from selected procedures -> SELECTION_GUARD_FAIL:F.2 (F.1 survives via the pass-2 row; see the case table above)
    - AM3: F.2/G.2 present in an R1 report -> OVER_REVIEW_GUARD_FAIL
    - AM4: DONE recorded for an unavailable runtime procedure -> EXECUTION_HONESTY_FAIL
    - AM5: no Review Sufficiency line -> SUFFICIENCY_CONTRACT_FAIL

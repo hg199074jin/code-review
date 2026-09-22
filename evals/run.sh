@@ -89,7 +89,8 @@ changed/producer.py changed/test_service.py
 SPEC.md HIGH_RISK_SPEC.md CROSSFILE_SPEC.md
 PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini
 baseline/check.sh changed/check.sh changed/check_test.sh
-baseline/records.py changed/records.py changed/test_records.py AUTHZ_SPEC.md"
+baseline/records.py changed/records.py changed/test_records.py AUTHZ_SPEC.md
+procedure-selection.json"
 
 # ---------------------------------------------------------------- fixtures --
 echo '[1/6] fixture integrity'
@@ -238,7 +239,11 @@ if tp is not None:
 
 # --- M2: Selection Matrix vs frozen expectation (evaluator-only JSON) ---
 sel_path = sys.argv[4] if len(sys.argv) > 4 else None
-if sel_path and os.path.isfile(sel_path):
+if not sel_path or not os.path.isfile(sel_path):
+    # a missing frozen expectation file must be red, not a silently skipped block
+    # (found by the 2026-09-22 whole-repo review; deletion used to stay green at 49/0)
+    fail("selection_expectation_file_present", "evals/fixtures/procedure-selection.json missing")
+elif True:
     if "<!-- PROCEDURE_SELECTION_BEGIN -->" not in skill or "<!-- PROCEDURE_SELECTION_END -->" not in skill:
         fail("selection_matrix_parseable", "markers missing")
     else:
@@ -292,7 +297,9 @@ if sel_path and os.path.isfile(sel_path):
                         "changed": [k for k in set(exp) & set(got) if exp[k] != got[k]]}
                 fail("selection_matrix_expected_sync", str(diff))
             fdx = sel.get("disclosure_eligible_universe")
-            if fdx is not None and sorted(fdx) != universe:
+            if fdx is None:
+                fail("frozen_universe_field_in_sync", "field absent from the frozen expectation")
+            elif sorted(fdx) != universe:
                 fail("frozen_universe_field_in_sync", f"json {sorted(fdx)} != derived {universe}")
             else:
                 ok("frozen_universe_field_in_sync")
@@ -300,7 +307,9 @@ if sel_path and os.path.isfile(sel_path):
             # subset of the derived universe. The rule itself is universe-wide and is
             # enforced by r1_no_default_adversarial above.
             fr1 = sel.get("r1_forbidden_defaults")
-            if fr1 is not None and not set(fr1) <= set(universe):
+            if fr1 is None:
+                fail("r1_forbidden_defaults_in_sync", "field absent from the frozen expectation")
+            elif not set(fr1) <= set(universe):
                 fail("r1_forbidden_defaults_in_sync", f"json {sorted(fr1)} not a subset of {universe}")
             else:
                 ok("r1_forbidden_defaults_in_sync")
@@ -490,6 +499,21 @@ if tp_ids != ef_ids:
     print("only in prompts:", sorted(tp_ids - ef_ids))
     print("only in findings:", sorted(ef_ids - tp_ids))
     sys.exit(1)
+# Frozen scenario set: equality between the two JSONs is not enough - a scenario deleted
+# from BOTH would leave them equal and green (found by the 2026-09-22 whole-repo review).
+FROZEN_SCENARIOS = {
+    "review-workspace-01", "review-branch-02", "review-nospec-03",
+    "regress-upstream-trap-04", "regress-whole-repo-audit-05", "regress-old-ocr-compat-06",
+    "regress-no-test-runner-07", "v2-pr-context-08", "v2-r3-security-09",
+    "v2-s3-integration-10", "v2-review-fix-verify-11", "v2-tool-fusion-12",
+    "v2-egress-optin-13", "v2-injection-boundary-14",
+    "v21-prc01-minimal-15", "v21-prc02-r3-16", "v21-prc03-s3-17", "v21-prc04-verifier-18",
+    "v21-prc05-dynamic-19", "v21-prc06-authz-20", "v21-prc07-r3-nosurface-21",
+}
+if tp_ids != FROZEN_SCENARIOS or ef_ids != FROZEN_SCENARIOS:
+    print("missing scenarios:", sorted(FROZEN_SCENARIOS - tp_ids - ef_ids))
+    print("unknown scenarios:", sorted((tp_ids | ef_ids) - FROZEN_SCENARIOS))
+    sys.exit(2)
 sys.exit(0)
 PY
 then
