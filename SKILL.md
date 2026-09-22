@@ -192,6 +192,10 @@ The thresholds are routing heuristics, not defect criteria.
 required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)
 ```
 
+The **route minimum is the floor for every route**: `R1_S1_minimum` is required in all cases, and
+R2/S2, R3 and S3 add their rows on top of it. A route never replaces the floor. The floor plus the
+`R3_minimum` row are what make "route minimum" concrete.
+
 <!-- PROCEDURE_SELECTION_BEGIN -->
 | Scope / surface | Required procedures | Class |
 |---|---|---|
@@ -199,6 +203,7 @@ required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requ
 | R2_S2_pass_1_AE | A.3, B.2, B.3, C.1, C.3, D.1, D.2, E.2 | route |
 | R2_S2_pass_2_FI | F.1, G.1, G.3, H.1, I.2 | route |
 | S3_additions | C.2, E.1, G.3, J.1 | route |
+| R3_minimum | >= 1 ADVERSARIAL; >= 1 corroboration; critical-path reread | route |
 | command_execution | F.1, F.2, G.1 | mandatory |
 | auth_permission | F.3, E.1, G.1 | mandatory |
 | file_destructive | F.4, D.2, G.1 | mandatory |
@@ -216,6 +221,13 @@ migration_schema row). F.1 in pass 2 covers the untrusted-input→sink surface a
 minimum — static source→sink reading is cheap, and skipping it on R2 risks under-review. On R1 the
 disclosure-eligible universe procedures (§5a) are all `NOT_SELECTED` and appear under
 `Not selected by routing`.
+
+`S3_additions` restates S3's own requirements; its four members are already required by the floor
+and the pass rows, so it changes no selection by itself. `R3_minimum` is a constraint row, not an ID
+set: every R3 review must select at least one procedure carrying the `ADVERSARIAL` attribute, must
+obtain or honestly record the absence of a second, different-nature corroboration, and must re-read
+the critical path independently. Selecting a matching mandatory surface row satisfies the surface
+requirement but never substitutes for the adversarial and corroboration requirements.
 
 Execution structure: R1+S1 = one fresh pass over its minimum; R2/S2 = the two passes above; R3/S3 =
 specialist passes + final integration pass; any R3 security/data-loss path gets an independent

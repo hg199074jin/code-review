@@ -153,6 +153,13 @@ if universe == ["D.3", "F.1", "F.2", "F.3", "F.5", "G.2"]:
 else:
     fail("disclosure_universe_matches", f"derived {universe}")
 
+# the disclosure rule itself is normative text, not only registry data (MS-V21-04)
+if ("`NOT_SELECTED`, it must be listed under `Not selected by routing`" in skill
+        and "**Negative-control disclosure**" in skill):
+    ok("disclosure_rule_stated")
+else:
+    fail("disclosure_rule_stated", "section 5a negative-control disclosure rule missing or reworded")
+
 i5 = next((i for i, l in enumerate(lines) if l.startswith("## 5. Review lenses")), None)
 i5a = next((i for i, l in enumerate(lines) if l.startswith("## 5a.")), None)
 if i5 is None or i5a is None or i5a <= i5:
@@ -168,7 +175,8 @@ else: fail(f"skill_line_budget ({n_lines} > 640)")
 
 # report-contract markers: only proves the section/enums were not deleted wholesale.
 # Does NOT prove LLM behaviour - that is Group E + M6b territory.
-markers = ["## 审查程序", "Review Sufficiency:", "SUFFICIENT", "LIMITED", "INSUFFICIENT"]
+markers = ["## 审查程序", "Not selected by routing", "Review Sufficiency:",
+           "SUFFICIENT", "LIMITED", "INSUFFICIENT"]
 missing_m = [m for m in markers if m not in skill]
 if missing_m: fail("report_contract_markers_present", f"missing {missing_m}")
 else: ok("report_contract_markers_present")
@@ -210,11 +218,14 @@ if sel_path and os.path.isfile(sel_path):
         block = skill.split("<!-- PROCEDURE_SELECTION_BEGIN -->", 1)[1].split("<!-- PROCEDURE_SELECTION_END -->", 1)[0]
         mrows, mrow_dups = {}, []
         for ln in block.split("\n"):
-            m = re.match(r"^\|\s*([^|]+?)\s*\|\s*([A-Za-z0-9., /-]+?)\s*\|\s*(route|mandatory|advisory)\s*\|\s*$", ln)
+            m = re.match(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(route|mandatory|advisory)\s*\|\s*$", ln)
             if m:
-                key = m.group(1)
+                key, field = m.group(1), m.group(2)
                 if key in mrows: mrow_dups.append(key)
-                mrows[key] = {"class": m.group(3), "ids": sorted(set(DOTTED.findall(m.group(2))))}
+                ids = sorted(set(DOTTED.findall(field)))
+                id_only = re.fullmatch(r"[A-Z]\.[0-9]+(?:, [A-Z]\.[0-9]+)*", field.strip()) is not None
+                constraints = [] if id_only else [c.strip() for c in field.split(";") if c.strip()]
+                mrows[key] = {"class": m.group(3), "ids": ids, "constraints": constraints}
         if mrow_dups: fail("selection_rows_unique", f"duplicate keys: {mrow_dups}")
         else: ok("selection_rows_unique")
         unknown = sorted({i for v in mrows.values() for i in v["ids"]} - set(reg))
@@ -224,18 +235,47 @@ if sel_path and os.path.isfile(sel_path):
         adv = sorted(k for k, v in mrows.items() if v["class"] == "advisory")
         if len(mand) == 4 and len(adv) == 6: ok("mandatory_advisory_classification_stable")
         else: fail("mandatory_advisory_classification_stable", f"mandatory={len(mand)} advisory={len(adv)}")
+        # the floor rule must be stated in normative text, not only implied by a row name
+        if "route minimum is the floor for every route" in skill: ok("route_floor_stated")
+        else: fail("route_floor_stated", "floor sentence missing from section 4.3")
+        r3 = mrows.get("R3_minimum")
+        r3txt = " ".join(r3.get("constraints", [])) if r3 else ""
+        r1_ids = mrows.get("R1_S1_minimum", {}).get("ids", [])
+        if (r3 and r3.get("class") == "route" and "ADVERSARIAL" in r3txt
+                and "corroboration" in r3txt and "reread" in r3txt and "J.2" in r1_ids):
+            ok("r3_minimum_present")
+        else:
+            fail("r3_minimum_present", f"R3_minimum row={r3}")
+        # no route floor may default to an adversarial/dynamic procedure: bound to the
+        # derived universe, not to a hardcoded id pair (MS-V21-03)
         r1 = mrows.get("R1_S1_minimum", {}).get("ids", [])
-        if "F.2" in r1 or "G.2" in r1: fail("r1_no_default_adversarial", str(r1))
+        overlap = sorted(set(r1) & set(universe))
+        if overlap: fail("r1_no_default_adversarial", f"floor defaults to {overlap}")
         else: ok("r1_no_default_adversarial")
         try:
-            expected = json.load(open(sel_path, encoding="utf-8"))["rows"]
-            exp = {r["key"]: (sorted(set(r["ids"])), r["class"]) for r in expected}
-            got = {k: (v["ids"], v["class"]) for k, v in mrows.items()}
+            sel = json.load(open(sel_path, encoding="utf-8"))
+            expected = sel["rows"]
+            exp = {r["key"]: (sorted(set(r["ids"])), r["class"], [c.strip() for c in r.get("constraints", [])])
+                   for r in expected}
+            got = {k: (v["ids"], v["class"], v["constraints"]) for k, v in mrows.items()}
             if exp == got: ok("selection_matrix_expected_sync")
             else:
                 diff = {"only_in_json": sorted(set(exp) - set(got)), "only_in_skill": sorted(set(got) - set(exp)),
                         "changed": [k for k in set(exp) & set(got) if exp[k] != got[k]]}
                 fail("selection_matrix_expected_sync", str(diff))
+            fdx = sel.get("disclosure_eligible_universe")
+            if fdx is not None and sorted(fdx) != universe:
+                fail("frozen_universe_field_in_sync", f"json {sorted(fdx)} != derived {universe}")
+            else:
+                ok("frozen_universe_field_in_sync")
+            # the field lists ids that must never become R1 defaults; it must stay a
+            # subset of the derived universe. The rule itself is universe-wide and is
+            # enforced by r1_no_default_adversarial above.
+            fr1 = sel.get("r1_forbidden_defaults")
+            if fr1 is not None and not set(fr1) <= set(universe):
+                fail("r1_forbidden_defaults_in_sync", f"json {sorted(fr1)} not a subset of {universe}")
+            else:
+                ok("r1_forbidden_defaults_in_sync")
         except Exception as exc:
             fail("selection_matrix_expected_sync", repr(exc))
 PY
