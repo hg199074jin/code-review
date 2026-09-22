@@ -186,14 +186,40 @@ Use OCR/git stats where available.
 
 The thresholds are routing heuristics, not defect criteria.
 
-### 4.3 Execution plan
+### 4.3 Procedure selection
 
-| Route | Required execution |
-|---|---|
-| R1 + S1 | one fresh A–J pass |
-| R2 or S2 | two independent passes: pass 1 = Lenses 1-2 (Intent/Scope, Correctness/Regression → A-E); pass 2 = Lenses 3-4 (Security & Data Safety, Tests/Maintainability → F-I) |
-| R3 or S3 | specialist passes + final integration pass |
-| any R3 security/data-loss path | independent re-read of the critical path even if another tool already flagged it |
+```text
+required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)
+```
+
+<!-- PROCEDURE_SELECTION_BEGIN -->
+| Scope / surface | Required procedures | Class |
+|---|---|---|
+| R1_S1_minimum | A.1, A.2, B.1, C.2, E.1, G.1, I.1, J.1, J.2, J.3 | route |
+| R2_S2_pass_1_AE | A.3, B.2, B.3, C.1, C.3, D.1, D.2, E.2 | route |
+| R2_S2_pass_2_FI | F.1, G.1, G.3, H.1, I.2 | route |
+| S3_additions | C.2, E.1, G.3, J.1 | route |
+| command_execution | F.1, F.2, G.1 | mandatory |
+| auth_permission | F.3, E.1, G.1 | mandatory |
+| file_destructive | F.4, D.2, G.1 | mandatory |
+| verifier_harness | G.2, G.4, J.2 | mandatory |
+| network_egress | F.5, D.2 | advisory |
+| migration_schema | E.2, E.3, D.2, G.3 | advisory |
+| concurrency | D.3, D.2 | advisory |
+| retry_cache | D.2, C.1 | advisory |
+| serializer_protocol | C.2, E.2, C.3 | advisory |
+| agent_tool_execution | F.5, F.1, G.1 | advisory |
+<!-- PROCEDURE_SELECTION_END -->
+
+Notes: E.3 is selected only when a migration/compatibility surface is present (it arrives via the
+migration_schema row). F.1 in pass 2 covers the untrusted-input→sink surface and is kept in the R2
+minimum — static source→sink reading is cheap, and skipping it on R2 risks under-review. On R1 the
+disclosure-eligible universe procedures (§5a) are all `NOT_SELECTED` and appear under
+`Not selected by routing`.
+
+Execution structure: R1+S1 = one fresh pass over its minimum; R2/S2 = the two passes above; R3/S3 =
+specialist passes + final integration pass; any R3 security/data-loss path gets an independent
+re-read of the critical path even if another tool already flagged it.
 
 If the runtime supports fresh/isolated subagents, use them. If not, run the same lenses sequentially
 in the current context and disclose that context isolation was unavailable.

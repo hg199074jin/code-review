@@ -106,8 +106,8 @@ echo '[1b/6] V2.1 procedure registry & disclosure universe'
 SKILL_FILE="$HERE/../SKILL.md"
 # Both READMEs are checked (EN + zh); a dotted procedure ID in either must be a registry
 # member, and legacy bare IDs must be absent (E1/E2/E3 excluded - they are evidence grades).
-if python3 - "$SKILL_FILE" "$HERE/../README.md" "$HERE/../README.zh-CN.md" >"$WORK/v21-registry.txt" 2>&1 <<'PY'
-import os, re, sys
+if python3 - "$SKILL_FILE" "$HERE/../README.md" "$HERE/../README.zh-CN.md" "$FIX/procedure-selection.json" >"$WORK/v21-registry.txt" 2>&1 <<'PY'
+import json, os, re, sys
 skill_path, readme_en, readme_zh = sys.argv[1:4]
 def ok(n): print("GUARD_OK " + n)
 def fail(n, d=""): print("GUARD_FAIL " + n + (" - " + d if d else ""))
@@ -176,6 +176,45 @@ if dotted_bad: fail("readme_dotted_procedure_ids_valid", str(dotted_bad))
 else: ok("readme_dotted_procedure_ids_valid")
 if legacy_bad: fail("readme_legacy_procedure_ids_absent", str(legacy_bad))
 else: ok("readme_legacy_procedure_ids_absent")
+
+# --- M2: Selection Matrix vs frozen expectation (evaluator-only JSON) ---
+sel_path = sys.argv[4] if len(sys.argv) > 4 else None
+if sel_path and os.path.isfile(sel_path):
+    if "<!-- PROCEDURE_SELECTION_BEGIN -->" not in skill or "<!-- PROCEDURE_SELECTION_END -->" not in skill:
+        fail("selection_matrix_parseable", "markers missing")
+    else:
+        ok("selection_matrix_parseable")
+        block = skill.split("<!-- PROCEDURE_SELECTION_BEGIN -->", 1)[1].split("<!-- PROCEDURE_SELECTION_END -->", 1)[0]
+        mrows, mrow_dups = {}, []
+        for ln in block.split("\n"):
+            m = re.match(r"^\|\s*([^|]+?)\s*\|\s*([A-Za-z0-9., /-]+?)\s*\|\s*(route|mandatory|advisory)\s*\|\s*$", ln)
+            if m:
+                key = m.group(1)
+                if key in mrows: mrow_dups.append(key)
+                mrows[key] = {"class": m.group(3), "ids": sorted(set(DOTTED.findall(m.group(2))))}
+        if mrow_dups: fail("selection_rows_unique", f"duplicate keys: {mrow_dups}")
+        else: ok("selection_rows_unique")
+        unknown = sorted({i for v in mrows.values() for i in v["ids"]} - set(reg))
+        if unknown: fail("selection_ids_exist", f"matrix ids not in registry: {unknown}")
+        else: ok("selection_ids_exist")
+        mand = sorted(k for k, v in mrows.items() if v["class"] == "mandatory")
+        adv = sorted(k for k, v in mrows.items() if v["class"] == "advisory")
+        if len(mand) == 4 and len(adv) == 6: ok("mandatory_advisory_classification_stable")
+        else: fail("mandatory_advisory_classification_stable", f"mandatory={len(mand)} advisory={len(adv)}")
+        r1 = mrows.get("R1_S1_minimum", {}).get("ids", [])
+        if "F.2" in r1 or "G.2" in r1: fail("r1_no_default_adversarial", str(r1))
+        else: ok("r1_no_default_adversarial")
+        try:
+            expected = json.load(open(sel_path, encoding="utf-8"))["rows"]
+            exp = {r["key"]: (sorted(set(r["ids"])), r["class"]) for r in expected}
+            got = {k: (v["ids"], v["class"]) for k, v in mrows.items()}
+            if exp == got: ok("selection_matrix_expected_sync")
+            else:
+                diff = {"only_in_json": sorted(set(exp) - set(got)), "only_in_skill": sorted(set(got) - set(exp)),
+                        "changed": [k for k in set(exp) & set(got) if exp[k] != got[k]]}
+                fail("selection_matrix_expected_sync", str(diff))
+        except Exception as exc:
+            fail("selection_matrix_expected_sync", repr(exc))
 PY
 then :; fi
 while IFS= read -r line; do
