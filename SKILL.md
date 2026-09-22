@@ -166,9 +166,9 @@ to the Independent Review Brief — authority path/version/sha, base/head SHAs, 
 scope, predeclared preflight results, runtime facts, and the user's task verbatim (never a
 directional summary; facts pass, interpretations do not; Fact Pack fields come from their declared
 resolvers and may not be hand-edited); and no coordinator findings, suspicions, or reasoning reaching
-the reviewer. Anything less is `sequential-fallback`: `Review Sufficiency` is capped at `LIMITED`,
-findings and the mechanical verdict still stand, and claiming an independent review was completed is
-forbidden.
+the reviewer. Anything less is `sequential-fallback` or `author-self-review`: `Review Sufficiency` is capped at
+`LIMITED` (§8), findings and the mechanical verdict still stand, and claiming an independent review
+was completed is forbidden.
 
 ## 4. Risk and size routing
 
@@ -552,7 +552,9 @@ verdict stays mechanical over open P0/P1. `SUFFICIENT`: floor, matched surface r
 additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete.
 `LIMITED`: some required procedure is `LIMITED/BLOCKED`, or a required independent pass was
 unavailable, unconfirmed, or author-conflicted, while findings and the verdict still stand, with
-residual risk stated. `INSUFFICIENT`: a critical risk path was unchecked, scope materially
+residual risk stated. **Independence caps this value**: whenever `Review independence` is
+`author-self-review` or `sequential-fallback` (§3.5), Sufficiency is `LIMITED` even when every
+procedure is `DONE` — sequential in-context re-reads are diligence, not an independent pass. `INSUFFICIENT`: a critical risk path was unchecked, scope materially
 incomplete, an R3 critical path lacks even E1, or the target is unresolvable — never call such a
 review complete. Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.
 
