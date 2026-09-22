@@ -13,7 +13,7 @@
 #   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
 #   M8  restore everything         -> PASS
 #
-#   DM1-DM8 (M6a, V2.1): every procedure-framework guard has its own injected failure,
+#   DM1-DM13 (M6a, V2.1): every procedure-framework guard has its own injected failure,
 #   and each red must be attributable to the target guard name (MS-001 discipline).
 #
 # Isolation rule: harness mutations run against throwaway copies under $WORK; the repo is
@@ -94,8 +94,15 @@ dm_case() {  # dm_case <case> <guard-name> <target-file> <mut.py-path>
   cp -R "${HERE:?}" "$WORK/$_c/evals"
   cp "${SKILL_FILE}" "${HERE:?}/../README.md" "${HERE:?}/../README.zh-CN.md" "$WORK/$_c/"
   # the mutation target file is ALWAYS the last argument
-  python3 "$_mut" "$WORK/$_c/SKILL.md" "$WORK/$_c/README.md" "$WORK/$_c/README.zh-CN.md" \
-    "$WORK/$_c/evals/test-prompts.json" "$WORK/$_c/evals/expected-findings.json" "$WORK/$_c/$_target" >/dev/null 2>&1
+  if ! python3 "$_mut" "$WORK/$_c/SKILL.md" "$WORK/$_c/README.md" "$WORK/$_c/README.zh-CN.md" \
+      "$WORK/$_c/evals/test-prompts.json" "$WORK/$_c/evals/expected-findings.json" "$WORK/$_c/$_target" \
+      >"$WORK/$_c/mut.log" 2>&1; then
+    # a mutation whose anchor no longer exists proves nothing: report it as its own failure
+    # mode instead of letting it look like "the guard did not fire".
+    bad "$_c (mutation did not apply - anchor missing; see $WORK/$_c/mut.log)"
+    [ "$VERBOSE" = 1 ] && sed 's/^/    /' "$WORK/$_c/mut.log"
+    return
+  fi
   rc=0; ( cd "$WORK/$_c/evals" && sh ./run.sh >"$CAP" 2>&1 ) || rc=$?
   if ! harness_ran; then
     bad "$_c (harness never ran - not evidence)"; [ "$VERBOSE" = 1 ] && sed 's/^/    /' "$CAP"; return
@@ -169,7 +176,7 @@ say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
 expect "M8 restored harness is green" pass "$rc"
 
-# ---- M6a: deterministic mutations (DM1-DM8) ----
+# ---- M6a: deterministic mutations (DM1-DM13) ----
 
 say '[DM1] duplicate a procedure ID in the registry'
 M="$WORK/dm1.py"
@@ -245,6 +252,83 @@ printf '%s\n' \
   "s = open(p).read().replace('Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>', 'Review Sufficiency: <result>')" \
   "open(p, 'w').write(s)" > "$M"
 dm_case dm8 report_contract_markers_present SKILL.md "$M"
+
+# ---- M6a (F1b): mutations for the guards added with the 4.3 fix (DM9-DM13) ----
+
+say '[DM9] the route-floor sentence deleted from 4.3'
+M="$WORK/dm9.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = ("The **route minimum is the floor for every route**: `R1_S1_minimum` is required in all cases, and\n"
+       "R2/S2, R3 and S3 add their rows on top of it. A route never replaces the floor.")
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "The route minimums are the tables below.", 1))
+DMEOF
+dm_case dm9 route_floor_stated SKILL.md "$M"
+
+say '[DM10] the R3_minimum constraint row deleted from SKILL.md and the frozen JSON'
+M="$WORK/dm10.py"
+cat > "$M" <<'DMEOF'
+import json, os, sys
+skill = sys.argv[1]
+fx = os.path.join(os.path.dirname(skill), "evals", "fixtures", "procedure-selection.json")
+s = open(skill, encoding="utf-8").read()
+row = "| R3_minimum | >= 1 ADVERSARIAL; >= 1 corroboration; critical-path reread | route |\n"
+assert row in s, "anchor missing"
+open(skill, "w", encoding="utf-8").write(s.replace(row, "", 1))
+d = json.load(open(fx, encoding="utf-8"))
+d["rows"] = [r for r in d["rows"] if r["key"] != "R3_minimum"]
+json.dump(d, open(fx, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+DMEOF
+dm_case dm10 r3_minimum_present evals/fixtures/procedure-selection.json "$M"
+
+say '[DM11] an adversarial procedure added to the route floor in SKILL.md AND the JSON'
+M="$WORK/dm11.py"
+cat > "$M" <<'DMEOF'
+import json, os, sys
+skill = sys.argv[1]
+fx = os.path.join(os.path.dirname(skill), "evals", "fixtures", "procedure-selection.json")
+old = "| R1_S1_minimum | A.1, A.2, B.1, C.2, E.1, G.1, I.1, J.1, J.2, J.3 | route |"
+new = "| R1_S1_minimum | A.1, A.2, B.1, C.2, E.1, F.1, G.1, I.1, J.1, J.2, J.3 | route |"
+s = open(skill, encoding="utf-8").read()
+assert old in s, "anchor missing"
+open(skill, "w", encoding="utf-8").write(s.replace(old, new, 1))
+d = json.load(open(fx, encoding="utf-8"))
+for r in d["rows"]:
+    if r["key"] == "R1_S1_minimum":
+        r["ids"] = sorted(set(r["ids"]) | {"F.1"})
+json.dump(d, open(fx, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+DMEOF
+dm_case dm11 r1_no_default_adversarial evals/fixtures/procedure-selection.json "$M"
+
+say '[DM12] the negative-control disclosure rule deleted from 5a'
+M="$WORK/dm12.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = ("**Negative-control disclosure**: procedures with the `ADVERSARIAL` or `DYNAMIC` attribute form the\n"
+       "disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a procedure is\n"
+       "`NOT_SELECTED`, it must be listed under `Not selected by routing` with a reason (intersection with\n"
+       "this universe, deduplicated, sorted by ID). R1 may use the compressed one-line form.")
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "Procedure attributes are informational.", 1))
+DMEOF
+dm_case dm12 disclosure_rule_stated SKILL.md "$M"
+
+say '[DM13] the Not-selected disclosure block deleted from the section 8 reporting contract'
+M="$WORK/dm13.py"
+cat > "$M" <<'DMEOF'
+import re, sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+m = re.search(r"Not selected by routing:\n<every NOT_SELECTED procedure[^>]*>\n\n", s)
+assert m, "anchor missing"
+open(p, "w", encoding="utf-8").write(s[:m.start()] + s[m.end():])
+DMEOF
+dm_case dm13 report_contract_markers_present SKILL.md "$M"
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"

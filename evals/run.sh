@@ -175,7 +175,9 @@ else: fail(f"skill_line_budget ({n_lines} > 640)")
 
 # report-contract markers: only proves the section/enums were not deleted wholesale.
 # Does NOT prove LLM behaviour - that is Group E + M6b territory.
-markers = ["## 审查程序", "Not selected by routing", "Review Sufficiency:",
+# "Not selected by routing:" (colon, line start) is the section-8 contract line; the bare
+# phrase also occurs in the 5a prose, so a substring check there would not be armed (DM13).
+markers = ["## 审查程序", "\nNot selected by routing:", "Review Sufficiency:",
            "SUFFICIENT", "LIMITED", "INSUFFICIENT"]
 missing_m = [m for m in markers if m not in skill]
 if missing_m: fail("report_contract_markers_present", f"missing {missing_m}")
