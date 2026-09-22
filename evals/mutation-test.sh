@@ -43,7 +43,11 @@ fresh() {  # fresh <name> -> copies evals/ into $WORK/<name>/evals, echoes the p
   _n="$1"
   rm -rf "${WORK:?}/$_n"
   mkdir -p "$WORK/$_n"
-  cp -R "$HERE" "$WORK/$_n/evals"
+  cp -R "${HERE:?}" "$WORK/$_n/evals"
+  # the registry/matrix guards read SKILL.md relative to the evals copy's parent
+  cp "${HERE:?}/../SKILL.md" "$WORK/$_n/SKILL.md"
+  # registry/matrix/README guards read these too; M6a README mutations (DM4/DM5) need them
+  cp "${HERE:?}/../README.md" "${HERE:?}/../README.zh-CN.md" "$WORK/$_n/"
   printf '%s' "$WORK/$_n/evals"
 }
 

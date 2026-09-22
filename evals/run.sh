@@ -101,6 +101,93 @@ else
   bad "$MISSING fixture file(s) missing"
 fi
 
+# ------------------------------------------------- V2.1 registry guards (M1) --
+echo '[1b/6] V2.1 procedure registry & disclosure universe'
+SKILL_FILE="$HERE/../SKILL.md"
+# Both READMEs are checked (EN + zh); a dotted procedure ID in either must be a registry
+# member, and legacy bare IDs must be absent (E1/E2/E3 excluded - they are evidence grades).
+if python3 - "$SKILL_FILE" "$HERE/../README.md" "$HERE/../README.zh-CN.md" >"$WORK/v21-registry.txt" 2>&1 <<'PY'
+import os, re, sys
+skill_path, readme_en, readme_zh = sys.argv[1:4]
+def ok(n): print("GUARD_OK " + n)
+def fail(n, d=""): print("GUARD_FAIL " + n + (" - " + d if d else ""))
+
+try:
+    skill = open(skill_path, encoding="utf-8").read()
+    readmes = [(os.path.basename(p), open(p, encoding="utf-8").read()) for p in (readme_en, readme_zh)]
+except OSError as exc:
+    fail("skill_registry_inputs_readable", str(exc)); sys.exit(0)
+lines = skill.split("\n")
+
+reg = {}
+for i, ln in enumerate(lines):
+    m = re.match(r"^\|\s*([A-J]\.[0-9]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$", ln)
+    if m:
+        reg.setdefault(m.group(1), []).append([a.strip() for a in m.group(3).split(",")])
+
+if len(reg) == 30: ok("procedure_count_exactly_30")
+else: fail("procedure_count_exactly_30", f"found {len(reg)} registry rows, expected 30")
+
+dups = sorted(p for p, v in reg.items() if len(v) > 1)
+if dups: fail("procedure_ids_unique", f"duplicate rows for {dups}")
+else: ok("procedure_ids_unique")
+
+bad_parent = sorted(p for p in reg if p.split(".")[0] not in "ABCDEFGHIJ" or not p.split(".", 1)[1].isdigit())
+if bad_parent: fail("procedure_parents_valid", str(bad_parent))
+else: ok("procedure_parents_valid")
+
+bare_defs = re.findall(r"^\|\s*[A-J][0-9]+\s*\|", skill, flags=re.M)
+if bare_defs: fail("procedure_id_pattern_canonical", f"legacy bare-ID table rows present: {bare_defs}")
+else: ok("procedure_id_pattern_canonical")
+
+VALID = {"CORE", "EXTENDED", "ADVERSARIAL", "DYNAMIC"}
+bad_attr = sorted((p, a) for p, v in reg.items() for a in v[0] if a not in VALID)
+if bad_attr: fail("procedure_attributes_valid", str(bad_attr))
+else: ok("procedure_attributes_valid")
+
+universe = sorted(p for p, v in reg.items() if "ADVERSARIAL" in v[0] or "DYNAMIC" in v[0])
+if universe == ["D.3", "F.1", "F.2", "F.3", "F.5", "G.2"]:
+    ok("disclosure_universe_matches")
+else:
+    fail("disclosure_universe_matches", f"derived {universe}")
+
+i5 = next((i for i, l in enumerate(lines) if l.startswith("## 5. Review lenses")), None)
+i5a = next((i for i, l in enumerate(lines) if l.startswith("## 5a.")), None)
+if i5 is None or i5a is None or i5a <= i5:
+    fail("j_procedures_not_business_lens", "section markers not found")
+elif re.search(r"J\.[0-9]", "\n".join(lines[i5:i5a])):
+    fail("j_procedures_not_business_lens", "J.x referenced inside the lens section")
+else:
+    ok("j_procedures_not_business_lens")
+
+n_lines = len(lines)
+if n_lines <= 640: ok(f"skill_line_budget ({n_lines} <= 640)")
+else: fail(f"skill_line_budget ({n_lines} > 640)")
+
+LEGACY = re.compile(r"\b(?:A[1-3]|B[1-3]|C[1-3]|D[1-3]|F[1-5]|G[1-4]|H1|I[12]|J[1-3])\b")
+DOTTED = re.compile(r"[A-J]\.[0-9]+")
+dotted_bad, legacy_bad = [], []
+for name, text in readmes:
+    for tok in sorted(set(DOTTED.findall(text))):
+        if tok not in reg: dotted_bad.append(f"{name}:{tok}")
+    for tok in LEGACY.findall(text):
+        legacy_bad.append(f"{name}:{tok}")
+if dotted_bad: fail("readme_dotted_procedure_ids_valid", str(dotted_bad))
+else: ok("readme_dotted_procedure_ids_valid")
+if legacy_bad: fail("readme_legacy_procedure_ids_absent", str(legacy_bad))
+else: ok("readme_legacy_procedure_ids_absent")
+PY
+then :; fi
+while IFS= read -r line; do
+  case "$line" in
+    GUARD_OK*) ok "${line#GUARD_OK }" ;;
+    GUARD_FAIL*) bad "${line#GUARD_FAIL }" ;;
+  esac
+done < "$WORK/v21-registry.txt"
+if ! grep -q "GUARD_" "$WORK/v21-registry.txt" 2>/dev/null; then
+  bad "v21 registry guards produced no result (python3 failed?)"
+fi
+
 # --- invoice: behavioural probes (audit CR-001) ---
 INV="$FIX/changed"
 

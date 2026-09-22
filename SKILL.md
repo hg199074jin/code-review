@@ -276,6 +276,74 @@ R3 findings require a demonstrated attack/failure path, not a generic warning.
 
 ---
 
+## 5a. Review Procedure Framework
+
+Procedures are the **how** beneath each A–J objective (**what**). A procedure is not a finding, not
+a severity, and not bound to any specific tool. Procedure IDs use the dotted form (`A.1`); evidence
+grades keep the bare form (`E1`/`E2`/`E3`) — the two token classes never share a parser.
+
+### Selection and execution
+
+Every procedure is first `SELECTED` or `NOT_SELECTED` by routing (§4.3). `NOT_SELECTED` is a
+routing decision, not an execution status. A `SELECTED` procedure then carries exactly one
+execution status:
+
+| Status | Meaning |
+|---|---|
+| `DONE` | executed and evidence obtained |
+| `LIMITED` | executed, but evidence or environment limited |
+| `BLOCKED` | should run, but environment/authorization prevents it |
+| `NOT_APPLICABLE` | selected, but the code path makes it inapplicable |
+
+Never fabricate evidence; a `BLOCKED` procedure is never recorded as `DONE`.
+
+### Registry (30 procedures; attributes are static)
+
+| ID | Procedure | Attributes |
+|---|---|---|
+| A.1 | Requirement Trace | CORE |
+| A.2 | Negative & Partial Implementation | CORE |
+| A.3 | Contradiction & Missing Behavior | EXTENDED |
+| B.1 | Unrequested Behavior | CORE |
+| B.2 | Missing Support Change | EXTENDED |
+| B.3 | Dependency / Config / Generated Drift | EXTENDED |
+| C.1 | State & Invariant | EXTENDED |
+| C.2 | Call-chain & Contract | CORE |
+| C.3 | Differential & Error Semantics | EXTENDED |
+| D.1 | Boundary Values | CORE |
+| D.2 | Failure / Retry / Idempotency / Recovery | EXTENDED |
+| D.3 | Concurrency & Resource Exhaustion | ADVERSARIAL |
+| E.1 | Call-site & Stale Reference | CORE |
+| E.2 | Public Contract / Schema / Serialization | EXTENDED |
+| E.3 | Old Behavior / Migration Compatibility | EXTENDED |
+| F.1 | Source→Sink Analysis | ADVERSARIAL |
+| F.2 | Injection Probe | ADVERSARIAL, DYNAMIC |
+| F.3 | Authn / Authz Boundary | ADVERSARIAL |
+| F.4 | File / Destructive Data Safety | EXTENDED |
+| F.5 | Secret / Egress / Prompt-Tool Injection | ADVERSARIAL |
+| G.1 | Fail-before-fix & Negative Path | CORE |
+| G.2 | Mutation Challenge | ADVERSARIAL, DYNAMIC |
+| G.3 | Integration & Mock Integrity | EXTENDED |
+| G.4 | Harness Reliability | CORE |
+| H.1 | Complexity / Duplicate Control Plane | EXTENDED |
+| I.1 | Dead Code / Docs Drift | CORE |
+| I.2 | Diagnostics / Ownership / Blast Radius | CORE |
+| J.1 | Finding Verification & Dedup | CORE |
+| J.2 | Evidence Sufficiency & Residual Risk | CORE |
+| J.3 | Mechanical Verdict | CORE |
+
+Attributes are static: `CORE` = low-cost, broadly applicable; `EXTENDED` = needs more context or
+runtime evidence; `ADVERSARIAL` = actively hunts bypasses; `DYNAMIC` = executes code and obeys the
+§10 sandbox/side-effect boundaries. Conditional selection lives in the Selection Matrix (§4.3),
+never in this table.
+
+**Negative-control disclosure**: procedures with the `ADVERSARIAL` or `DYNAMIC` attribute form the
+disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a procedure is
+`NOT_SELECTED`, it must be listed under `Not selected by routing` with a reason (intersection with
+this universe, deduplicated, sorted by ID). R1 may use the compressed one-line form.
+
+---
+
 ## 6. Finding admission, evidence, severity, and de-duplication
 
 ### 6.1 Finding admission
