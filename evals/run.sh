@@ -199,13 +199,28 @@ n_lines = len(lines)
 if n_lines <= 640: ok(f"skill_line_budget ({n_lines} <= 640)")
 else: fail(f"skill_line_budget ({n_lines} > 640)")
 
+# independence rule + brief contract must be stated in normative text (V2.2)
+prio = "Priority: `author-self-review` > `sequential-fallback` >\n`independent-pass`."
+if (prio in skill and "author_conflict_status" in skill
+        and "is the safe default" in skill
+        and "did not put history in the prompt" in skill):
+    ok("review_independence_rule_stated")
+else:
+    fail("review_independence_rule_stated", "independence rule block missing or reworded")
+if ("facts pass, interpretations do not" in skill and "Fact Pack" in skill
+        and "may not be hand-edited" in skill and "verbatim" in skill):
+    ok("brief_contract_stated")
+else:
+    fail("brief_contract_stated", "independent review brief contract missing or reworded")
+
 # report-contract markers: only proves the section/enums were not deleted wholesale.
 # Does NOT prove LLM behaviour - that is Group E + M6b territory.
 # Markers must be specific to the section-8 contract itself: the bare phrase "Not selected by
 # routing" also occurs in the 5a prose, and the bare enum words also occur in the Sufficiency
 # criteria paragraph, so either loose form leaves the guard unarmed (found by DM13 and DM8).
 markers = ["## 审查程序", "\nNot selected by routing:",
-           "Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>"]
+           "Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>",
+           "Review independence: <author-self-review | sequential-fallback | independent-pass>"]
 missing_m = [m for m in markers if m not in skill]
 if missing_m: fail("report_contract_markers_present", f"missing {missing_m}")
 else: ok("report_contract_markers_present")
