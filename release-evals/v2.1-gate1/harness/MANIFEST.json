@@ -1,0 +1,11 @@
+{
+  "_comment": "Copies of the evaluator-side generators, recorded so the V2.1 agent-level evidence is reproducible from the repository. They contain no answers: the run reports, the 20 scenario repos and the briefs stay in the evaluator workspace and are identified by scenario-manifest.json.",
+  "copied_at_commit": "5bb983b2b6f1209178b0ee096232860ebd4dff0c",
+  "scenario_manifest_note": "scenario-manifest.json holds each scenario repo's HEAD and worktree sha256.",
+  "shas": {
+    "build-scenarios.sh": "00138de553ae1230a5433bfd6a53201a0103d2166ebdd019cdedcbda24971e00",
+    "gen-am-mutations.py": "cc77f45af714fd9b16792160574995ce698ac00e72a18247b90f0fec4501acb1",
+    "make-briefs.py": "5cee5c9e163acf37323ccc1c28a9f255646b43b3f452058d7d412f430e8e8412",
+    "scenario-manifest.json": "fc5ac57c532ca526fea3631a7c3763150fcde2e9323b2ad395fffd94ecca32d1"
+  }
+}

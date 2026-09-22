@@ -14,9 +14,11 @@ than inheriting the old absolute score.
 ## V2.1 rubric
 
 Weights redistributed within 100 (total unchanged). V2.1 shifts weight from static description
-(architecture prose) toward procedure selection and honesty: four dimensions were renamed/sharpened
-— 3 → Procedure selection quality, 8 → Evidence triangulation, 10 → Over-review discipline,
-11 → Execution honesty.
+(architecture prose) toward procedure selection and honesty: 3 → Procedure selection quality,
+8 → Evidence triangulation, 10 → Over-review discipline, 11 → Execution honesty. The first V2.1
+draft of this table silently dropped V2.0.2's "Fix/verify control" dimension while the text above
+claimed the changes were renames only; dimension 13 restores it at 5 points, funded by trimming
+dimensions 6/8/11/12 (no dimension's meaning changed).
 
 | # | Dimension | Weight | What is checked |
 |---|---|---:|---|
@@ -25,13 +27,14 @@ Weights redistributed within 100 (total unchanged). V2.1 shifts weight from stat
 | 3 | Procedure selection quality | 10 | required set per R/S/surface selected; no silent omission of a mandatory procedure |
 | 4 | Size/batching | 6 | S1-S3 routing, bounded batches, no silent truncation |
 | 5 | Review independence | 7 | fresh/separate lenses when warranted; fallback disclosed |
-| 6 | A-J defect quality | 14 | spec, correctness, regression, security, tests, complexity, maintainability |
+| 6 | A-J defect quality | 13 | spec, correctness, regression, security, tests, complexity, maintainability |
 | 7 | Cross-file integration | 8 | contract/call-site drift caught after batching |
-| 8 | Evidence triangulation | 10 | R3/P0 findings carry >=2 evidence natures; LIMITED + residual when second unavailable |
+| 8 | Evidence triangulation | 9 | R3/P0 findings carry >=2 evidence natures; LIMITED + residual when second unavailable |
 | 9 | Tool fusion / de-dup | 5 | tools treated as evidence, false positives removed, duplicate root causes merged |
 | 10 | Over-review discipline | 6 | R1/S1 stays minimal; expensive procedures only on surface/justification |
-| 11 | Execution honesty | 8 | procedures DONE only when actually executed; LIMITED/BLOCKED disclosed |
-| 12 | Reporting/verdict | 10 | procedure block complete, Sufficiency correct, one mechanically correct verdict |
+| 11 | Execution honesty | 7 | procedures DONE only when actually executed; LIMITED/BLOCKED disclosed |
+| 12 | Reporting/verdict | 8 | procedure block complete, Sufficiency correct, one mechanically correct verdict |
+| 13 | Fix/verify control | 5 | stable finding IDs, targeted verification of the fix, bounded loops, FIXED/OPEN/REGRESSED status tracking |
 
 Total: 100.
 
