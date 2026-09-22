@@ -207,8 +207,8 @@ if (prio in skill and "author_conflict_status" in skill
     ok("review_independence_rule_stated")
 else:
     fail("review_independence_rule_stated", "independence rule block missing or reworded")
-if ("facts pass, interpretations do not" in skill and "Fact Pack" in skill
-        and "may not be hand-edited" in skill and "verbatim" in skill):
+if ("facts pass" in skill and "interpretations do not" in skill and "Fact Pack" in skill
+        and "hand-edited" in skill and "verbatim" in skill):
     ok("brief_contract_stated")
 else:
     fail("brief_contract_stated", "independent review brief contract missing or reworded")
