@@ -76,3 +76,22 @@ repository), because it changes a V2.0.x expectation.
 Nothing in `evals/expected-findings.json` was edited while writing this erratum: the V2.1 Gate 2
 scoring for this scenario was adjudicated against the fixture instead (see
 `release-evals/v2.1-gate1/m7-gate-report.md`, MS-V21-11).
+
+---
+
+## Disposition — CLOSED (2026-09-22, user decision: option 2)
+
+The record owner chose **option 2**: restore the injected initial state instead of rewriting the
+expectation. `build-scenarios.sh` no longer copies the post-fix fixture from the frozen PR-1
+workspace (which stays untouched); it constructs the scenario from the repository's own fixture
+pair — baseline commit = safe argv runner + the 3-requirement spec, workspace change = the
+`os.system` regression + the implementation-shaped weak test. The other 20 scenario worktrees
+rebuilt byte-identical; the frozen expectation was **not** edited and is now satisfiable.
+
+Behavioral proof: one fresh acceptance run on the restored fixture against the released
+authority (`348946ae…`) reported exactly the frozen `initial_must_report` set — `command_injection`
+as P0 with E1+E3 (injection probe executed) and `weak_security_test` as P1 — froze the IDs, fixed
+both in a read-only-respecting `/tmp` copy, re-ran the minimal checks (pre-fix: 0 tests collected;
+post-fix: 3 tests OK; injection probe red before / absent after), and closed at PASS in one cycle.
+Report: the evaluator workspace `runs/v2/S11-RESTORE.md`; scoring row in
+`release-evals/results.tsv`. Any future agent-suite run scores this scenario without adjudication.

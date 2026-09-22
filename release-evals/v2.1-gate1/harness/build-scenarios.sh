@@ -37,7 +37,6 @@ for pair in \
   "v2-pr-context-08:s08-prcontext" \
   "v2-r3-security-09:s09-r3security" \
   "v2-s3-integration-10:s10-s3integration" \
-  "v2-review-fix-verify-11:s11-reviewfix" \
   "v2-tool-fusion-12:v201-s12" \
   "v2-egress-optin-13:v201-s13" \
   "v2-injection-boundary-14:v201-s14"
@@ -46,6 +45,18 @@ do
   cp -R "/Volumes/ORICO/Projects/code-review-meta-review/pr1/scenarios/$dir" "$OUT/$id"
   find "$OUT/$id" -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
 done
+
+# v2-review-fix-verify-11: REVIEW_FIX from a genuine P0 (erratum-s11 option 2, user decision).
+# Baseline = safe argv runner + the 3-requirement spec; the workspace change injects the
+# os.system regression plus the implementation-shaped weak test. The frozen expectation
+# (initial_must_report: command_injection + weak_security_test) is satisfiable against this.
+P=$OUT/v2-review-fix-verify-11; mkdir -p "$P"
+cd "$P"; git init -q .
+cp "$REPO/evals/fixtures/HIGH_RISK_SPEC.md" SPEC.md
+cp "$REPO/evals/fixtures/baseline/runner.py" runner.py
+git add -A; git -c user.email=e@x -c user.name=e commit -qm "baseline: safe job runner"
+cp "$REPO/evals/fixtures/changed/runner.py" runner.py
+cp "$REPO/evals/fixtures/changed/test_runner.py" test_runner.py
 
 # --------------------------------------------------------- 3. Group E repos --
 # PRC-01 docs/narrow, R1-S1, no SPEC.

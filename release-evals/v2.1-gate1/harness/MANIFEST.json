@@ -3,12 +3,12 @@
   "copied_at_commit": "5bb983b2b6f1209178b0ee096232860ebd4dff0c",
   "scenario_manifest_note": "scenario-manifest.json holds each scenario repo's HEAD and worktree sha256.",
   "shas": {
-    "build-scenarios.sh": "f8fd9962076ed2d761b5ebccadd97479fde00add00df0b1abb94c77ce7da7f00",
+    "build-scenarios.sh": "0bcf3bc93131a83f4d875339992c3c351958b944fe40d1541682c5dff36706f9",
     "gen-am-mutations.py": "b1ba9a17c81652ebfd46833e7997bed659bf0d900eacfbfbdcc96741221c6399",
     "make-briefs.py": "48946ae76764c8457a4d9782b498aade0b36558415e67dedadf5d162c30a0d73",
-    "scenario-manifest.json": "d762c00f39c6c0b6c7ed1906f7c83f39dc7f6872c44fb56be3b1835f97ee4b5c"
+    "scenario-manifest.json": "26a842ee36c8a7b17420dfb91e5ba0d3c97427a097fc6d580c9aed3f7d5c617c"
   },
-  "updated_at_commit": "00571b8c5cc149fd427f4b6fb74be481cbb55948",
+  "updated_at_commit": "16ca9a87ea76541dc854aa6034768fd715a8a3a9",
   "am_mutation_set_v2": {
     "note": "Regenerated against the post-fix candidate 348946ae. Each mutation removes exactly one rule; the canonical file is never written.",
     "AM1": "delete the command_execution mandatory surface row",
@@ -17,5 +17,6 @@
     "AM4": "reverse the execution-honesty rule",
     "AM5": "remove the Review Sufficiency contract line and its criteria paragraph",
     "AM2": "verifier_harness row deletion - recorded NOT ATTRIBUTABLE in the previous cycle; not re-run"
-  }
+  },
+  "s11_restored": "2026-09-22 erratum option 2: builder constructs the injected initial state; expectation unchanged"
 }

@@ -1,8 +1,8 @@
 {
   "candidate": {
     "SKILL.md": "348946aec2e3b39388920bf862b8755f2323383f045f3ef44a2cfe5ee1a33455",
-    "README.md": "2abb627b1fa8fa7f16d60f2ee98a1d7c71353cebee850eaf0dffbf6c431fb9ba",
-    "README.zh-CN.md": "9ec14e88fa92d04076ce68452fed2e2f0933c9195bd4c1713f4ac00d1d3d4376"
+    "README.md": "8f0854bed5bd971996fe649cdc655b489be592f07c76905194e001024292d3d6",
+    "README.zh-CN.md": "aead00d88553889c2a360bfdfa709b8bd558e6f4a72927b6bdf64b8534add11b"
   },
   "scenarios": {
     "regress-no-test-runner-07": {
@@ -72,9 +72,9 @@
       "file_count": 3
     },
     "v2-review-fix-verify-11": {
-      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
-      "worktree_sha256": "46bffa92f6d3dd211b80ee0ae74990af70447b5d4ff4af1c5228651ed87aca46",
-      "dirty": "?? SPEC.md\n?? test_runner.py\n",
+      "head": "3c59b9c0ee0493bc1a8d10ed59e6322be33625d3",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? test_runner.py\n",
       "file_count": 3
     },
     "v2-s3-integration-10": {
@@ -90,7 +90,7 @@
       "file_count": 4
     },
     "v21-prc01-minimal-15": {
-      "head": "519fb2f0c80a73f4eb07aca16c619dec346d95d0",
+      "head": "841352cb35bdf44c7a708ca07a84bc25bb673b87",
       "worktree_sha256": "6d65a15cb6639574e47a73151c7b9cd8fdaad7206f6275d0960d0f7932659dd4",
       "dirty": " M README.md\n M app.py\n",
       "file_count": 3
@@ -108,25 +108,25 @@
       "file_count": 25
     },
     "v21-prc04-verifier-18": {
-      "head": "fc03cb470ca0b1e3c5f09e6bf113cf71fb19cda1",
+      "head": "2f1e34a31111af6cc2c25156378ac69924744af3",
       "worktree_sha256": "7ec470eb9eed81971bdb98746e59455df5f9df850072397a40d8278f4718c0fe",
       "dirty": " M check.sh\n?? check_test.sh\n",
       "file_count": 4
     },
     "v21-prc05-dynamic-19": {
-      "head": "0e243d66f703ee42dd3a0c011ecb35d37bd08ffc",
+      "head": "5fa245bcc15ef2bb5dc8c08bbd3653c281aaebe8",
       "worktree_sha256": "ff4cbbe58ebdc3e14b42e6fe080ded0de162091d16fc5c54f7d62f8ce3e3bd8e",
       "dirty": " M runner.py\n?? test_runner.py\n",
       "file_count": 3
     },
     "v21-prc06-authz-20": {
-      "head": "857fadde6319fdb7227e452843c6230164a2082e",
+      "head": "f155d0d8abb696398fbab13204f94ab6ace02667",
       "worktree_sha256": "71e86a84b3f7b0e780015d2fcb49ed01c12d996dab9402fc0a126d0b0a17d5aa",
       "dirty": " M records.py\n?? test_records.py\n",
       "file_count": 3
     },
     "v21-prc07-r3-nosurface-21": {
-      "head": "ca3d5c02eb1e5a0df3e1ddbce3f276706e412912",
+      "head": "2a2564f3b32e4126cc0a2dce17b53d6912dfadf5",
       "worktree_sha256": "e2a9c2e000686522e04066eda780ae0dc8ec0ebe522aa451bd28560ec02fb003",
       "dirty": " M derive.py\n",
       "file_count": 2
