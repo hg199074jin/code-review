@@ -123,7 +123,7 @@ lines = skill.split("\n")
 
 reg = {}
 for i, ln in enumerate(lines):
-    m = re.match(r"^\|\s*([A-J]\.[0-9]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$", ln)
+    m = re.match(r"^\|\s*([A-Z]\.[0-9]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$", ln)
     if m:
         reg.setdefault(m.group(1), []).append([a.strip() for a in m.group(3).split(",")])
 
