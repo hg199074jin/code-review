@@ -30,20 +30,20 @@ finding IDs, evidence grades, and verdict lines verbatim.
 ## 1. Non-negotiable invariants
 
 - **Scope before reasoning.** Never start from an arbitrary subset of changed files.
-- **Intent before judgment.** A reviewer cannot test specification compliance without identifying
-  the best available requirement source.
+- **Intent before judgment.** Specification compliance cannot be tested without the best available
+  requirement source.
 - **Risk changes depth, not honesty.** Low-risk changes may use fewer passes; no risk tier may skip
   the A–J standard.
 - **Coverage is explicit.** Every selected file is reviewed or listed as skipped with a reason.
 - **Findings need evidence.** No speculative P0/P1.
 - **Tools are witnesses, not judges.** A static analyzer or external reviewer output becomes a
   finding only after the coordinator verifies it against the code and scope.
-- **Reviewer independence matters.** For elevated/high-risk work, use fresh contexts or separate
-  passes; do not let the authoring conversation rubber-stamp itself.
+- **Reviewer independence matters.** Elevated/high-risk work uses fresh contexts or separate passes;
+  never let the authoring conversation rubber-stamp itself.
 - **The reviewer is source-tree read-only.** Fixes are performed only after an initial report is
   frozen and only when the user requested review-and-fix.
-- **External egress is opt-in.** Do not send repository content to an external reviewer or LLM
-  endpoint without explicit authorization.
+- **External egress is opt-in.** Repository content reaches an external reviewer or LLM only with
+  explicit authorization.
 - **No unbounded review/fix loops.** Verification cycles are bounded (§7).
 - **This file is the sole review standard.** Do not load or defer to a legacy same-named review
   skill (for example a superseded `review-agent`); where a pointer file exists, follow it here.
@@ -192,9 +192,8 @@ The thresholds are routing heuristics, not defect criteria.
 required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)
 ```
 
-The **route minimum is the floor for every route**: `R1_S1_minimum` is required in all cases, and
-R2/S2, R3 and S3 add their rows on top of it. A route never replaces the floor. The floor plus the
-`R3_minimum` row are what make "route minimum" concrete.
+The **route minimum is the floor for every route**: `R1_S1_minimum` is always required, and R2/S2,
+R3 and S3 add their rows on top of it. The floor plus `R3_minimum` is what "route minimum" means.
 
 <!-- PROCEDURE_SELECTION_BEGIN -->
 | Scope / surface | Required procedures | Class |
@@ -222,19 +221,15 @@ minimum — static source→sink reading is cheap, and skipping it on R2 risks u
 disclosure-eligible universe procedures (§5a) are all `NOT_SELECTED` and appear under
 `Not selected by routing`.
 
-`S3_additions` restates S3's own requirements; its four members are already required by the floor
-and the pass rows, so it changes no selection by itself. `R3_minimum` is a constraint row, not an ID
-set: every R3 review must select at least one procedure carrying the `ADVERSARIAL` attribute, must
-obtain or honestly record the absence of a second, different-nature corroboration, and must re-read
-the critical path independently. Selecting a matching mandatory surface row satisfies the surface
-requirement but never substitutes for the adversarial and corroboration requirements.
+`S3_additions` restates S3's requirements: the floor and the pass rows already require its members,
+so it changes no selection by itself. `R3_minimum` is a constraint row, not an ID set — every R3
+review must select at least one `ADVERSARIAL` procedure, must obtain or honestly record the absence
+of a different-nature corroboration, and must re-read the critical path independently. A matched
+surface row satisfies the surface requirement but never substitutes for those two.
 
 Execution structure: R1+S1 = one fresh pass over its minimum; R2/S2 = the two passes above; R3/S3 =
 specialist passes + final integration pass; any R3 security/data-loss path gets an independent
 re-read of the critical path even if another tool already flagged it.
-
-If the runtime supports fresh/isolated subagents, use them. If not, run the same lenses sequentially
-in the current context and disclose that context isolation was unavailable.
 
 For S3, partition by module, rule group, dependency boundary, or coherent feature slice. Do not
 blindly split by token count. After all batches, run a **cross-batch integration pass** for broken
@@ -420,9 +415,9 @@ P0/P1 require at least E1. Prefer E2/E3 when practical. A direct, decisive code-
 support P0 when reproduction would be unsafe or destructive.
 
 **Evidence triangulation.** On R3 critical paths, candidate P0s, command-execution, authz,
-destructive/data-loss findings, and verifier P1s, prefer two evidences of **different nature**
-(`E1+E2`, `E1+E3`, `E2 mutation + E1 guard reading`, `E1 call-site + E2 integration`). Two reviewers
-statically reading the same code raises independence only — it is not triangulation. When a second
+destructive/data-loss findings and verifier P1s, prefer two evidences of **different nature**
+(`E1+E2`, `E1+E3`, `E2 mutation + E1 guard reading`). Two reviewers statically reading the same code
+raises independence only — it is not triangulation. When a second
 evidence is unsafe or unavailable, do not force it: record `LIMITED/BLOCKED` on the procedure, state
 the residual risk, and do not auto-downgrade the severity.
 
@@ -539,7 +534,7 @@ External egress: <none | explicitly authorized tool>
 ## 检查覆盖
 A 规格符合性 ✅ | B 范围控制 ✅ | C 正确性 ✅ | D 边界/可靠性 ✅ | E 回归 ✅ |
 F 安全/数据安全 ✅ | G 测试质量 ✅ | H 复杂度 ✅ | I 可维护性 ✅ | J 综合裁决 ✅
-（✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明））
+（✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明）｜无选中程序的目标一律 ➖ 并写明理由，不得 ✅）
 
 ## 审查程序
 Selected:
@@ -552,9 +547,13 @@ see §5a disclosure rule>
 Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>
 ```
 
-`Review Sufficiency` is the statement "were the required procedures enough", never a verdict — the
-verdict stays mechanical over open P0/P1. When a finding used specific procedures, attribute them
-(next bracket after the objective): `[P1][CR-001][F][F.1/F.2][E3]`.
+`Review Sufficiency` answers "were the required procedures enough" and is never a verdict — the
+verdict stays mechanical over open P0/P1. `SUFFICIENT`: floor, matched surface rows and selected
+additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete.
+`LIMITED`: some required procedure is `LIMITED/BLOCKED` while findings and verdict still stand, with
+residual risk stated. `INSUFFICIENT`: a critical risk path was unchecked, scope materially
+incomplete, an R3 critical path lacks even E1, or the target is unresolvable — never call such a
+review complete. Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.
 
 Then findings first, ordered P0 → P3:
 

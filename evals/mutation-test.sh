@@ -261,8 +261,8 @@ cat > "$M" <<'DMEOF'
 import sys
 p = sys.argv[1]
 s = open(p, encoding="utf-8").read()
-old = ("The **route minimum is the floor for every route**: `R1_S1_minimum` is required in all cases, and\n"
-       "R2/S2, R3 and S3 add their rows on top of it. A route never replaces the floor.")
+old = ("The **route minimum is the floor for every route**: `R1_S1_minimum` is always required, and R2/S2,\n"
+       "R3 and S3 add their rows on top of it. The floor plus `R3_minimum` is what \"route minimum\" means.")
 assert old in s, "anchor missing"
 open(p, "w", encoding="utf-8").write(s.replace(old, "The route minimums are the tables below.", 1))
 DMEOF
