@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.1.0-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.2.0-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -367,6 +367,30 @@ case, and re-executed 16 fresh agent runs on the fixed artifact; the final indep
 follow-ups). The Human Merge Gate approved it, and V2.1 merged at `84ae4af` with a green post-merge
 smoke (59/59 + 54/54, 25/25, shellcheck 0) and a runtime sync of `SKILL.md` only. Full record:
 `release-evals/v2.1-gate1/m7-gate-report.md`, cycle 2.
+
+## V2.2 — Review Independence
+
+Goal: make "who reviewed this, and how independent was the review" explicit, machine-checkable,
+and honest about its limits — without changing the A-J standard, severity ladder, or verdict rule.
+
+- report-level `Review independence` (`author-self-review` / `sequential-fallback` /
+  `independent-pass`) with a fixed priority; a per-pass ledger (context, brief mode, authority sha,
+  isolation basis) that never uses those states
+- `independent-pass` is provable, not declared: runtime-confirmed isolated context, isolated brief
+  only, authority identity fixed, author conflict affirmatively cleared (`unknown` is the safe
+  default and caps Sufficiency at `LIMITED`)
+- the Independent Review Brief is fact-sanitized: a fixed Fact Pack schema fed by deterministic
+  resolvers - facts pass, interpretations do not
+- new acceptance scenarios: an author-conflict case, a no-fresh-reviewer case, and a
+  runtime-attested independent case (each proving one path)
+
+Release evidence in `release-evals/v2.1-gate1/results-v2.tsv` (v22-m5 rows): deterministic
+`run.sh` 61/61 + 56/56, `mutation-test.sh` **32/32** (DM1-DM22), `shellcheck` clean, `SKILL.md`
+639/640 lines, 12 fresh acceptance runs. Behavioral finding recorded honestly: model reviewers
+apply the independence cap reliably when author conflict is confirmed, but not for absence-based
+limitations - the cap is therefore **enforced by the runtime layer** (which owns authorship and
+dispatch facts), not left to reviewer self-assessment. Open follow-ups: the s11 fixture decision
+and the advisory-row semantics clarification.
 
 ## License
 

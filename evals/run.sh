@@ -199,13 +199,28 @@ n_lines = len(lines)
 if n_lines <= 640: ok(f"skill_line_budget ({n_lines} <= 640)")
 else: fail(f"skill_line_budget ({n_lines} > 640)")
 
+# independence rule + brief contract must be stated in normative text (V2.2)
+prio = "Priority: `author-self-review` > `sequential-fallback` >\n`independent-pass`."
+if (prio in skill and "author_conflict_status" in skill
+        and "is the safe default" in skill
+        and "did not put history in the prompt" in skill):
+    ok("review_independence_rule_stated")
+else:
+    fail("review_independence_rule_stated", "independence rule block missing or reworded")
+if ("facts pass" in skill and "interpretations do not" in skill and "Fact Pack" in skill
+        and "hand-edited" in skill and "verbatim" in skill):
+    ok("brief_contract_stated")
+else:
+    fail("brief_contract_stated", "independent review brief contract missing or reworded")
+
 # report-contract markers: only proves the section/enums were not deleted wholesale.
 # Does NOT prove LLM behaviour - that is Group E + M6b territory.
 # Markers must be specific to the section-8 contract itself: the bare phrase "Not selected by
 # routing" also occurs in the 5a prose, and the bare enum words also occur in the Sufficiency
 # criteria paragraph, so either loose form leaves the guard unarmed (found by DM13 and DM8).
 markers = ["## 审查程序", "\nNot selected by routing:",
-           "Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>"]
+           "Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>",
+           "Review independence: <author-self-review | sequential-fallback | independent-pass>"]
 missing_m = [m for m in markers if m not in skill]
 if missing_m: fail("report_contract_markers_present", f"missing {missing_m}")
 else: ok("report_contract_markers_present")
@@ -232,8 +247,12 @@ except Exception as exc:
 if tp is not None:
     need = ("must_select_procedures", "must_not_select_procedures", "must_exhibit_sufficiency", "must_exhibit_selection_reason")
     v21 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v21-")]
+    v22 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v22-")]
+    need22 = need + ("must_exhibit_review_independence",)
     miss = [sid for sid in v21 if sid not in ef.get("scenarios", {})
             or any(f not in ef["scenarios"][sid] for f in need)]
+    miss += [sid for sid in v22 if sid not in ef.get("scenarios", {})
+             or any(f not in ef["scenarios"][sid] for f in need22)]
     if miss: fail("group_e_contract_fields_present", f"missing fields/entries: {miss}")
     else: ok("group_e_contract_fields_present")
 
@@ -509,6 +528,7 @@ FROZEN_SCENARIOS = {
     "v2-egress-optin-13", "v2-injection-boundary-14",
     "v21-prc01-minimal-15", "v21-prc02-r3-16", "v21-prc03-s3-17", "v21-prc04-verifier-18",
     "v21-prc05-dynamic-19", "v21-prc06-authz-20", "v21-prc07-r3-nosurface-21",
+    "v22-prc08-author-conflict-22", "v22-r3a-sequential-23", "v22-r3b-independent-24",
 }
 if tp_ids != FROZEN_SCENARIOS or ef_ids != FROZEN_SCENARIOS:
     print("missing scenarios:", sorted(FROZEN_SCENARIOS - tp_ids - ef_ids))

@@ -13,7 +13,7 @@
 #   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
 #   M8  restore everything         -> PASS
 #
-#   DM1-DM19b (M6a, V2.1): every procedure-framework guard has its own injected failure,
+#   DM1-DM22 (M6a, V2.1): every procedure-framework guard has its own injected failure,
 #   and each red must be attributable to the target guard name (MS-001 discipline).
 #
 # Isolation rule: harness mutations run against throwaway copies under $WORK; the repo is
@@ -176,7 +176,7 @@ say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
 expect "M8 restored harness is green" pass "$rc"
 
-# ---- M6a: deterministic mutations (DM1-DM19b) ----
+# ---- M6a: deterministic mutations (DM1-DM22) ----
 
 say '[DM1] duplicate a procedure ID in the registry'
 M="$WORK/dm1.py"
@@ -418,6 +418,44 @@ ef["scenarios"].pop(sid, None)
 json.dump(ef, open(os.path.join(root, "expected-findings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 DMEOF
 dm_case dm19 "scenario JSONs invalid or desynchronized" evals/test-prompts.json "$M"
+
+say '[DM20] the independence priority sentence deleted'
+M="$WORK/dm20.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "Priority: `author-self-review` > `sequential-fallback` >\n`independent-pass`."
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "Priority: the three independence states.", 1))
+DMEOF
+dm_case dm20 review_independence_rule_stated SKILL.md "$M"
+
+say '[DM21] the brief-contract sentence deleted (facts/interpretations + Fact Pack provenance)'
+M="$WORK/dm21.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = ("facts pass,\n"
+       "interpretations do not; Fact Pack fields come from their declared resolvers and are never\n"
+       "hand-edited); and zero coordinator findings, suspicions, or reasoning reaching the reviewer.")
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "the task verbatim); and no coordinator findings or suspicions reaching the reviewer.", 1))
+DMEOF
+dm_case dm21 brief_contract_stated SKILL.md "$M"
+
+say '[DM22] the Review independence marker line deleted from the report contract'
+M="$WORK/dm22.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "Review independence: <author-self-review | sequential-fallback | independent-pass> — <reason>\n"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+DMEOF
+dm_case dm22 report_contract_markers_present SKILL.md "$M"
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"
