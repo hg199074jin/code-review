@@ -164,6 +164,13 @@ n_lines = len(lines)
 if n_lines <= 640: ok(f"skill_line_budget ({n_lines} <= 640)")
 else: fail(f"skill_line_budget ({n_lines} > 640)")
 
+# report-contract markers: only proves the section/enums were not deleted wholesale.
+# Does NOT prove LLM behaviour - that is Group E + M6b territory.
+markers = ["## 审查程序", "Review Sufficiency:", "SUFFICIENT", "LIMITED", "INSUFFICIENT"]
+missing_m = [m for m in markers if m not in skill]
+if missing_m: fail("report_contract_markers_present", f"missing {missing_m}")
+else: ok("report_contract_markers_present")
+
 LEGACY = re.compile(r"\b(?:A[1-3]|B[1-3]|C[1-3]|D[1-3]|F[1-5]|G[1-4]|H1|I[12]|J[1-3])\b")
 DOTTED = re.compile(r"[A-J]\.[0-9]+")
 dotted_bad, legacy_bad = [], []

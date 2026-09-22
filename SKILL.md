@@ -407,6 +407,13 @@ Every P0/P1 finding and every disputed P2 includes an evidence grade:
 P0/P1 require at least E1. Prefer E2/E3 when practical. A direct, decisive code-path proof can still
 support P0 when reproduction would be unsafe or destructive.
 
+**Evidence triangulation.** On R3 critical paths, candidate P0s, command-execution, authz,
+destructive/data-loss findings, and verifier P1s, prefer two evidences of **different nature**
+(`E1+E2`, `E1+E3`, `E2 mutation + E1 guard reading`, `E1 call-site + E2 integration`). Two reviewers
+statically reading the same code raises independence only — it is not triangulation. When a second
+evidence is unsafe or unavailable, do not force it: record `LIMITED/BLOCKED` on the procedure, state
+the residual risk, and do not auto-downgrade the severity.
+
 ### 6.3 Severity
 
 - **P0 Critical** — release blocker: exploitable security boundary, likely data loss/corruption,
@@ -521,12 +528,26 @@ External egress: <none | explicitly authorized tool>
 A 规格符合性 ✅ | B 范围控制 ✅ | C 正确性 ✅ | D 边界/可靠性 ✅ | E 回归 ✅ |
 F 安全/数据安全 ✅ | G 测试质量 ✅ | H 复杂度 ✅ | I 可维护性 ✅ | J 综合裁决 ✅
 （✅ 已查 ｜ ⚠️ 查了但受限（说明）｜ ➖ 不适用（说明））
+
+## 审查程序
+Selected:
+<each selected procedure: ID name — DONE/LIMITED/BLOCKED/NOT_APPLICABLE (+ reason if not DONE)>
+
+Not selected by routing:
+<every NOT_SELECTED procedure carrying the ADVERSARIAL or DYNAMIC attribute — one reason each;
+see §5a disclosure rule>
+
+Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>
 ```
+
+`Review Sufficiency` is the statement "were the required procedures enough", never a verdict — the
+verdict stays mechanical over open P0/P1. When a finding used specific procedures, attribute them
+(next bracket after the objective): `[P1][CR-001][F][F.1/F.2][E3]`.
 
 Then findings first, ordered P0 → P3:
 
 ```text
-[P1][CR-001][A/C][E2] Imperative finding title — path/to/file.ext:line
+[P1][CR-001][A/C][F.1][E2] Imperative finding title — path/to/file.ext:line
 Impact: <concrete affected scenario / blast radius>
 Evidence: <code path + test/tool/runtime evidence>
 Fix direction: <smallest safe direction; not a full patch unless asked>
