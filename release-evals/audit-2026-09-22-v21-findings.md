@@ -29,3 +29,12 @@ skill = repo skill = evaluated artifact (`348946ae`).
 Independence caveat: this audit was run by the session that authored most of V2.1; the standing
 route (a fresh reviewer, ideally a different model, once 5–10 real reviews have accumulated)
 remains the authoritative next audit.
+
+## Disposition (post-audit fix commit, same day)
+
+CR-003, CR-004 and CR-005 are **fixed** in the follow-up commit: both READMEs now state the merge,
+`evals/README.md` describes both agent-run cycles, `docs/V2-ARCHITECTURE.md` gained a V2.1 section,
+the three cycle-1 captures carry a header naming their candidate, and cycle-2 captures
+(`*-cycle2.txt`: 59/0, 54/0, 25/25) sit beside them. No `SKILL.md` or eval-code change; the suite
+re-verified green after the fixes (59/0, 54/0, 25/25, shellcheck 0).
+CR-001 (s11 fixture decision) and CR-002 (advisory semantics, next patch) remain open by design.

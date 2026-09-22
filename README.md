@@ -356,14 +356,15 @@ Release evidence in `release-evals/v2.1-gate1/` (two recorded cycles): `run.sh` 
 `SKILL.md` 637 lines against a 640-line hard budget; and 20 + 12 clean fresh agent runs across
 Groups A-E plus isolated agent-level mutations.
 
-**Fix cycle complete; awaiting the Human Merge Gate.** The first merge-safety review (stable-main
-authority) returned `P0 = 0, P1 = 1`: the Selection Matrix never stated that its base row is the
-floor for every route, carried no R3 minimum, and its S3 row could not change any selection. The fix
-cycle made the floor and the R3 minimum normative text, bound the guards to the document itself,
-added the no-surface R3 acceptance case, and re-executed 16 fresh agent runs on the fixed artifact.
-The final independent review (`05dd293..eab62b9`) returned **PASS, `P0 = 0, P1 = 0`** (2 P2 + 1 P3
-recorded as non-blocking follow-ups). Full record: `release-evals/v2.1-gate1/m7-gate-report.md`,
-cycle 2.
+**Merged.** The first merge-safety review (stable-main authority) returned `P0 = 0, P1 = 1`: the
+Selection Matrix never stated that its base row is the floor for every route, carried no R3
+minimum, and its S3 row could not change any selection. The fix cycle made the floor and the R3
+minimum normative text, bound the guards to the document itself, added the no-surface R3 acceptance
+case, and re-executed 16 fresh agent runs on the fixed artifact; the final independent review
+(`05dd293..eab62b9`) returned **PASS, `P0 = 0, P1 = 0`** (2 P2 + 1 P3 recorded as non-blocking
+follow-ups). The Human Merge Gate approved it, and V2.1 merged at `84ae4af` with a green post-merge
+smoke (59/59 + 54/54, 25/25, shellcheck 0) and a runtime sync of `SKILL.md` only. Full record:
+`release-evals/v2.1-gate1/m7-gate-report.md`, cycle 2.
 
 ## License
 

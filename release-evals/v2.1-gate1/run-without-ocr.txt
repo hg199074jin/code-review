@@ -1,3 +1,5 @@
+# cycle-1 capture (pre-fix candidate 41e10ff4). Current numbers: see
+# results-v2.tsv, m7-gate-report.md "Cycle 2", and results.tsv (post-merge smoke row).
   --   ocr not on PATH — ocr checks skipped (skill falls back to git diff)
 [1/6] fixture integrity
   ok   all 26 fixture files present

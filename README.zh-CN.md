@@ -363,12 +363,13 @@ PR #1 元评审的后续修补：
 `mutation-test.sh` 25/25 个故障注入全部转红（DM1–DM16）；`shellcheck` 干净；`SKILL.md` 637 行
 （硬预算 640）；以及 20 + 12 次 clean fresh agent run（Group A–E）与隔离的 agent 级 mutation。
 
-**修复周期已完成，等待 Human Merge Gate。** 第一轮 merge-safety review（权威 = 稳定 main）返回
-`P0 = 0、P1 = 1`：Selection Matrix 从未写明基础行是所有路由的地板、没有 R3 最低集行、S3 行无法
-改变任何选择。修复周期把地板与 R3 最低集写成运行时规范文本、把守卫绑定到文档本身、新增"无触发
-表面的 R3"验收场景，并在修复后的工件上重跑了 16 次 fresh agent run。最终独立 review
-（`05dd293..eab62b9`）返回 **PASS，P0 = 0、P1 = 0**（2 个 P2 + 1 个 P3 记录为不阻断的跟进项）。
-完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycle 2。
+**已合并。** 第一轮 merge-safety review（权威 = 稳定 main）返回 `P0 = 0、P1 = 1`：Selection
+Matrix 从未写明基础行是所有路由的地板、没有 R3 最低集行、S3 行无法改变任何选择。修复周期把地板
+与 R3 最低集写成运行时规范文本、把守卫绑定到文档本身、新增"无触发表面的 R3"验收场景，并在修复
+后的工件上重跑了 16 次 fresh agent run；最终独立 review（`05dd293..eab62b9`）返回 **PASS，
+P0 = 0、P1 = 0**（2 个 P2 + 1 个 P3 记录为不阻断的跟进项）。Human Merge Gate 批准后，V2.1 已在
+`84ae4af` 合并，合并后冒烟全绿（59/59 + 54/54、25/25、shellcheck 0），runtime 只同步了
+SKILL.md。完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycle 2。
 
 ## License
 

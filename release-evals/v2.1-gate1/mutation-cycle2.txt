@@ -1,5 +1,3 @@
-# cycle-1 capture (pre-fix candidate 41e10ff4). Current numbers: see
-# results-v2.tsv, m7-gate-report.md "Cycle 2", and results.tsv (post-merge smoke row).
 [M1] baseline: unmutated harness must be green
   ok   M1 normal harness is green
 [M2] mutation: delete a copied fixture (changed/test_service.py)
@@ -33,6 +31,22 @@
   ok   dm7
 [DM8] Review Sufficiency enum deleted from SKILL.md
   ok   dm8
+[DM9] the route-floor sentence deleted from 4.3
+  ok   dm9
+[DM10] the R3_minimum constraint row deleted from SKILL.md and the frozen JSON
+  ok   dm10
+[DM11] an adversarial procedure added to the route floor in SKILL.md AND the JSON
+  ok   dm11
+[DM12] the negative-control disclosure rule deleted from 5a
+  ok   dm12
+[DM13] the Not-selected disclosure block deleted from the section 8 reporting contract
+  ok   dm13
+[DM14] the planted authz bypass restored (fixture drift probe must fire)
+  ok   dm14
+[DM15] the real release gate restored in check.sh (fixture drift probe must fire)
+  ok   dm15
+[DM16] the guard block crashes halfway (partial green must read as red)
+  ok   dm16
 
-mutation test: 17/17 cases behaved as required
+mutation test: 25/25 cases behaved as required
 All failure paths are armed: the harness goes red exactly when its condition stops holding.

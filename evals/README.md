@@ -101,9 +101,11 @@ missing negative-path test. `run.sh` asserts that both planted defects stay plan
 run.sh verifies deterministic plumbing, not LLM quality. The agent layer must be executed with a
 fresh review context and compared to expected-findings.json.
 
-V2.1's agent layer was executed as 20 clean fresh runs (Groups A-D regression + Group E acceptance)
-plus 6 mutated runs for the isolated agent-level mutations; the runs, their scoring and the
-adjudicated Gate 4 review are recorded in `release-evals/v2.1-gate1/`.
+V2.1's agent layer ran in two recorded cycles. Cycle 1 (the pre-fix candidate): 20 clean fresh runs
+(Groups A-D + E) plus 6 mutated runs. Cycle 2 (after the route-minimum/R3-floor fix, on the released
+artifact): 12 clean runs including the no-surface R3 acceptance case, 3 mutated runs, and two
+independent merge-safety rounds (FAIL -> fixes -> PASS). Scoring and adjudication for both cycles
+live in `release-evals/v2.1-gate1/` (`results.tsv`, `results-v2.tsv`, `m7-gate-report.md`).
 
 The old V1 Darwin score (86.8 in that judging run) is historical only. V2 deliberately does not
 inherit it. A major architecture change must earn a new paired evaluation.

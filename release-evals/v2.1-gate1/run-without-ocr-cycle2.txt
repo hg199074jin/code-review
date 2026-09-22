@@ -1,7 +1,8 @@
-# cycle-1 capture (pre-fix candidate 41e10ff4). Current numbers: see
-# results-v2.tsv, m7-gate-report.md "Cycle 2", and results.tsv (post-merge smoke row).
+  --   ocr not on PATH — ocr checks skipped (skill falls back to git diff)
 [1/6] fixture integrity
   ok   all 26 fixture files present
+  ok   authz bypass planted (cross-user read returns another user's record)
+  ok   always-pass verifier planted (check.sh succeeds with no build report)
 [1b/6] V2.1 procedure registry & disclosure universe
   ok   procedure_count_exactly_30
   ok   procedure_ids_unique
@@ -9,8 +10,9 @@
   ok   procedure_id_pattern_canonical
   ok   procedure_attributes_valid
   ok   disclosure_universe_matches
+  ok   disclosure_rule_stated
   ok   j_procedures_not_business_lens
-  ok   skill_line_budget (626 <= 640)
+  ok   skill_line_budget (637 <= 640)
   ok   report_contract_markers_present
   ok   readme_dotted_procedure_ids_valid
   ok   readme_legacy_procedure_ids_absent
@@ -19,8 +21,12 @@
   ok   selection_rows_unique
   ok   selection_ids_exist
   ok   mandatory_advisory_classification_stable
+  ok   route_floor_stated
+  ok   r3_minimum_present
   ok   r1_no_default_adversarial
   ok   selection_matrix_expected_sync
+  ok   frozen_universe_field_in_sync
+  ok   r1_forbidden_defaults_in_sync
   ok   spec-1 defect planted (total() raises on missing price)
   ok   spec-3 defect planted (apply_discount accepts pct=101)
   ok   spec-2 correctly implemented (format_invoice renders amount)
@@ -39,14 +45,12 @@
   ok   injection attempt planted
   ok   synthetic credential planted
   ok   PR42 metadata fixture present
-  ok   scenario JSONs valid and id-synchronized (20 cases)
+  ok   scenario JSONs valid and id-synchronized (21 cases)
 [2/6] build fixture repo
   ok   baseline committed on main
   ok   workspace dirty (changed + SPEC untracked)
 [3/6] ocr deterministic scope
-  ok   delegate preview json lists invoice.py
-  ok   preview mentions test_invoice.py (excluded paths visible)
-  ok   scan --preview enumerates whole repo without LLM
+  --   skipped (no ocr)
 [4/6] base-resolution trap (why upstream != merge target)
   ok   upstream armed (push succeeded)
   ok   feature-x upstream resolves (@{u})
@@ -55,10 +59,8 @@
   --   origin/HEAD unresolvable in this fixture (structural) — ladder falls through to main
 [5/6] R3 high-risk fixture
   ok   R3 fixture still injectable (payload executes)
-  ok   R3 fixture is visible to deterministic scope
 [6/6] S3 cross-file integration fixture
   ok   S3 fixture exceeds 20 changed files (24)
   ok   cross-file contract drift planted (consumer stale)
-  ok   S3 fixture is visible to deterministic scope
 
-result: 52 passed, 0 failed (set CR_EVAL_KEEP=1 to inspect /var/folders/cj/byj4hb2j0c1d9jydpcvtd9t40000gn/T//cr-eval.iTy8T3)
+result: 54 passed, 0 failed (set CR_EVAL_KEEP=1 to inspect /tmp/cr-eval.u2DE1J)

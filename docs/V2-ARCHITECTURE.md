@@ -162,3 +162,31 @@ V2 should be considered successful only when evals show that it can:
 8. run review/fix/verify without entering an infinite loop;
 9. preserve one mechanical verdict;
 10. disclose incomplete coverage instead of pretending a full audit.
+
+## V2.1 addition — the Review Procedure Framework
+
+V2.1 layers a risk-based procedure framework under the unchanged V2 control plane. Nothing above
+changes: the A-J objectives, the P0-P3 ladder, the evidence grades and the single mechanical verdict
+are exactly as before.
+
+- Each A-J objective is served by named **procedures** (30, `A.1` … `J.3`) with static attributes
+  (`CORE` / `EXTENDED` / `ADVERSARIAL` / `DYNAMIC`). Procedures are the *how*; objectives remain the
+  *what*.
+- **Selection and execution are separate.** Routing decides `SELECTED` / `NOT_SELECTED`; a selected
+  procedure then carries exactly one execution status (`DONE` / `LIMITED` / `BLOCKED` /
+  `NOT_APPLICABLE`). `NOT_SELECTED` is never an execution status.
+- The **route minimum is the floor for every route** (`R1_S1_minimum`); higher risk and larger size
+  add rows (two R2/S2 passes, `S3_additions`, and the `R3_minimum` constraint row: at least one
+  ADVERSARIAL procedure, a different-nature corroboration, and an independent critical-path re-read).
+  Four mandatory surfaces (command execution, auth/permission, file destructive, verifier harness)
+  force their own procedures regardless of route.
+- **Negative control is disclosed**: the six ADVERSARIAL/DYNAMIC procedures that routing did *not*
+  select are listed in the report with reasons.
+- **Evidence triangulation** (two different natures on R3 critical paths and qualifying findings) and
+  **Review Sufficiency** (`SUFFICIENT` / `LIMITED` / `INSUFFICIENT`, never a verdict) round out the
+  reporting contract.
+
+The Selection Matrix is a Markdown table in `SKILL.md` kept in sync with a frozen evaluator-only
+expectation (`evals/fixtures/procedure-selection.json`), and the harness verifies the registry, the
+matrix, the disclosure universe and the reporting markers on every run, with failure-injection
+proofs (DM1-DM16) that each check actually goes red when its condition stops holding.
