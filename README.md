@@ -347,22 +347,23 @@ standard, the severity ladder, or the verdict rule.
 - negative-control disclosure: unselected adversarial/dynamic procedures are reported with reasons
 - evidence triangulation folded into the evidence rules; Review Sufficiency added to the reporting
   contract
-- six Group E acceptance scenarios, deterministic guards, deterministic mutations DM1-DM8, and
-  agent-level mutations AM1-AM5 executed against isolated mutated copies of the skill (the frozen
-  `SKILL.md` is never mutated)
+- seven Group E acceptance scenarios (including an R3 change that triggers no mandatory surface),
+  deterministic guards, deterministic mutations DM1-DM16, and agent-level mutations executed against
+  isolated mutated copies of the skill (the frozen `SKILL.md` is never mutated)
 
-Release evidence in `release-evals/v2.1-gate1/`: `run.sh` 52/52 with `ocr`, 47/47 without;
-`mutation-test.sh` 17/17; `shellcheck` clean; 20 clean fresh agent runs across Groups A-D and E;
-4 attributable isolated agent-level mutations (1 non-attributable, recorded); `SKILL.md` 625 lines
-against a 640-line hard budget.
+Release evidence in `release-evals/v2.1-gate1/` (two recorded cycles): `run.sh` 59/59 with `ocr`,
+54/54 without; `mutation-test.sh` 25/25 failure injections (DM1-DM16); `shellcheck` clean;
+`SKILL.md` 637 lines against a 640-line hard budget; and 20 + 12 clean fresh agent runs across
+Groups A-E plus isolated agent-level mutations.
 
-**Merge withheld.** The independent merge-safety review (stable-main authority, `05dd293..c886324`)
-returned `P0 = 0, P1 = 1` -> `NEEDS_REVISION`. The P1 is the Selection Matrix's route-minimum
-semantics: the base row is only named `R1_S1_minimum`, 2 of 20 fresh runs read an R2 route as
-"pass rows only" (16-18 procedures) instead of "base minimum plus pass rows" (22), the matrix
-carries no R3 minimum, and `S3_additions` cannot change any selection. The fix plus the re-run
-scope is a pending decision; full findings, their adjudication and the escalation determination are
-in `release-evals/v2.1-gate1/m7-gate-report.md`.
+**Fix cycle complete; awaiting the Human Merge Gate.** The first merge-safety review (stable-main
+authority) returned `P0 = 0, P1 = 1`: the Selection Matrix never stated that its base row is the
+floor for every route, carried no R3 minimum, and its S3 row could not change any selection. The fix
+cycle made the floor and the R3 minimum normative text, bound the guards to the document itself,
+added the no-surface R3 acceptance case, and re-executed 16 fresh agent runs on the fixed artifact.
+The final independent review (`05dd293..eab62b9`) returned **PASS, `P0 = 0, P1 = 0`** (2 P2 + 1 P3
+recorded as non-blocking follow-ups). Full record: `release-evals/v2.1-gate1/m7-gate-report.md`,
+cycle 2.
 
 ## License
 

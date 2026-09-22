@@ -356,18 +356,19 @@ PR #1 元评审的后续修补：
   `evals/fixtures/procedure-selection.json` 同步、由 `run.sh` 机械核对
 - 负控制披露：未选中的对抗/动态程序必须逐条给出理由
 - 三角验证并入证据规则；Review Sufficiency 进入报告契约
-- 6 个 Group E 验收场景、确定性守卫、确定性 mutation DM1–DM8，以及针对**隔离的变异副本**执行的
-  agent 级 mutation AM1–AM5（冻结的 `SKILL.md` 永不被变异）
+- 7 个 Group E 验收场景（含一个不触发任何强制表面的 R3 改动）、确定性守卫、确定性 mutation
+  DM1–DM16，以及针对**隔离的变异副本**执行的 agent 级 mutation（冻结的 `SKILL.md` 永不被变异）
 
-发布证据在 `release-evals/v2.1-gate1/`：`run.sh` 有 ocr 52/52、无 ocr 47/47；`mutation-test.sh`
-17/17；`shellcheck` 干净；20 次 clean fresh agent run（Group A–D + E）、4 个可归因的隔离 agent 级
-mutation（另 1 个不可归因，已记录）；`SKILL.md` 625 行（硬预算 640）。
+发布证据在 `release-evals/v2.1-gate1/`（两个周期均有记录）：`run.sh` 有 ocr 59/59、无 ocr 54/54；
+`mutation-test.sh` 25/25 个故障注入全部转红（DM1–DM16）；`shellcheck` 干净；`SKILL.md` 637 行
+（硬预算 640）；以及 20 + 12 次 clean fresh agent run（Group A–E）与隔离的 agent 级 mutation。
 
-**合并已停止。** 独立 merge-safety review（权威 = 稳定 main，范围 `05dd293..c886324`）返回
-`P0 = 0、P1 = 1` → `NEEDS_REVISION`。该 P1 是 Selection Matrix 的 route minimum 语义：基础行只叫
-`R1_S1_minimum`，20 次 fresh run 中有 2 次把 R2 路由读成"只跑 pass 行"（16–18 项）而非"基础最低集 +
-pass 行"（22 项）；矩阵没有 R3 最低集行；`S3_additions` 行无法改变任何选择结果。修复方案与重跑范围
-待定；完整 findings、逐条裁定与升级判定见 `release-evals/v2.1-gate1/m7-gate-report.md`。
+**修复周期已完成，等待 Human Merge Gate。** 第一轮 merge-safety review（权威 = 稳定 main）返回
+`P0 = 0、P1 = 1`：Selection Matrix 从未写明基础行是所有路由的地板、没有 R3 最低集行、S3 行无法
+改变任何选择。修复周期把地板与 R3 最低集写成运行时规范文本、把守卫绑定到文档本身、新增"无触发
+表面的 R3"验收场景，并在修复后的工件上重跑了 16 次 fresh agent run。最终独立 review
+（`05dd293..eab62b9`）返回 **PASS，P0 = 0、P1 = 0**（2 个 P2 + 1 个 P3 记录为不阻断的跟进项）。
+完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycle 2。
 
 ## License
 
