@@ -253,3 +253,98 @@ missing R3 minimum). Therefore:
 | M6b agent mutations | 4 detected, 1 non-attributable (recorded) |
 | Gate 4 merge-safety | **FAIL — P0 = 0, P1 = 1** |
 | Mergeable now? | **No.** Fix MS-V21-01 and the P2s, then re-run and re-review |
+
+
+---
+
+# Cycle 2 — fix cycle results (2026-09-22)
+
+Evaluated AND released artifact: `SKILL.md` sha256
+`348946aec2e3b39388920bf862b8755f2323383f045f3ef44a2cfe5ee1a33455` (line count 637/640). The first
+cycle's 26 runs belong to the superseded `41e10ff4…` and are kept as history only.
+
+## Commits
+
+`c91085b` F1a normative fix · `180cc19` F1b DM9–DM13 · `e5912cd` F2 Sufficiency criteria ·
+`5bb983b` F3 fixture drift probes · `16c2ee3` F4 rubric/README/evidence/erratum · `00571b8` F5
+PRC-07 · `ad4e418` F6 freeze · `35b8900` F7 GUARDS_COMPLETE sentinel · `eab62b9` F6 cycle-2 evidence.
+
+## Gate 1 (re-declared green only after the new guards had mutation proofs)
+
+`run.sh` 59/0 with `ocr`, 54/0 without; `mutation-test.sh` **25/25** (DM1–DM16, including DM16 for
+the mid-block-crash false-green window that Gate 4 round 2 found); `shellcheck` clean; SKILL.md
+637/640; the two previously inert expectation fields are now guard-consumed.
+
+## Gates 2+3 (cycle 2): 12 clean fresh runs — all contracts met
+
+Scoring: `results-v2.tsv`. Highlights:
+
+- **PRC-07 (new)** — an R3 change that triggers none of the four mandatory surfaces still selected
+  and executed an adversarial procedure (F.1) **via the new `R3_minimum` row**, stated the
+  different-nature corroboration and the critical-path reread, and claimed no surface. This is the
+  behavioral proof that the round-1 P1 is fixed.
+- The two runs that misread the route minimum in cycle 1 (06, 07) both read **floor ∪ passes** this
+  time; no divergence recurred.
+- `v2-s3-integration-10`'s severity matched the frozen catalog exactly this cycle (P1 →
+  NEEDS_REVISION); the cycle-1 P0 variance did not recur.
+- Recorded variances (content present, folded per §6.4 same-root-cause dedup): weak_tests
+  (workspace-01) and weak_integration_test (s3-integration-10); severity variance on 07's unrunnable
+  suite (P1 here vs P2/P3 in cycle 1).
+
+## M6b (cycle 2): 2 detected, 1 not attributable — recorded, not papered over
+
+- AM2R (remove the disclosure rule): **DETECTED** — the not-selected list became an indiscriminate
+  20-item enumeration, `ADVERSARIAL`/`DYNAMIC`/`universe` 0 mentions (clean run: 6 scoped items).
+- AM3 (adversarial procedures into the R1 floor): **DETECTED** — a docs-only R1 review selected F.2
+  and G.2; G.2 even ran a mutation challenge on a comment change.
+- AM1 (delete the `command_execution` row): **NOT ATTRIBUTABLE on this model** — the reviewer
+  re-added F.2 and F.5 by discretionary addition and still ran a real injection probe. The security
+  *behavior* survived the row's removal; the *row* is therefore not mutation-verifiable on this
+  model. Recorded as a negative result next to cycle 1's detected AM1 (different model): row-level
+  selection enforcement is model-dependent, which is itself a finding about how much the framework
+  should rely on discretionary additions.
+- AM4/AM5 were not re-run (Option B scope); cycle 1's detections stand for those rules.
+
+## Gate 4 (cycle 2): round 2 FAIL → fixes → round 3 PASS
+
+- Round 2 (`05dd293..ad4e418`): **NEEDS_REVISION, P0=0, P1=1** — the committed release evidence still
+  belonged to the pre-fix candidate (correct: the F6 results were not yet in the repository). Also
+  found: a mid-block-crash false-green window in `run.sh`'s guard block (P2, fixed by the
+  `GUARDS_COMPLETE` sentinel + DM16), undefined advisory-row semantics (P2 → follow-up MS-V21-12, the
+  sentence was deliberately **not** added so the released artifact stays byte-identical to the
+  evaluated one), stale README evidence (P3, fixed), a results.tsv cross-reference typo (P3, fixed).
+- Round 3 (`05dd293..eab62b9`): **PASS, P0=0, P1=0, P2=2, P3=1.** The reviewer independently
+  reproduced every deterministic number (59/0, 54/0, 25/25, shellcheck 0, baseline 34/0/29/0/14/14),
+  re-derived all hashes (HEAD SKILL.md = candidate snapshot = evaluated artifact; 21/21 scenario
+  worktrees), re-ran three false-green injections (all red), and confirmed the round-1 P1 and the
+  round-2 CR-002/003/006 genuinely closed. Residual boundary: the 16 agent runs were verified
+  statically (hashes, frozen refs, consistency), not re-executed.
+
+## Findings disposition (cumulative)
+
+| Finding | Disposition |
+|---|---|
+| MS-V21-01 (P1, route minimum / R3 floor) | **FIXED** (F1a) and behaviorally proven (PRC-07, PRC-06) |
+| MS-V21-02 (P3, coverage line vs selection) | **FIXED** (F2 legend rule) |
+| MS-V21-03 (P2, hardcoded guard pair) | **FIXED** (F1a universe-bound guard) |
+| MS-V21-04 (P2, disclosure rule unguarded) | **FIXED** (F1a `disclosure_rule_stated` + DM12) |
+| MS-V21-05 (P2, new fixtures undrifted) | **FIXED** (F3 probes + DM14/DM15) |
+| MS-V21-06 (P2, Sufficiency criteria missing) | **FIXED** (F2) |
+| MS-V21-07 (P3, rubric dropped fix/verify) | **FIXED** (F4 dimension 13) |
+| MS-V21-08 (P3, evals/README stale) | **FIXED** (F4) |
+| MS-V21-09 (P3, evidence chain out-of-tree) | **FIXED** (F4 harness copies; generators updated in F6) |
+| MS-V21-10 (record, M0 manifest) | **FIXED** (M7 cycle 1) |
+| MS-V21-11 (record, s11 expectation) | **OPEN follow-up** — erratum written; fixture decision belongs to the V2.0.2 record owner (`release-evals/v2.1-baseline/erratum-s11.md`) |
+| MS-V21-12 (P2, advisory-row semantics) | **OPEN follow-up** — deliberately not added post-evaluation; next patch, with its own targeted re-run |
+| Round-2 CR-003 (P2, guard-block crash window) | **FIXED** (F7 sentinel + DM16) |
+
+## Human Merge Gate input (cycle 2)
+
+| Item | Status |
+|---|---|
+| Gate 1 deterministic | PASS (59/0, 54/0, 25/25, shellcheck 0, 637 lines) |
+| Gates 2+3 agent | 12/12 contracts met (4 recorded variances, no missed defects) |
+| M6b mutations | 2 detected + 1 honestly non-attributable this cycle |
+| Gate 4 merge-safety | **PASS (P0=0, P1=0)** after the round-2 findings were fixed |
+| Open follow-ups | MS-V21-11 (s11 erratum, V2.0.2 record), MS-V21-12 (advisory semantics, next patch) |
+| Mergeable? | **Yes by the protocol's bar.** Merge + post-merge sync execute only on the user's explicit GO. |
