@@ -26,7 +26,7 @@ dimensions 6/8/11/12 (no dimension's meaning changed).
 | 2 | Intent grounding | 8 | requirement-source priority, no invented spec, PR context handled correctly |
 | 3 | Procedure selection quality | 10 | required set per R/S/surface selected; no silent omission of a mandatory procedure |
 | 4 | Size/batching | 6 | S1-S3 routing, bounded batches, no silent truncation |
-| 5 | Review independence | 7 | fresh/separate lenses when warranted; fallback disclosed |
+| 5 | Review independence | 7 | report-level independence state correct (author-self-review / sequential-fallback / independent-pass per the pass ledger); independence caps Sufficiency; fallback disclosed |
 | 6 | A-J defect quality | 13 | spec, correctness, regression, security, tests, complexity, maintainability |
 | 7 | Cross-file integration | 8 | contract/call-site drift caught after batching |
 | 8 | Evidence triangulation | 9 | R3/P0 findings carry >=2 evidence natures; LIMITED + residual when second unavailable |

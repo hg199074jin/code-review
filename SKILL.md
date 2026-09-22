@@ -2,7 +2,7 @@
 name: code-review
 description: The single entry point for code review. Resolves scope deterministically, builds intent context, routes by risk and change size, runs independent review lenses, fuses tool evidence, deduplicates findings, and returns one mechanical PASS / NEEDS_REVISION / FAILED verdict. Use for workspace/branch/commit/PR review, merge-safety checks, whole-repo audits, review-and-fix, or post-fix verification.
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # Code Review — Review Control Plane

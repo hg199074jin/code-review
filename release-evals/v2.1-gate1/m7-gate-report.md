@@ -348,3 +348,43 @@ Scoring: `results-v2.tsv`. Highlights:
 | Gate 4 merge-safety | **PASS (P0=0, P1=0)** after the round-2 findings were fixed |
 | Open follow-ups | MS-V21-11 (s11 erratum, V2.0.2 record), MS-V21-12 (advisory semantics, next patch) |
 | Mergeable? | **Yes by the protocol's bar.** Merge + post-merge sync execute only on the user's explicit GO. |
+
+
+---
+
+# V2.2 cycle — review independence (2026-09-23)
+
+Design: `code-review-meta-review/v22-design-review/code-review-V2.2-设计文档-v2.md` (four external
+review rounds). Branch `v2.2-review-independence`.
+
+## Gates
+
+- M1+M2 (`d15d317` + fixes): SKILL.md independence section (author_conflict_status confirmed/
+  cleared/unknown, priority, pass ledger, five-condition independent pass, runtime cap) + four
+  bundled contract fixes; guards `review_independence_rule_stated` / `brief_contract_stated` /
+  marker extension; DM20-DM22. Deterministic: run.sh 61/0 + 56/0, mutation 32/32, shellcheck 0,
+  640/640 lines.
+- M3 (`13390b6` + `a7172cc`): 24-case frozen set; three single-factor independence scenarios
+  (PRC-08 author-conflict / R3-A no-fresh-reviewer / R3-B independent-pass).
+- M5 (12 fresh runs, `results-v2.tsv` v22-m5 rows): declared-path acceptance **PASS** —
+  PRC-08 author-self-review disclosed + LIMITED; R3-B independent-pass + SUFFICIENT; R3-A
+  disclosed sequential-fallback but graded SUFFICIENT (cap miss); Group E all contracts met,
+  field-local migration invariant demonstrated (findings unchanged, sufficiency changed).
+- **V22-F2 behavioral finding**: the independence cap is applied by model reviewers when author
+  conflict is CONFIRMED (1/1) but NOT for absence-based limitations (0/3: prc04 a/b/d across three
+  text variants, R3-A). Conclusion: the cap is not model-self-enforceable; enforcement moved to the
+  runtime layer (mechanical attestation from facts the runtime owns). Design doc amended (§A).
+- M1b fix en route (`d4b7caf`): M5 also surfaced that the cap never propagated to the judgment
+  site; first fixed as section-8 criteria, then as a red CHECKPOINT - and finally moved to the
+  SUFFICIENT definition + runtime enforcement after samples c/d.
+
+## M6 merge-safety (V2.2 delta)
+
+- Round 1 (`84ae4af..a7172cc`, deployed-V2.1 authority): **NEEDS_REVISION, P0=0, P1=1** - CR-001:
+  the M1+M2 commit claimed DM20-DM22 injection proofs that were never committed (the guards
+  themselves verified working via the reviewer's own probes). Plus 2 P2 (dangling SHA in
+  results-v2; v22 contracts missing F.2), 2 P2 release-docs items (version still 2.1.0, rubric
+  dim 5 stale), 2 P3.
+- All findings fixed (DM20-22 implemented for real, 32/32; contracts corrected; version 2.2.0;
+  READMEs; rubric; identity records). CR-005/CR-006 recorded as follow-ups.
+- Final status: awaiting the narrow M6 re-verification + Human Merge Gate.

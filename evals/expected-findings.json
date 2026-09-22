@@ -434,6 +434,7 @@
       "expected_verdict": "FAILED or NEEDS_REVISION per severity ladder",
       "must_select_procedures": [
         "F.1",
+        "F.2",
         "G.1",
         "J.2"
       ],
@@ -459,6 +460,7 @@
       "expected_verdict": "FAILED or NEEDS_REVISION per severity ladder",
       "must_select_procedures": [
         "F.1",
+        "F.2",
         "G.1",
         "J.2"
       ],

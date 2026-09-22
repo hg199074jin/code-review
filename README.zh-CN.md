@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.1.0-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.2.0-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)
@@ -370,6 +370,25 @@ Matrix 从未写明基础行是所有路由的地板、没有 R3 最低集行、
 P0 = 0、P1 = 0**（2 个 P2 + 1 个 P3 记录为不阻断的跟进项）。Human Merge Gate 批准后，V2.1 已在
 `84ae4af` 合并，合并后冒烟全绿（59/59 + 54/54、25/25、shellcheck 0），runtime 只同步了
 SKILL.md。完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycle 2。
+
+## V2.2 — Review Independence（审查独立性）
+
+目标：把"谁来审、这次复核到底有多独立"变成显式、可机械核对、对自身局限诚实的东西——不动 A–J 标准、严重度阶梯与裁决规则。
+
+- 报告级 `Review independence` 三态（`author-self-review` / `sequential-fallback` /
+  `independent-pass`）+ 固定优先级；逐 pass 台账（上下文、简报模式、权威 sha、隔离依据），
+  台账永不使用三态
+- `independent-pass` 是**可证明**的而非自称的：运行时可确认的隔离上下文、只收隔离简报、
+  权威标识固定、作者冲突被**正向排除**（`unknown` 是安全默认，会把 Sufficiency 封顶在
+  `LIMITED`）
+- 独立简报事实净化：固定 Fact Pack schema + 确定性 resolver——事实可以传，解释不能传
+- 新增三个互斥验收场景：作者冲突、无 fresh reviewer、运行时证明的独立（各证明一条路径）
+
+发布证据见 `release-evals/v2.1-gate1/results-v2.tsv`（v22-m5 行）：确定性 `run.sh` 61/61 + 56/56、
+`mutation-test.sh` **32/32**（DM1–DM22）、`shellcheck` 干净、`SKILL.md` 640/640 行、12 次 fresh
+验收运行。行为学发现如实记录：作者冲突**已确认**时模型能正确封顶，但**缺失型**限制（无 fresh
+reviewer / 来源未知）不能自我执行——封顶因此改由 **runtime 层机械执行**（作者与派发事实归
+runtime 所有）。跟进项：s11 fixture 决策、advisory 行语义澄清。
 
 ## License
 
