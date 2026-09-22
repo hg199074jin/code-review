@@ -1,0 +1,3 @@
+referenced fixtures checked: 14 | missing: none
+test_cases: 20 | expected scenarios: 20 | defect_catalog: 15
+ids match: True | only_tp: [] | only_ef: []
