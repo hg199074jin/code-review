@@ -1,0 +1,17 @@
+V2.1 candidate identity (evidence-chain record)
+
+evaluated SKILL.md sha256 : 41e10ff4fe8fc326b44b6b9d1e38f91d87301a886f4148b06b39f0a2d36d3d6f
+  (metadata.version "2.0.2"; this is the file the 20 clean + 6 mutated runs read)
+released  SKILL.md sha256 : 1dec1b623c79cf01c00f7e95cb2e96b5fe193f033ae40051d888b3d505f4b94d
+  (metadata.version "2.1.0")
+
+delta: exactly one line - frontmatter metadata.version. Machine check:
+  git diff 41e10ff4 <release-commit> -- SKILL.md
+  grep -n '2\.0\.2' SKILL.md   -> no match
+  grep -n '2\.1\.0' SKILL.md   -> frontmatter only
+The version token appears nowhere else in SKILL.md and is not referenced by any deterministic
+guard, fixture or contract field, so the release delta cannot change review behaviour; the
+agent-level evidence nevertheless belongs to the evaluated SHA and is recorded as such.
+
+Line budget: 625 lines (hard budget 640). Recorded counts: baseline 510 (M0) / 578 (M1) /
+604 (M2) / 625 (M3+M4, unchanged through M5, M6a, docs).

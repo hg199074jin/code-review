@@ -19,11 +19,22 @@ itself, and the observable effect is a change in LLM review behavior.
 
 | ID | Mutation (applied to a temp SKILL.md copy) | Scenario | Expected evaluator failure |
 |---|---|---|---|
-| AM1 | delete F.1 from the command_execution row of the Selection Matrix | PRC-02 | `SELECTION_GUARD_FAIL:F.1` |
-| AM2 | delete the S3_additions row | PRC-03 | `SELECTION_GUARD_FAIL:C.2/E.1/G.3` |
+| AM1 | delete the `command_execution` mandatory surface row | PRC-02 | `SELECTION_GUARD_FAIL:F.2` |
+| AM2R | remove the negative-control disclosure rule (§5a universe + §4.3 note + §8 report block) | PRC-01 | `DISCLOSURE_GUARD_FAIL` |
 | AM3 | add F.2 and G.2 to the R1_S1_minimum row | PRC-01 | `OVER_REVIEW_GUARD_FAIL` |
 | AM4 | delete the "never record BLOCKED as DONE" rule | PRC-05 | `EXECUTION_HONESTY_FAIL` |
 | AM5 | delete the Review Sufficiency contract block | PRC-05 | `SUFFICIENCY_CONTRACT_FAIL` |
+
+### Why AM1/AM2R differ from the first draft
+
+The first draft targeted "delete R3 → F.1" and "delete the S3_additions row". Both are
+**selection-redundant** in the frozen matrix, so no single-rule removal can make them
+unselectable: F.1 is also required by the unconditional R2 pass-2 row, and all four
+`S3_additions` members are already required by the base plus R2 rows. AM1 therefore targets F.2
+(unique to the `command_execution` row) and AM2R targets the disclosure rule (no second source).
+Deleting the `verifier_harness` row was tried as AM2 and was **not attributable** — the reviewer
+selected G.2/G.4 on its own judgment — and is recorded as a negative result in
+`evals/agent-mutations.json`. Full evidence: `release-evals/v2.1-gate1/m6b-results.md`.
 
 ## Runner protocol (per AM)
 
