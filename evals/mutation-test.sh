@@ -13,7 +13,7 @@
 #   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
 #   M8  restore everything         -> PASS
 #
-#   DM1-DM13 (M6a, V2.1): every procedure-framework guard has its own injected failure,
+#   DM1-DM15 (M6a, V2.1): every procedure-framework guard has its own injected failure,
 #   and each red must be attributable to the target guard name (MS-001 discipline).
 #
 # Isolation rule: harness mutations run against throwaway copies under $WORK; the repo is
@@ -176,7 +176,7 @@ say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
 expect "M8 restored harness is green" pass "$rc"
 
-# ---- M6a: deterministic mutations (DM1-DM13) ----
+# ---- M6a: deterministic mutations (DM1-DM15) ----
 
 say '[DM1] duplicate a procedure ID in the registry'
 M="$WORK/dm1.py"
@@ -329,6 +329,37 @@ assert m, "anchor missing"
 open(p, "w", encoding="utf-8").write(s[:m.start()] + s[m.end():])
 DMEOF
 dm_case dm13 report_contract_markers_present SKILL.md "$M"
+
+say '[DM14] the planted authz bypass restored (fixture drift probe must fire)'
+M="$WORK/dm14.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[-1]
+s = open(p, encoding="utf-8").read()
+old = "def get_record(user, record):\n    return DB[record[\"id\"]]"
+new = ("def get_record(user, record):\n"
+       "    if record[\"owner\"] != user[\"id\"] and user.get(\"role\") != \"admin\":\n"
+       "        raise PermissionError(\"forbidden\")\n"
+       "    return DB[record[\"id\"]]")
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, new, 1))
+DMEOF
+dm_case dm14 "drift: records.py ownership check restored" evals/fixtures/changed/records.py "$M"
+
+say '[DM15] the real release gate restored in check.sh (fixture drift probe must fire)'
+M="$WORK/dm15.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[-1]
+s = open(p, encoding="utf-8").read()
+old = '#!/bin/sh\n# release verifier\necho "verify OK"\n'
+new = ('#!/bin/sh\n# release verifier: the build report must carry the verification marker\n'
+       'grep -q "STATUS: VERIFIED" build/report.txt || { echo "verify FAILED"; exit 1; }\n'
+       'echo "verify OK"\n')
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, new, 1))
+DMEOF
+dm_case dm15 "drift: check.sh no longer passes unconditionally" evals/fixtures/changed/check.sh "$M"
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"

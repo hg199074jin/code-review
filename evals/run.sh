@@ -103,6 +103,31 @@ else
   bad "$MISSING fixture file(s) missing"
 fi
 
+# --- PRC-04 / PRC-06 fixtures: the planted defects must stay planted (MS-V21-05) ---
+# Without these, "fixing" either planted defect leaves every other check green, because the two
+# new fixtures are only existence-checked; their acceptance value lives in the Group E runs.
+CH="$FIX/changed"
+
+behave "$CH" "authz bypass planted (cross-user read returns another user's record)" \
+  "drift: records.py ownership check restored — the planted authz bypass is gone" '
+import os, sys
+d = os.environ["PROBE_DIR"]; sys.path.insert(0, d); os.chdir(d)
+from records import get_record
+try:
+    got = get_record({"id": "alice"}, {"id": "r2", "owner": "bob"})
+except PermissionError:
+    sys.exit(1)
+sys.exit(0 if got.get("owner") == "bob" else 1)'
+
+behave "$CH" "always-pass verifier planted (check.sh succeeds with no build report)" \
+  "drift: check.sh no longer passes unconditionally — the planted false-green gate is gone" '
+import os, subprocess, sys, tempfile
+d = os.environ["PROBE_DIR"]
+with tempfile.TemporaryDirectory() as td:
+    r = subprocess.run(["sh", os.path.join(d, "check.sh")], cwd=td,
+                       capture_output=True, text=True)
+sys.exit(0 if r.returncode == 0 and "verify OK" in r.stdout else 1)'
+
 # ------------------------------------------------- V2.1 registry guards (M1) --
 echo '[1b/6] V2.1 procedure registry & disclosure universe'
 SKILL_FILE="$HERE/../SKILL.md"
