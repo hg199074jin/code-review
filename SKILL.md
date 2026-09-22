@@ -469,9 +469,8 @@ An installed Semgrep with a **repository-local** config is a valid extra signal;
 rule packs in a confidential repository without authorization; existing CodeQL/SARIF/CI results are
 evidence; never require CodeQL just to finish a review.
 
-CI/Danger-style policy checks are valid when the repository itself requires them: changelog and
-version updates, generated files, migrations, docs, lockfiles, schema snapshots, license headers,
-required tests, and similar merge contracts.
+CI/Danger-style policy checks are valid when the repository itself requires them (changelogs,
+versions, generated files, migrations, lockfiles, licenses, required tests, similar contracts).
 
 ### 7.2 External AI reviewers — optional second opinion
 
@@ -541,7 +540,9 @@ Review Sufficiency: <SUFFICIENT | LIMITED | INSUFFICIENT>
 
 `Review Sufficiency` answers "were the required procedures enough" and is never a verdict — the
 verdict stays mechanical over open P0/P1. `SUFFICIENT`: floor, matched surface rows and selected
-additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete.
+additions are `DONE` or equivalently covered, triangulation holds, scope accounting complete, **and
+`Review independence` is `independent-pass`** — any other independence value caps the grade at
+`LIMITED` regardless of the criteria above.
 `LIMITED`: some required procedure is `LIMITED/BLOCKED`, or a required independent pass was
 unavailable, unconfirmed, or author-conflicted, while findings and the verdict still stand, with
 residual risk stated. **Independence caps this value**: whenever `Review independence` is
@@ -550,7 +551,7 @@ procedure is `DONE` — sequential in-context re-reads are diligence, not an ind
 incomplete, an R3 critical path lacks even E1, or the target is unresolvable — never call such a
 review complete. Attribute findings to their procedures: `[P1][CR-001][F][F.1/F.2][E3]`.
 
-Then findings first, ordered P0 → P3:
+Findings first, ordered P0 → P3:
 
 ```text
 [P1][CR-001][A/C][F.1][E2] Imperative finding title — path/to/file.ext:line
