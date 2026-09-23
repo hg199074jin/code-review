@@ -5,12 +5,12 @@
 # when their condition stops holding:
 #
 #   M1  normal                     -> PASS   (baseline: the harness is green when healthy)
-#   M2  delete a copied fixture    -> FAIL   (CR-002)
-#   M3  delete a requirement SPEC  -> FAIL   (CR-002)
-#   M4  break the upstream push    -> FAIL   (CR-003: trap must be proven armed)
-#   M5  fix a planted defect       -> FAIL   (CR-001: behavioural drift guard must fire)
-#   M6  respell a planted defect   -> FAIL   (CR-001: guard must not be a string matcher)
-#   M7  desync the scenario JSONs  -> FAIL   (OR-009: id sets must be guarded)
+#   M2  delete a copied fixture    -> RED attributable to the missing-fixture guard  (CR-002)
+#   M3  delete a requirement SPEC  -> RED attributable to the missing-fixture guard  (CR-002)
+#   M4  break the upstream push    -> RED attributable to the arming guard           (CR-003)
+#   M5  fix a planted defect       -> RED attributable to the spec-1 drift guard     (CR-001)
+#   M6  respell a planted defect   -> RED attributable to the spec-3 drift guard     (CR-001)
+#   M7  desync the scenario JSONs  -> RED attributable to the id-sync guard          (OR-009)
 #   M8  restore everything         -> PASS
 #
 #   DM1-DM22 (M6a, V2.1): every procedure-framework guard has its own injected failure,
@@ -20,8 +20,12 @@
 # never touched. M6b (agent-level SKILL mutations) is documented separately in
 # evals/procedure-mutation-plan.md and never touches the canonical SKILL.md.
 #
-# Attribution rules (MS-001): "red" counts only when the harness output carries the target
-# FAIL marker; a non-zero exit without one, or a decoy failure, is not evidence.
+# Attribution rules (MS-001, tightened by the PRE-0 maintenance patch): "red" counts only
+# when the harness output carries the TARGET guard's FAIL marker; a non-zero exit without
+# one, a crash, or a decoy failure is not evidence. Every harness mutation must also prove
+# it was actually applied (mut_applied) before the harness runs, and the judge itself is
+# refutable: the ST cases at the end feed synthetic output to expect_red_for/mut_applied
+# and require the verdict to flip in both directions.
 #
 # Usage: ./evals/mutation-test.sh
 # Env:   MUTATION_VERBOSE=1 | MUTATION_KEEP=1
@@ -62,23 +66,53 @@ harness_ran() {
   grep -q '^result: ' "$CAP" 2>/dev/null || grep -q '^  FAIL ' "$CAP" 2>/dev/null
 }
 
-harness_failed_for_reason() { grep -q '^  FAIL ' "$CAP" 2>/dev/null; }
-
-# expect <desc> <want: pass|fail> <rc>
+# expect <desc> pass <rc>  — green-path judgement only (M1/M8). Red paths must use
+# expect_red_for: a bare "any FAIL line" judge cannot tell the target guard from a decoy
+# (the disease the legacy M2/M3/M5-M7 suffered from, closed by the PRE-0 patch).
 expect() {
   _desc="$1"; _want="$2"; _rc="$3"
+  if [ "$_want" != pass ]; then
+    bad "$_desc (expect() only judges green paths; use expect_red_for)"
+    return
+  fi
   if ! harness_ran; then
     bad "$_desc (harness never ran and reported no FAIL line - not evidence either way)"
     if [ "$VERBOSE" = 1 ]; then sed 's/^/    /' "$CAP"; fi
     return
   fi
-  if [ "$_want" = pass ]; then
-    if [ "$_rc" -eq 0 ]; then ok "$_desc"; else bad "$_desc (expected green, got red)"; fi
-  else
-    if [ "$_rc" -ne 0 ] && harness_failed_for_reason; then ok "$_desc"
-    elif [ "$_rc" -ne 0 ]; then bad "$_desc (non-zero exit with no FAIL line - red unattributable)"
-    else bad "$_desc (expected RED, got green - false confidence)"; fi
+  if [ "$_rc" -eq 0 ]; then ok "$_desc"; else bad "$_desc (expected green, got red)"; fi
+}
+
+# expect_red_for <desc> <rc> <target-fail-marker>
+# Attributed red (MS-001): the case counts only when the harness exited non-zero AND its
+# output carries the TARGET guard's FAIL line. A non-zero exit, a crash, or a decoy FAIL
+# without the target marker is not evidence for this case.
+expect_red_for() {
+  _desc="$1"; _rc="$2"; _target="$3"
+  if ! harness_ran; then
+    bad "$_desc (harness never ran and reported no FAIL line - not evidence either way)"
+    if [ "$VERBOSE" = 1 ]; then sed 's/^/    /' "$CAP"; fi
+    return
   fi
+  if [ "$_rc" -eq 0 ]; then
+    bad "$_desc (expected RED via '$_target', got green - false confidence)"
+    return
+  fi
+  if grep -qF -- "  FAIL $_target" "$CAP"; then
+    ok "$_desc"
+  else
+    bad "$_desc (red not attributable: target marker '$_target' absent from harness output)"
+    if [ "$VERBOSE" = 1 ]; then sed 's/^/    /' "$CAP"; fi
+  fi
+}
+
+# mut_applied <desc> <test-args...> — the mutation itself must be proven applied before the
+# harness runs; a mutation that silently did not happen proves nothing about the guard.
+mut_applied() {
+  _desc="$1"; shift
+  if "$@"; then return 0; fi
+  bad "$_desc"
+  return 1
 }
 
 show() {
@@ -117,22 +151,31 @@ expect "M1 normal harness is green" pass "$rc"
 
 say '[M2] mutation: delete a copied fixture (changed/test_service.py)'
 E=$(fresh m2); rm -f "$E/fixtures/changed/test_service.py"
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M2 deleting a fixture turns the harness RED" fail "$rc"
+rc=0
+if mut_applied "M2 mutation did not apply (fixture still present)" test ! -f "$E/fixtures/changed/test_service.py"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M2 deleting a fixture turns the harness RED (missing-fixture guard)" "$rc" \
+    "missing fixtures/changed/test_service.py"
+fi
 
 say '[M3] mutation: delete a requirement SPEC (HIGH_RISK_SPEC.md)'
 E=$(fresh m3); rm -f "$E/fixtures/HIGH_RISK_SPEC.md"
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M3 deleting a requirement spec turns the harness RED" fail "$rc"
+rc=0
+if mut_applied "M3 mutation did not apply (spec still present)" test ! -f "$E/fixtures/HIGH_RISK_SPEC.md"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M3 deleting a requirement spec turns the harness RED (missing-fixture guard)" "$rc" \
+    "missing fixtures/HIGH_RISK_SPEC.md"
+fi
 
 say '[M4] mutation: break the upstream push (trap never armed)'
 E=$(fresh m4)
 sed -i.bak 's|git push -q -u origin feature-x|git remote set-url origin /nonexistent-cr-mutation-remote.git; git push -q -u origin feature-x|' "$E/run.sh"
 rm -f "$E/run.sh.bak"
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M4 an unarmed upstream trap turns the harness RED" fail "$rc"
-if harness_ran && grep -q 'upstream NOT armed' "$CAP"; then
-  ok "M4b the red came from the arming guard, not an unrelated crash"
+rc=0
+if mut_applied "M4 mutation did not apply (run.sh unchanged)" grep -q 'nonexistent-cr-mutation-remote' "$E/run.sh"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M4 an unarmed upstream trap turns the harness RED (arming guard)" "$rc" \
+    "upstream NOT armed"
 fi
 
 say '[M5] mutation: fix a planted defect (spec-1 skip branch, respelled)'
@@ -145,8 +188,12 @@ s = s.replace('        s += ln["price"] * ln["qty"]',
               '        p = ln.get("price")\n        if p is None:\n            continue\n        s += p * ln["qty"]')
 open(p, 'w').write(s)
 PY
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M5 fixing spec-1 turns the harness RED" fail "$rc"
+rc=0
+if mut_applied "M5 mutation did not apply (skip branch absent)" grep -q 'if p is None:' "$E/fixtures/changed/invoice.py"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M5 fixing spec-1 turns the harness RED (spec-1 drift guard)" "$rc" \
+    "drift: total() no longer raises"
+fi
 
 say '[M6] mutation: respell a planted defect (assert instead of raise ValueError)'
 E=$(fresh m6)
@@ -158,8 +205,12 @@ s = s.replace('    return t * (1 - pct / 100)',
               '    assert 0 <= pct <= 100\n    return t * (1 - pct / 100)')
 open(p, 'w').write(s)
 PY
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M6 respelling spec-3 still turns the harness RED" fail "$rc"
+rc=0
+if mut_applied "M6 mutation did not apply (assert absent)" grep -q 'assert 0 <= pct <= 100' "$E/fixtures/changed/invoice.py"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M6 respelling spec-3 still turns the harness RED (spec-3 drift guard)" "$rc" \
+    "drift: apply_discount now validates"
+fi
 
 say '[M7] mutation: desync the two scenario JSONs (rename one id)'
 E=$(fresh m7)
@@ -169,8 +220,12 @@ p = sys.argv[-1]
 s = open(p).read().replace('v2-tool-fusion-12', 'v2-tool-fusion-12-renamed', 1)
 open(p, 'w').write(s)
 PY
-rc=0; run_quiet "$E" || rc=$?; show
-expect "M7 a desynced scenario id turns the harness RED" fail "$rc"
+rc=0
+if mut_applied "M7 mutation did not apply (id unchanged)" grep -q 'v2-tool-fusion-12-renamed' "$E/test-prompts.json"; then
+  run_quiet "$E" || rc=$?; show
+  expect_red_for "M7 a desynced scenario id turns the harness RED (id-sync guard)" "$rc" \
+    "scenario JSONs invalid or desynchronized"
+fi
 
 say '[M8] restore: a fresh copy must be green again (no residue)'
 E=$(fresh m8); rc=0; run_quiet "$E" || rc=$?; show
@@ -456,6 +511,56 @@ assert old in s, "anchor missing"
 open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
 DMEOF
 dm_case dm22 report_contract_markers_present SKILL.md "$M"
+
+# ---- ST: the attribution judge itself must be refutable (MS-001 applied to the referee) ----
+# A judge that accepts any FAIL line cannot tell a target red from a decoy. These cases feed
+# synthetic harness output to expect_red_for/mut_applied and require the verdict to flip in
+# BOTH directions; a self-test that could only ever pass would prove nothing.
+_scap=$CAP
+CAP="$WORK/st-cap.txt"
+
+say '[ST-A] attributed red with the target marker present counts as evidence'
+printf '  ok   some guard\n  FAIL drift: total() no longer raises - spec-1 defect gone\nresult: 9 passed, 1 failed\n' > "$CAP"
+case "$(expect_red_for "ST-A target-attributed red" 1 "drift: total() no longer raises")" in
+  '  ok '*) ok "ST-A attributed red with the target marker present judges OK" ;;
+  *) bad "ST-A attributed red with the target marker present judges OK" ;;
+esac
+
+say '[ST-B] a decoy FAIL without the target marker must be rejected'
+printf '  FAIL drift: some unrelated guard fired\nresult: 9 passed, 1 failed\n' > "$CAP"
+case "$(expect_red_for "ST-B decoy-only red" 1 "drift: total() no longer raises")" in
+  '  FAIL '*) ok "ST-B decoy-only red is rejected as unattributable" ;;
+  *) bad "ST-B decoy-only red is rejected as unattributable" ;;
+esac
+
+say '[ST-C] a green run must not count as the expected red'
+printf '  ok   all guards\nresult: 10 passed, 0 failed\n' > "$CAP"
+case "$(expect_red_for "ST-C green is not red" 0 "drift: total() no longer raises")" in
+  '  FAIL '*) ok "ST-C green output is rejected where red was required" ;;
+  *) bad "ST-C green output is rejected where red was required" ;;
+esac
+
+say '[ST-D] a harness that never ran is not evidence'
+: > "$CAP"
+case "$(expect_red_for "ST-D never ran" 1 "drift: total() no longer raises")" in
+  '  FAIL '*) ok "ST-D harness-never-ran is rejected as evidence" ;;
+  *) bad "ST-D harness-never-ran is rejected as evidence" ;;
+esac
+
+say '[ST-E] an unapplied mutation is reported as its own failure'
+case "$(mut_applied "ST-E mutation did not apply" false)" in
+  '  FAIL '*) ok "ST-E unapplied mutation is its own failure mode" ;;
+  *) bad "ST-E unapplied mutation is its own failure mode" ;;
+esac
+
+say '[ST-F] an applied mutation stays silent on success'
+if _st_out=$(mut_applied "ST-F should not fire" test -f "$HERE/run.sh") && [ -z "$_st_out" ]; then
+  ok "ST-F applied mutation is silent on success"
+else
+  bad "ST-F applied mutation is silent on success"
+fi
+
+CAP=$_scap
 
 say ""
 say "mutation test: $GOOD/$CASES cases behaved as required"
