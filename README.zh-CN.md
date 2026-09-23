@@ -388,8 +388,9 @@ SKILL.md。完整记录见 `release-evals/v2.1-gate1/m7-gate-report.md` 的 cycl
 `mutation-test.sh` **32/32**（DM1–DM22）、`shellcheck` 干净、`SKILL.md` 639/640 行、12 次 fresh
 验收运行。行为学发现如实记录：作者冲突**已确认**时模型能正确封顶，但**缺失型**限制（无 fresh
 reviewer / 来源未知）不能自我执行——封顶因此改由 **runtime 层机械执行**（作者与派发事实归
-runtime 所有）。跟进项：独立性封顶的 runtime attestation 实现、M 用例归因改造（下次动
-mutation-test.sh 时）。已闭合：s11 于 `015e550` 按方案 2 修复（恢复注入初态，fresh 验收已证
+runtime 所有）。跟进项：独立性封顶的 runtime attestation 实现。已闭合：M 用例归因改造
+（`maintenance/harness-attribution` 补丁——每个 M 用例的红必须可归因到目标守卫、变异本身须
+证明已应用、裁判自身可驳；`mutation-test.sh` 现 37/37）；s11 于 `015e550` 按方案 2 修复（恢复注入初态，fresh 验收已证
 冻结期望可满足）；advisory 行语义句已随 V2.2 M1 落地（12 次 M5 验收即在含该句的工件上运行）。
 
 ## License
