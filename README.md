@@ -393,8 +393,10 @@ dispatch facts), not left to reviewer self-assessment. Follow-ups: the s11 fixtu
 question was closed at `015e550` (option 2 - the injected initial state was restored and the frozen
 expectation verified satisfiable by a fresh acceptance run), and the advisory-row semantics sentence
 landed in V2.2 M1 (verified across the 12-run M5 cycle). Remaining: the runtime enforcement
-implementation for the independence cap, and the legacy M-case attribution refactor (next harness
-touch).
+implementation for the independence cap. Closed since: the legacy M-case attribution debt (the
+`maintenance/harness-attribution` patch - every harness-mutation red is now attributable to its
+target guard, each mutation must prove it was applied, and the judge itself is refutable;
+`mutation-test.sh` 37/37).
 
 ## License
 
