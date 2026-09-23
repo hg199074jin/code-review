@@ -389,8 +389,12 @@ Release evidence in `release-evals/v2.1-gate1/results-v2.tsv` (v22-m5 rows): det
 639/640 lines, 12 fresh acceptance runs. Behavioral finding recorded honestly: model reviewers
 apply the independence cap reliably when author conflict is confirmed, but not for absence-based
 limitations - the cap is therefore **enforced by the runtime layer** (which owns authorship and
-dispatch facts), not left to reviewer self-assessment. Open follow-ups: the s11 fixture decision
-and the advisory-row semantics clarification.
+dispatch facts), not left to reviewer self-assessment. Follow-ups: the s11 fixture
+question was closed at `015e550` (option 2 - the injected initial state was restored and the frozen
+expectation verified satisfiable by a fresh acceptance run), and the advisory-row semantics sentence
+landed in V2.2 M1 (verified across the 12-run M5 cycle). Remaining: the runtime enforcement
+implementation for the independence cap, and the legacy M-case attribution refactor (next harness
+touch).
 
 ## License
 

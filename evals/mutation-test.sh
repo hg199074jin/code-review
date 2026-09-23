@@ -24,7 +24,7 @@
 # FAIL marker; a non-zero exit without one, or a decoy failure, is not evidence.
 #
 # Usage: ./evals/mutation-test.sh
-# Env:   MUTATION_VERBOSE=1 | CR_EVAL_KEEP=1
+# Env:   MUTATION_VERBOSE=1 | MUTATION_KEEP=1
 
 set -u
 

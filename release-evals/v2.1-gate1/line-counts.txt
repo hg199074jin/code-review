@@ -1,3 +1,4 @@
+# cycle-2 capture. Current: 639 lines (wc) at the released candidate; the run.sh guard counts 640 by split().
 # cycle-1 capture. Current: 637 lines at the released candidate (guard counts split lines: 637).
 dbc7058  510
 9f33f53  578

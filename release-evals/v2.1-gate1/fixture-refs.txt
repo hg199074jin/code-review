@@ -1,3 +1,4 @@
+# cycle-2 capture (released candidate d5bc44bb). Current: 24 cases (ids frozen in run.sh).
 # cycle-1 capture (pre-fix candidate). Current: 21 cases, ids frozen in run.sh.
 referenced fixtures checked: 14 | missing: none
 test_cases: 20 | expected scenarios: 20 | defect_catalog: 15

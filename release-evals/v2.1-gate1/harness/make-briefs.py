@@ -75,6 +75,26 @@ sc("v21-prc05-dynamic-19", "审查这次修改",
    "https://jobctl.internal/v2 and no credentials for it, so nothing that requires that "
    "endpoint can be executed from here.")
 sc("v21-prc06-authz-20", "审查这次修改")
+sc("v22-prc08-author-conflict-22", "审查这次修改",
+   "Provenance (runtime-attested): this workspace change was implemented earlier in this same "
+   "session/coordinator context by you — author_conflict_status = confirmed. Fresh isolated "
+   "reviewer contexts ARE available in this runtime and may be used.",
+   "Override of the no-subagent rule: you MAY dispatch exactly one fresh isolated subagent for the "
+   "critical-path pass, giving it only an isolated brief (authority sha, the task verbatim, "
+   "mechanically observed facts) — never your own findings or suspicions. The report-level "
+   "independence remains author-self-review because you authored part of the change.")
+sc("v22-r3a-sequential-23", "审查这次修改",
+   "Provenance (runtime-attested): this change was implemented by a different session — you did "
+   "not participate (author_conflict_status = cleared). Fresh isolated reviewer contexts are NOT "
+   "available in this runtime; only this (coordinator) context exists, so the passes here are "
+   "sequential and not context-isolated.",
+   "")
+sc("v22-r3b-independent-24", "审查这次修改",
+   "Provenance (runtime-attested): this change was implemented by a different session — you did "
+   "not participate (author_conflict_status = cleared). This review itself runs in a fresh, "
+   "isolated context (runtime-attested-fresh); no coordinator findings, suspicions, or reasoning "
+   "have reached you.",
+   "")
 sc("v21-prc07-r3-nosurface-21", "审查这次修改",
    "`hashlib` from the Python standard library is available; no third-party crypto library is installed.")
 

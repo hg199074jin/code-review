@@ -130,6 +130,24 @@
       "worktree_sha256": "e2a9c2e000686522e04066eda780ae0dc8ec0ebe522aa451bd28560ec02fb003",
       "dirty": " M derive.py\n",
       "file_count": 2
+    },
+    "v22-prc08-author-conflict-22": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v22-r3a-sequential-23": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
+    },
+    "v22-r3b-independent-24": {
+      "head": "8e440bb3d7a1c65796ec586c45aa2b6f97ed554a",
+      "worktree_sha256": "4a75366b4433137621f60f9976036c697d8b9fe62af32dc95200bd6347f51667",
+      "dirty": " M runner.py\n?? SPEC.md\n?? test_runner.py\n",
+      "file_count": 3
     }
   }
 }

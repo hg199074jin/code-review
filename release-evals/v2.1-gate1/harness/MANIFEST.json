@@ -5,10 +5,10 @@
   "shas": {
     "build-scenarios.sh": "0bcf3bc93131a83f4d875339992c3c351958b944fe40d1541682c5dff36706f9",
     "gen-am-mutations.py": "b1ba9a17c81652ebfd46833e7997bed659bf0d900eacfbfbdcc96741221c6399",
-    "make-briefs.py": "48946ae76764c8457a4d9782b498aade0b36558415e67dedadf5d162c30a0d73",
-    "scenario-manifest.json": "26a842ee36c8a7b17420dfb91e5ba0d3c97427a097fc6d580c9aed3f7d5c617c"
+    "make-briefs.py": "7f630f1136992e84736a3e9d22ffd73a4256350eb03671bda86c5dd6d7efe80a",
+    "scenario-manifest.json": "b46344ad8086cff20b898ed64b800d0347d358a8a900c8056336eabe6a2f4402"
   },
-  "updated_at_commit": "16ca9a87ea76541dc854aa6034768fd715a8a3a9",
+  "updated_at_commit": "6b0a9fd9984dfe03000671be19aa42b7200c194d",
   "am_mutation_set_v2": {
     "note": "Regenerated against the post-fix candidate 348946ae. Each mutation removes exactly one rule; the canonical file is never written.",
     "AM1": "delete the command_execution mandatory surface row",
@@ -18,5 +18,6 @@
     "AM5": "remove the Review Sufficiency contract line and its criteria paragraph",
     "AM2": "verifier_harness row deletion - recorded NOT ATTRIBUTABLE in the previous cycle; not re-run"
   },
-  "s11_restored": "2026-09-22 erratum option 2: builder constructs the injected initial state; expectation unchanged"
+  "s11_restored": "2026-09-22 erratum option 2: builder constructs the injected initial state; expectation unchanged",
+  "v22_coverage": "make-briefs.py now defines all 24 scenarios (incl. the three v22 independence cases); build-scenarios.sh builds them; scenario-manifest.json covers 24"
 }

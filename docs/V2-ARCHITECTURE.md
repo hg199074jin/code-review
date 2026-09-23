@@ -186,6 +186,26 @@ are exactly as before.
   **Review Sufficiency** (`SUFFICIENT` / `LIMITED` / `INSUFFICIENT`, never a verdict) round out the
   reporting contract.
 
+The Selection Matrix is a Markdown table in `SKILL.md` kept in sync
+
+## V2.2 addition — Review Independence
+
+V2.2 answers a question the procedure framework does not: **who reviewed this, and how independent
+was the review?**
+
+- The report carries a **Pass ledger** (one line per pass: context, brief mode, authority sha,
+  isolation basis) and a report-level **`Review independence`** state:
+  `author-self-review` / `sequential-fallback` / `independent-pass`, with a fixed priority when
+  several apply (author conflict wins).
+- **`independent-pass` is provable, not declared**: the author conflict must be affirmatively
+  cleared (`unknown` is the safe default and blocks the claim), the reviewer must run in a
+  runtime-confirmed isolated context receiving only the fact-sanitized Independent Review Brief
+  (fixed Fact Pack schema, deterministic resolvers, the user's task verbatim), and the authority
+  identity must be fixed.
+- **Independence caps Review Sufficiency at `LIMITED`** regardless of how many procedures are
+  `DONE` - findings and the mechanical verdict stand, but the report cannot claim an independent
+  review was completed. Enforcement lives in the runtime layer, which owns authorship and dispatch
+  facts; the reviewer's self-assessment is advisory.
 The Selection Matrix is a Markdown table in `SKILL.md` kept in sync with a frozen evaluator-only
 expectation (`evals/fixtures/procedure-selection.json`), and the harness verifies the registry, the
 matrix, the disclosure universe and the reporting markers on every run, with failure-injection

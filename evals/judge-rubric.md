@@ -54,6 +54,17 @@ Regardless of weighted score, a candidate version cannot be preferred when it:
 - enters an unbounded review/fix loop;
 - emits a verdict inconsistent with open P0/P1 findings.
 
+### Group E — V2.1 procedure-selection acceptance
+- v21-prc01 (R1 minimal + disclosure), v21-prc02 (R3 command execution),
+  v21-prc03 (S3 cross-file), v21-prc04 (verifier false-green),
+  v21-prc05 (unavailable dynamic, execution honesty), v21-prc06 (authz),
+  v21-prc07 (R3 with no mandatory surface - R3_minimum regression test)
+
+### Group V22 — review independence (single-factor)
+- v22-prc08 (author conflict confirmed -> author-self-review + LIMITED),
+  v22-r3a (cleared, no fresh reviewer -> sequential-fallback + LIMITED),
+  v22-r3b (cleared, runtime-attested isolated -> independent-pass)
+
 ## Paired judging protocol
 
 For each round:
