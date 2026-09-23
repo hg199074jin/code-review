@@ -7,20 +7,12 @@ metadata:
 
 # Code Review — Review Control Plane
 
-This skill is the **single control plane for code review**. It is not a linter and it is not an
-LLM wrapper. It decides:
-
-1. **what** is actually in scope;
-2. **what the change was supposed to do**;
-3. **how deep** the review must go;
-4. **which independent review lenses** are required;
-5. **which deterministic evidence** should be gathered;
-6. **which candidate issues survive verification and de-duplication**;
-7. **whether the change is safe to proceed**.
-
-The `ocr` CLI is an optional deterministic scope/rule engine, not the reviewer. Other tools
-(Semgrep, CodeQL/SARIF, native linters, CI, external AI reviewers) are optional evidence sources,
-never authorities.
+This skill is the **single control plane for code review** — not a linter, not an LLM wrapper. It
+decides what is actually in scope, what the change was supposed to do, how deep the review must go,
+which independent lenses and deterministic evidence are required, which candidates survive
+verification and de-duplication, and whether the change is safe to proceed. The `ocr` CLI is an
+optional deterministic scope/rule engine, not the reviewer; other tools (Semgrep, CodeQL/SARIF,
+native linters, CI, external AI reviewers) are optional evidence sources, never authorities (§10).
 
 Write the report in the user's language. Keep code identifiers, paths, commands, severity labels,
 finding IDs, evidence grades, and verdict lines verbatim.
@@ -67,8 +59,7 @@ finding IDs, evidence grades, and verdict lines verbatim.
 | "审查并修复" | `REVIEW_FIX` = initial diff review + bounded fix/verify |
 | "确认这些问题修好没有" | `VERIFY` |
 
-If intent is ambiguous, default to workspace changes and say so in one line; never silently
-substitute another target.
+If intent is ambiguous, default to workspace changes and say so in one line; never silently substitute another target.
 
 ---
 
@@ -101,21 +92,16 @@ A branch's tracking upstream is **not** automatically its merge target. Resolve 
 3. repository default branch (`refs/remotes/origin/HEAD`);
 4. `main`;
 5. `master`;
-6. none resolve → report `merge target unavailable` and stop.
-
-Never use `origin/feature-x` as the base merely because `feature-x` tracks it.
+6. none resolve → report `merge target unavailable` and stop. Never use `origin/feature-x` as the
+   base merely because `feature-x` tracks it.
 
 ### 3.3 PR mode
 
 When reviewing a PR, gather provider metadata if the runtime exposes it. Otherwise, if `gh` is
-available, use provider-native metadata such as:
-
-```bash
-gh pr view <number> --json title,body,baseRefName,headRefName
-```
-
-Use the PR base/head for scope and the title/body only as **intent context**; if provider metadata
-or refs are unavailable, do not invent them — fall back only to a user-supplied target.
+available, use provider-native metadata such as `gh pr view <number> --json
+title,body,baseRefName,headRefName`. Use the PR base/head for scope and the title/body only as
+**intent context**; if provider metadata or refs are unavailable, do not invent them — fall back
+only to a user-supplied target.
 
 ### 3.4 Build the Context Pack
 
@@ -181,24 +167,19 @@ Assign one tier and state why.
   network egress, destructive operations, migrations, concurrency, sandbox boundaries, crypto,
   data-loss paths, security-sensitive parsing, frozen contracts.
 
-A change can be promoted by uncertainty: poor tests, missing requirements, or a broad blast radius
-may move an otherwise ordinary change up one tier.
+A change can be promoted by uncertainty: poor tests, missing requirements, or a broad blast radius may move an otherwise ordinary change up one tier.
 
 ### 4.2 Size tier
-
-Use OCR/git stats where available.
 
 - **S1 Small** — roughly ≤5 reviewable files and ≤400 changed lines.
 - **S2 Medium** — roughly ≤20 reviewable files and ≤1500 changed lines.
 - **S3 Large** — above either threshold, or a cross-cutting refactor regardless of raw size.
 
-The thresholds are routing heuristics, not defect criteria.
+Use OCR/git stats where available. The thresholds are routing heuristics, not defect criteria.
 
 ### 4.3 Procedure selection
 
-```text
-required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)
-```
+`required = dedupe(route minimum ∪ mandatory surface triggers ∪ explicit requirement triggers)`
 
 The **route minimum is the floor for every route**: `R1_S1_minimum` is always required, and R2/S2,
 R3 and S3 add their rows on top of it. The floor plus `R3_minimum` is what "route minimum" means.
@@ -224,36 +205,29 @@ R3 and S3 add their rows on top of it. The floor plus `R3_minimum` is what "rout
 <!-- PROCEDURE_SELECTION_END -->
 
 Notes: E.3 arrives only via the migration_schema row. F.1 stays in the R2 minimum — static
-source→sink reading is cheap and skipping it on R2 risks under-review. On R1 every
+source→sink reading is cheap, and skipping it on R2 risks under-review. On R1 every
 disclosure-eligible procedure (§5a) is `NOT_SELECTED` unless an explicit requirement or a matched
 surface selects it; each unselected one appears under `Not selected by routing`. Advisory rows
 never fire on their own: when an advisory surface is present, record the judgment — procedures
-selected with a reason, or skipped with one.
-
-`S3_additions` restates S3's requirements: the floor and pass rows already require its members, so
-it changes no selection. `R3_minimum` is a constraint row, not an ID set — every R3 review selects
-at least one `ADVERSARIAL` procedure, obtains or honestly records the absence of a different-nature
-corroboration, and independently re-reads the critical path; a matched surface row never substitutes
-for those two.
+selected with a reason, or skipped with one. `S3_additions` restates requirements the floor and
+pass rows already cover — it changes no selection. `R3_minimum` is a constraint row, not an ID set:
+every R3 review selects at least one `ADVERSARIAL` procedure, obtains or honestly records the
+absence of a different-nature corroboration, and independently re-reads the critical path; a
+matched surface row never substitutes for those two.
 
 Execution structure: R1+S1 = one fresh pass over its minimum; R2/S2 = the two passes above; R3/S3 =
-specialist passes + final integration pass; any R3 security/data-loss path gets an independent
-re-read of the critical path even if another tool already flagged it.
-
-For S3, partition by module, rule group, dependency boundary, or coherent feature slice — never by
-token count. After all batches, run a **cross-batch integration pass** for broken contracts, renamed
-fields, inconsistent config, call-site drift, and missing migration/compatibility work.
-
-Specialist reviewers never dispatch their own reviewers. The coordinator owns final verification,
-de-duplication, severity, and verdict.
+specialist passes + a final integration pass. For S3, partition by module, rule group, dependency
+boundary, or coherent feature slice — never by token count — and after all batches run a
+**cross-batch integration pass** for broken contracts, renamed fields, inconsistent config,
+call-site drift, and missing migration/compatibility work. Specialist reviewers never dispatch
+their own reviewers; the coordinator owns final verification, de-duplication, severity, and verdict.
 
 ---
 
 ## 5. Review lenses and the A–J standard
 
-Every route answers all of A–J: each objective is covered by its executed procedures or marked n/a
-with a reason; no route may leave an objective unaddressed. Multi-pass routes distribute the same
-standard across independent lenses.
+Every route answers all of A–J — each objective is covered by executed procedures or marked n/a
+with a reason; multi-pass routes distribute the same standard across independent lenses.
 
 ### Lens 1 — Intent & Scope
 **A. Specification compliance**
@@ -294,9 +268,8 @@ R3 findings require a demonstrated attack/failure path, not a generic warning.
 
 ### Lens 4 — Tests & Maintainability
 **G. Test quality**
-- Tests must assert required behavior, not merely current implementation.
-- Reject run-only tests, tests that mock the unit under test, and happy-path-only coverage for new
-  failure behavior.
+- Tests must assert required behavior, not merely current implementation; reject run-only tests,
+  tests that mock the unit under test, and happy-path-only coverage for new failure behavior.
 - Verify new/changed behavior has meaningful tests; identify the exact missing branch.
 - Prefer tests that fail before the fix and pass after it.
 
@@ -376,8 +349,7 @@ Never fabricate evidence; a `BLOCKED` procedure is never recorded as `DONE`.
 
 Attributes are static: `CORE` = low-cost, broadly applicable; `EXTENDED` = needs more context or
 runtime evidence; `ADVERSARIAL` = actively hunts bypasses; `DYNAMIC` = executes code and obeys the
-§10 sandbox/side-effect boundaries. Conditional selection lives in the Selection Matrix (§4.3),
-never in this table.
+§10 sandbox/side-effect boundaries. Conditional selection lives in the Selection Matrix (§4.3).
 
 **Negative-control disclosure**: procedures with the `ADVERSARIAL` or `DYNAMIC` attribute form the
 disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a procedure is
@@ -425,10 +397,9 @@ P0 when reproduction would be unsafe or destructive.
 
 **Evidence triangulation.** On R3 critical paths, candidate P0s, command-execution, authz,
 destructive/data-loss findings and verifier P1s, prefer two evidences of **different nature**
-(`E1+E2`, `E1+E3`). Two reviewers statically reading the same code raises independence only — it
-is not triangulation. When a second
-evidence is unsafe or unavailable, do not force it: record `LIMITED/BLOCKED` on the procedure, state
-the residual risk, and do not auto-downgrade the severity.
+(`E1+E2`, `E1+E3`); two reviewers statically reading the same code raises independence only — it is
+not triangulation. When a second evidence is unsafe or unavailable, do not force it: record
+`LIMITED/BLOCKED`, state the residual risk, and do not auto-downgrade the severity.
 
 ### 6.3 Severity
 
@@ -463,12 +434,9 @@ Normalize candidates as `source | path | line | category | severity_hint | messa
 
 Use what the repository already defines before inventing commands: focused unit/integration tests;
 build, typecheck, lint, formatter check; repository policy/CI checks; existing local
-static-analysis configuration.
-
-An installed Semgrep with a **repository-local** config is a valid extra signal; never fetch remote
-rule packs in a confidential repository without authorization; existing CodeQL/SARIF/CI results are
-evidence; never require CodeQL just to finish a review.
-
+static-analysis configuration. An installed Semgrep with a **repository-local** config is a valid
+extra signal — never fetch remote rule packs in a confidential repository without authorization;
+existing CodeQL/SARIF/CI results are evidence, and never require CodeQL just to finish a review.
 CI/Danger-style policy checks are valid when the repository itself requires them (changelogs,
 versions, generated files, migrations, lockfiles, licenses, required tests, similar contracts).
 
@@ -606,13 +574,10 @@ Compute it from **open** findings only: any P0 → FAILED; else any P1 → NEEDS
 | Trigger | First repair | Still failing |
 |---|---|---|
 | `ocr` missing / preview errors | confirm `which ocr`; fall back to native git/file enumeration | continue; disclose non-deterministic file selection |
-| old OCR rejects `--format json` | retry identical command without `--format` | continue with text output; record compatibility mode |
 | not a git repo / no HEAD | read requested working files directly | review current files; disclose no history/regression baseline |
-| branch/SHA/base unavailable | use the base ladder / provider metadata | report target unavailable; never silently substitute another range |
-| PR metadata unavailable | review only the explicitly resolvable git target | mark PR-intent context unavailable |
+| branch/SHA/base or PR metadata unavailable | base ladder / provider metadata; review only the explicitly resolvable git target | report target unavailable; never silently substitute another range; mark PR-intent context unavailable |
 | diff too large | partition by module/rule/dependency boundary | report reviewed/unreviewed batches; never silently truncate |
 | isolated subagents unavailable | run independent sequential lenses | disclose lack of context isolation |
-| specialist reviewers disagree | coordinator re-reads the path and evidence | preserve uncertainty; do not manufacture consensus |
 | tests cannot run | detect native runner and run minimal safe subset | E/G ⚠️ static review only; never claim tests passed |
 | static analyzer unavailable | skip it; static tools are optional evidence | do not install/fetch tools merely to make the review look complete |
 | external reviewer requested but secrets/sensitive scope found | stop before egress; narrow/sanitize only with approval | continue local-only review |
