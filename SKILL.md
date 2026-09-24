@@ -373,6 +373,11 @@ url/ssrf, authz-decision, parser-input, schema-contract, tool-input): ≤8 cases
 ≤12 per review, 60s/case, 15min total, sandbox-only; shrink bounded (≤10 attempts or ≤3min,
 report minimization_exhausted); record `generated_probe` (input/family, expected property, observed
 result, context) or `metamorphic_relation` (relation, input, lhs/rhs, violation). Unsafe → LIMITED/BLOCKED.
+**Base-vs-Head Differential** — recipe of C.3: materialize BASE/HEAD in temp worktrees; run the same deterministic corpus on
+both (≤10 calls, 30s/case, 10min total); comparable=YES only when interpreter/deps/env/fixtures/seed match — except deltas
+introduced by the reviewed change, which are preserved and disclosed; comparable=NO → LIMITED, never graded as regression.
+Record `base_head_diff` evidence — corpus item, comparable, BASE result, HEAD result, classification (expected change /
+regression / unknown; unknown is noted, not a finding).
 
 ---
 
