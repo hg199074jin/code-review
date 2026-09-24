@@ -356,6 +356,13 @@ disclosure-eligible universe = {D.3, F.1, F.2, F.3, F.5, G.2}. Whenever such a p
 `NOT_SELECTED`, it must be listed under `Not selected by routing` with a reason (intersection with
 this universe, deduplicated, sorted by ID). R1 may use the compressed one-line form.
 
+**Detection Profiles** are execution recipes of their parent procedures — no selection state, no status of their own. **Impact
+Map** (recipe of C.2/E.1/I.2; trigger: cross-file/public contract or changed symbol with consumers): trace changed symbol →
+unchanged callers/consumers → callees → entries → sinks/boundaries → tests by reference tracing; bounds R1≤10 nodes (1-hop,
+signal-gated), R2≤30/depth≤3, R3≤60/depth≤5, S3≤90 total, truncation disclosed; record key paths as `impact_path` evidence —
+root, ≥1 edge, affected consumer/boundary, change-to-impact relation. §6.1 admission is unchanged: pre-existing defects found
+via the map are residual risk, not findings.
+
 ---
 
 ## 6. Finding admission, evidence, severity, and de-duplication
