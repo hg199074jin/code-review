@@ -367,6 +367,12 @@ TLS/signature→F.5, sanitizer→F.1/F.2, test-assertion weakening→G.1/G.4): o
 lines and changed conditionals for removed/weakened guards — ≤40 candidates, risk-prioritized (authz/fail-open/destructive/
 execution → reliability → test weakening); record hits as `guard_delta` evidence: before control, after control, weakened
 property, location. Intentional/no-op changes are not findings.
+**Adversarial / Property Synthesis** — bounded probe generation for D.1/F.2/G.1 (surface parents:
+command→F.2, path→F.4, authz→F.3, egress/tool-input→F.5; surfaces: command, filesystem-path,
+url/ssrf, authz-decision, parser-input, schema-contract, tool-input): ≤8 cases per surface-instance,
+≤12 per review, 60s/case, 15min total, sandbox-only; shrink bounded (≤10 attempts or ≤3min,
+report minimization_exhausted); record `generated_probe` (input/family, expected property, observed
+result, context) or `metamorphic_relation` (relation, input, lhs/rhs, violation). Unsafe → LIMITED/BLOCKED.
 
 ---
 
