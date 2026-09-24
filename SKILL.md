@@ -362,6 +362,11 @@ unchanged callers/consumers → callees → entries → sinks/boundaries → tes
 signal-gated), R2≤30/depth≤3, R3≤60/depth≤5, S3≤90 total, truncation disclosed; record key paths as `impact_path` evidence —
 root, ≥1 edge, affected consumer/boundary, change-to-impact relation. §6.1 admission is unchanged: pre-existing defects found
 via the map are residual risk, not findings.
+**Guard Weakening** — deletion/relaxation pass (authz→F.3, file/destructive→F.4, timeout/rollback→D.2, error/fail-open→C.3,
+TLS/signature→F.5, sanitizer→F.1/F.2, test-assertion weakening→G.1/G.4): on every reviewable hunk inspect 100% of deleted
+lines and changed conditionals for removed/weakened guards — ≤40 candidates, risk-prioritized (authz/fail-open/destructive/
+execution → reliability → test weakening); record hits as `guard_delta` evidence: before control, after control, weakened
+property, location. Intentional/no-op changes are not findings.
 
 ---
 
