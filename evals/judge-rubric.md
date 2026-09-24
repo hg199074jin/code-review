@@ -65,6 +65,17 @@ Regardless of weighted score, a candidate version cannot be preferred when it:
   v22-r3a (cleared, no fresh reviewer -> sequential-fallback + LIMITED),
   v22-r3b (cleared, runtime-attested isolated -> independent-pass)
 
+### Group V23 — high-recall detection (per-profile evidence)
+- v23-det01 (impact path to unchanged consumer -> impact_path),
+  v23-det02 (widened authz guard -> guard_delta, F.3),
+  v23-det03 (differential-only regression -> base_head_diff),
+  v23-det04 (malformed input crash -> generated_probe),
+  v23-det05 (two weaknesses chained -> chain_edge, one primary re-rated),
+  v23-det06 (intentional formatting change -> no finding; clean negative)
+- Judge rule: a DET scenario's `must_exhibit_detection_evidence` type must appear with its minimum
+  payload complete (root/edge/consumer/relation for impact_path, before/after/property/location for
+  guard_delta, etc.) - a bare evidence-type label without the payload does not satisfy the oracle.
+
 ## Paired judging protocol
 
 For each round:

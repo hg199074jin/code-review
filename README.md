@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.2.0-1565C0?style=flat-square)
+![Version](https://img.shields.io/badge/version-2.3.0-1565C0?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-Compatible-2196F3?style=flat-square)
 ![Architecture](https://img.shields.io/badge/Architecture-Review_Control_Plane-7B1FA2?style=flat-square)
 ![Local First](https://img.shields.io/badge/Default-Local--first-00897B?style=flat-square)

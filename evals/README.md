@@ -39,7 +39,7 @@ evaluated separately with test-prompts.json + expected-findings.json.
 | mutation-test.sh | Failure-injection counterpart: proves `run.sh` turns RED when its condition stops holding (fixture deleted, spec deleted, upstream unarmed, defect fixed, defect respelled, scenario desynced). |
 | fixtures/ | Baseline/changed source files for the invoice, R3 security, cross-file contract, verifier (`check.sh`), and authorization (`records.py` + `AUTHZ_SPEC.md`) scenarios, plus scenario-supply fixtures: `PR42_METADATA.json` (offline provider metadata for the PR-context case), `TOOL_REPORT.txt` (static-tool output with 1 true / 2 false findings for tool-fusion eval), `INJECTION_NOTE.txt` (embedded reviewer-directed instructions for the injection-boundary eval), `SECRET_CONFIG.ini` (synthetic credential, realistic-looking but never a real secret, for the egress opt-in eval). |
 | procedure-selection.json | Evaluator-only frozen expectation for the SKILL.md Selection Matrix (ID rows + the `R3_minimum` constraint row) and the disclosure universe; `run.sh` compares the matrix against it row by row. Never synced to the runtime skill. |
-| test-prompts.json | Agent-level scenarios, Groups A-E plus V2.2 independence (14 from V2.0.x + 7 V2.1 procedure-selection cases PRC-01..07 + 3 single-factor independence cases v22-prc08/r3a/r3b = 24 total). The id set is frozen in run.sh's scenario guard. |
+| test-prompts.json | Agent-level scenarios, Groups A-E plus V2.2 independence and V2.3 detection (14 from V2.0.x + 7 V2.1 procedure-selection cases PRC-01..07 + 3 single-factor independence cases v22-prc08/r3a/r3b + 6 V2.3 detection cases DET-01..06 = 30 total). The id set is frozen in run.sh's scenario guard. |
 | expected-findings.json | Must-report / must-not-report / routing expectations, plus the Group E contract fields (`must_select_procedures`, `must_not_select_procedures`, `must_exhibit_sufficiency`, `must_exhibit_selection_reason`). |
 | agent-mutations.json | M6b agent-level procedure mutations: one rule removed from an isolated SKILL.md copy per case, each requiring a named contract failure. |
 | procedure-mutation-plan.md | The M6b runner protocol, the isolation rule (the canonical SKILL.md is never mutated), and why two mutations target renamed rules. |
@@ -116,7 +116,7 @@ Three consecutive releases shipped stale doc metadata (MS-V21-08 -> audit-2026-0
 audit-2026-09-23 CR-002). Before merging, grep and reconcile:
 
 1. version strings: `SKILL.md` frontmatter, both README badges, `evals/test-prompts.json` version;
-2. scenario count claims: "N cases" / "14+7+3" style text in `evals/README.md` and captured-output
+2. scenario count claims: "N cases" / "14+7+3+6" style text in `evals/README.md` and captured-output
    headers - compare against `len(test_cases)`;
 3. `Current:` labels on captured outputs in `release-evals/` (which candidate, which cycle);
 4. open-item lists ("Open follow-ups") in READMEs and `release-evals/results.tsv` - close what the

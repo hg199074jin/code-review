@@ -48,12 +48,13 @@ ok()   { CASES=$((CASES + 1)); GOOD=$((GOOD + 1)); printf '  ok   %s\n' "$1"; }
 bad()  { CASES=$((CASES + 1)); printf '  FAIL %s\n' "$1"; }
 note() { printf '  --   %s\n' "$1"; }
 
-fresh() {  # fresh <name> -> isolated copy (evals + SKILL + READMEs) for harness mutations
+fresh() {  # fresh <name> -> isolated copy (evals + SKILL + READMEs + release-evals)
   _n="$1"
   rm -rf "${WORK:?}/$_n"
   mkdir -p "$WORK/$_n"
   cp -R "${HERE:?}" "$WORK/$_n/evals"
   cp "${SKILL_FILE}" "${HERE:?}/../README.md" "${HERE:?}/../README.zh-CN.md" "$WORK/$_n/"
+  cp -R "${HERE:?}/../release-evals" "$WORK/$_n/release-evals"
   printf '%s' "$WORK/$_n/evals"
 }
 
@@ -127,6 +128,7 @@ dm_case() {  # dm_case <case> <guard-name> <target-file> <mut.py-path>
   rm -rf "${WORK:?}/$_c"; mkdir -p "${WORK:?}/$_c"
   cp -R "${HERE:?}" "$WORK/$_c/evals"
   cp "${SKILL_FILE}" "${HERE:?}/../README.md" "${HERE:?}/../README.zh-CN.md" "$WORK/$_c/"
+  cp -R "${HERE:?}/../release-evals" "$WORK/$_c/release-evals"
   # the mutation target file is ALWAYS the last argument
   if ! python3 "$_mut" "$WORK/$_c/SKILL.md" "$WORK/$_c/README.md" "$WORK/$_c/README.zh-CN.md" \
       "$WORK/$_c/evals/test-prompts.json" "$WORK/$_c/evals/expected-findings.json" "$WORK/$_c/$_target" \
@@ -511,6 +513,100 @@ assert old in s, "anchor missing"
 open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
 DMEOF
 dm_case dm22 report_contract_markers_present SKILL.md "$M"
+
+# ---- M7 (V2.3): Detection Profile contract guards (DM23-DM30) ----
+
+say '[DM23] the Detection Profiles identity invariant reworded'
+M="$WORK/dm23.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "no selection state, no status of their own"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "a selection state and their own status", 1))
+DMEOF
+dm_case dm23 detection_contracts_stated SKILL.md "$M"
+
+say '[DM24] a detection evidence token renamed (enum incomplete)'
+M="$WORK/dm24.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "chain_edge"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "chain-link", 1))
+DMEOF
+dm_case dm24 detection_evidence_contract_stated SKILL.md "$M"
+
+say '[DM25] the S3 impact-map global cap unbounded'
+M="$WORK/dm25.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "S3≤90"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "S3≤unbounded", 1))
+DMEOF
+dm_case dm25 impact_map_contract_stated SKILL.md "$M"
+
+say '[DM26] guard-weakening triage downgraded from 100% to sampled'
+M="$WORK/dm26.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "100% of deleted"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "sampled deleted", 1))
+DMEOF
+dm_case dm26 guard_weakening_contract_stated SKILL.md "$M"
+
+say '[DM27] the bounded-shrink marker renamed'
+M="$WORK/dm27.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "minimization_exhausted"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "shrink_exhausted", 1))
+DMEOF
+dm_case dm27 adversarial_synthesis_contract_stated SKILL.md "$M"
+
+say '[DM28] the differential comparability gate assumed'
+M="$WORK/dm28.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "comparable=YES"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "comparable=assumed", 1))
+DMEOF
+dm_case dm28 differential_contract_stated SKILL.md "$M"
+
+say '[DM29] the co-occurrence prohibition reworded away'
+M="$WORK/dm29.py"
+cat > "$M" <<'DMEOF'
+import sys
+p = sys.argv[1]
+s = open(p, encoding="utf-8").read()
+old = "co-occurrence"
+assert old in s, "anchor missing"
+open(p, "w", encoding="utf-8").write(s.replace(old, "co-location", 1))
+DMEOF
+dm_case dm29 exploit_chain_contract_stated SKILL.md "$M"
+
+say '[DM30] the benchmark manifest deleted'
+M="$WORK/dm30.py"
+cat > "$M" <<'DMEOF'
+import os, sys
+os.remove(sys.argv[-1])
+DMEOF
+dm_case dm30 benchmark_manifest_valid release-evals/v23/benchmark-manifest.json "$M"
 
 # ---- ST: the attribution judge itself must be refutable (MS-001 applied to the referee) ----
 # A judge that accepts any FAIL line cannot tell a target red from a decoy. These cases feed

@@ -90,7 +90,14 @@ SPEC.md HIGH_RISK_SPEC.md CROSSFILE_SPEC.md
 PR42_METADATA.json TOOL_REPORT.txt INJECTION_NOTE.txt SECRET_CONFIG.ini
 baseline/check.sh changed/check.sh changed/check_test.sh
 baseline/records.py changed/records.py changed/test_records.py AUTHZ_SPEC.md
-procedure-selection.json"
+procedure-selection.json
+det/det01/baseline/consumer.py det/det01/baseline/producer.py
+det/det01/changed/producer.py det/det01/changed/SPEC.md
+det/det02/baseline/api.py det/det02/baseline/test_api.py det/det02/changed/api.py
+det/det02/changed/test_api.py det/det03/baseline/pricing.py det/det03/changed/pricing.py
+det/det04/baseline/config_parser.py det/det04/changed/config_parser.py
+det/det05/baseline/app.py det/det05/changed/app.py
+det/det06/baseline/money.py det/det06/changed/money.py"
 
 # ---------------------------------------------------------------- fixtures --
 echo '[1/6] fixture integrity'
@@ -213,6 +220,43 @@ if ("facts pass" in skill and "interpretations do not" in skill and "Fact Pack" 
 else:
     fail("brief_contract_stated", "independent review brief contract missing or reworded")
 
+# V2.3 Detection Profile contract guards: profiles are execution recipes only; every guard
+# anchors on the frozen M2-M6 sentences and carries an attributable mutation (DM23-DM29).
+if ("Detection Profiles" in skill and "no selection state" in skill
+        and "execution recipes" in skill):
+    ok("detection_contracts_stated")
+else:
+    fail("detection_contracts_stated", "profile identity block missing or reworded")
+evid = ("impact_path", "guard_delta", "generated_probe", "metamorphic_relation",
+        "base_head_diff", "chain_edge")
+missing_e = [t for t in evid if t not in skill]
+if not missing_e:
+    ok("detection_evidence_contract_stated")
+else:
+    fail("detection_evidence_contract_stated", f"missing evidence tokens: {missing_e}")
+if ("impact_path" in skill and "S3≤90" in skill and "recipe of C.2/E.1/I.2" in skill):
+    ok("impact_map_contract_stated")
+else:
+    fail("impact_map_contract_stated", "impact map bounds/payload sentence missing")
+if ("Guard Weakening" in skill and "guard_delta" in skill and "100% of deleted" in skill):
+    ok("guard_weakening_contract_stated")
+else:
+    fail("guard_weakening_contract_stated", "guard weakening triage/payload sentence missing")
+if ("Adversarial / Property Synthesis" in skill and "minimization_exhausted" in skill
+        and "surface-instance" in skill):
+    ok("adversarial_synthesis_contract_stated")
+else:
+    fail("adversarial_synthesis_contract_stated", "synthesis budget/shrink sentence missing")
+if ("Base-vs-Head Differential" in skill and "base_head_diff" in skill
+        and "comparable=YES" in skill):
+    ok("differential_contract_stated")
+else:
+    fail("differential_contract_stated", "differential comparability/payload sentence missing")
+if ("Exploit-chain" in skill and "chain_edge" in skill and "co-occurrence" in skill):
+    ok("exploit_chain_contract_stated")
+else:
+    fail("exploit_chain_contract_stated", "chain admission sentence missing")
+
 # report-contract markers: only proves the section/enums were not deleted wholesale.
 # Does NOT prove LLM behaviour - that is Group E + M6b territory.
 # Markers must be specific to the section-8 contract itself: the bare phrase "Not selected by
@@ -248,11 +292,15 @@ if tp is not None:
     need = ("must_select_procedures", "must_not_select_procedures", "must_exhibit_sufficiency", "must_exhibit_selection_reason")
     v21 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v21-")]
     v22 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v22-")]
+    v23 = [c["id"] for c in tp["test_cases"] if c["id"].startswith("v23-")]
     need22 = need + ("must_exhibit_review_independence",)
+    need23 = need + ("must_exhibit_detection_evidence",)
     miss = [sid for sid in v21 if sid not in ef.get("scenarios", {})
             or any(f not in ef["scenarios"][sid] for f in need)]
     miss += [sid for sid in v22 if sid not in ef.get("scenarios", {})
              or any(f not in ef["scenarios"][sid] for f in need22)]
+    miss += [sid for sid in v23 if sid not in ef.get("scenarios", {})
+             or any(f not in ef["scenarios"][sid] for f in need23)]
     if miss: fail("group_e_contract_fields_present", f"missing fields/entries: {miss}")
     else: ok("group_e_contract_fields_present")
 
@@ -529,6 +577,8 @@ FROZEN_SCENARIOS = {
     "v21-prc01-minimal-15", "v21-prc02-r3-16", "v21-prc03-s3-17", "v21-prc04-verifier-18",
     "v21-prc05-dynamic-19", "v21-prc06-authz-20", "v21-prc07-r3-nosurface-21",
     "v22-prc08-author-conflict-22", "v22-r3a-sequential-23", "v22-r3b-independent-24",
+    "v23-det01-impact-25", "v23-det02-guard-26", "v23-det03-differential-27",
+    "v23-det04-synthesis-28", "v23-det05-chain-29", "v23-det06-clean-30",
 }
 if tp_ids != FROZEN_SCENARIOS or ef_ids != FROZEN_SCENARIOS:
     print("missing scenarios:", sorted(FROZEN_SCENARIOS - tp_ids - ef_ids))
@@ -540,6 +590,33 @@ then
   ok "scenario JSONs valid and id-synchronized ($(python3 -c 'import json;print(len(json.load(open("'"$HERE"'/test-prompts.json"))["test_cases"]))' 2>/dev/null || echo '?') cases)"
 else
   bad "scenario JSONs invalid or desynchronized (OR-009)"
+fi
+
+# --- V2.3 benchmark manifest (frozen schema; skeleton now, cases/runs at benchmark time) ---
+if python3 - "$HERE/../release-evals/v23/benchmark-manifest.json" <<'PY'
+import json, sys
+try:
+    m = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception as exc:
+    print("manifest unreadable:", exc); sys.exit(1)
+for key in ("cases", "commitments", "runs"):
+    if key not in m:
+        print("missing top-level key:", key); sys.exit(1)
+for c in m["cases"]:
+    for f in ("case_id", "family", "fixture_sha256", "task_sha256", "oracle_sha256"):
+        if f not in c:
+            print("case missing field:", f); sys.exit(1)
+for r in m["runs"]:
+    for f in ("case_id", "arm", "review_authority_sha", "candidate_head_sha", "model", "result",
+              "evidence_payload_complete", "mechanism_attribution_valid"):
+        if f not in r:
+            print("run missing field:", f); sys.exit(1)
+sys.exit(0)
+PY
+then
+  ok "benchmark_manifest_valid (schema ok)"
+else
+  bad "benchmark_manifest_valid (manifest missing or schema-invalid)"
 fi
 
 # ------------------------------------------------------------- build repo --

@@ -466,6 +466,165 @@
       ],
       "must_exhibit_review_independence": "independent-pass (author conflict cleared; runtime-attested fresh isolated context)",
       "must_exhibit_sufficiency": "SUFFICIENT if all other criteria hold"
+    },
+    "v23-det01-impact-25": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_select_procedures": [
+        "C.2",
+        "E.1"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "cross-file contract drift traced via C.2/E.1"
+      ],
+      "must_report": [
+        "renamed payload key breaks unchanged consumer"
+      ],
+      "must_not_report_as_finding": [
+        "preexisting defects unrelated to the diff"
+      ],
+      "must_exhibit": [
+        "impact path citing changed producer AND unchanged consumer",
+        "broken consumer side cited explicitly"
+      ],
+      "must_exhibit_detection_evidence": [
+        "impact_path"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "v23-det02-guard-26": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_select_procedures": [
+        "F.3",
+        "J.2"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "auth_permission surface (F.3); J.2 for evidence sufficiency"
+      ],
+      "must_report": [
+        "widened ownership check admits viewer role"
+      ],
+      "must_not_report_as_finding": [],
+      "must_exhibit": [
+        "before/after control delta (guard weakening)",
+        "test gap: no viewer-role assertion"
+      ],
+      "must_exhibit_detection_evidence": [
+        "guard_delta"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "NEEDS_REVISION or FAILED"
+    },
+    "v23-det03-differential-27": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_select_procedures": [
+        "C.3"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "behavior-refactor diff triggers differential (C.3)"
+      ],
+      "must_report": [
+        "coupon application silently dropped (SAVE10 no longer honored)"
+      ],
+      "must_not_report_as_finding": [],
+      "must_exhibit": [
+        "BASE/HEAD executed with the same corpus and both outputs recorded",
+        "delta classified as unintended regression"
+      ],
+      "must_exhibit_detection_evidence": [
+        "base_head_diff"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "v23-det04-synthesis-28": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_select_procedures": [
+        "D.1",
+        "G.1"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "parser-input surface; boundary/adversarial input family"
+      ],
+      "must_report": [
+        "colon path crashes on lines without ':' (or empty lines)"
+      ],
+      "must_not_report_as_finding": [],
+      "must_exhibit": [
+        "a generated malformed input demonstrated the failure",
+        "minimal failing input recorded"
+      ],
+      "must_exhibit_detection_evidence": [
+        "generated_probe"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "NEEDS_REVISION"
+    },
+    "v23-det05-chain-29": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R3",
+      "size": "S1",
+      "must_select_procedures": [
+        "F.3",
+        "J.2"
+      ],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "authz boundary + information exposure composed"
+      ],
+      "must_report": [
+        "unauthenticated /metrics exposes env secrets",
+        "DEBUG tracebacks expose env"
+      ],
+      "must_not_report_as_finding": [],
+      "must_exhibit": [
+        "chain composed: unauthenticated /metrics (or traceback) -> env secret exposure",
+        "edge proven by code path, not co-occurrence",
+        "ONE primary root-cause re-rated; other finding supporting/same-chain"
+      ],
+      "must_exhibit_detection_evidence": [
+        "chain_edge"
+      ],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "FAILED or NEEDS_REVISION"
+    },
+    "v23-det06-clean-30": {
+      "mode": "DIFF_WORKSPACE",
+      "risk": "R2",
+      "size": "S1",
+      "must_select_procedures": [],
+      "must_not_select_procedures": [],
+      "must_exhibit_sufficiency": "LIMITED",
+      "must_exhibit_selection_reason": [
+        "intentional formatting change declared in the task"
+      ],
+      "must_report": [],
+      "must_not_report_as_finding": [
+        "two-decimal formatting change"
+      ],
+      "must_exhibit": [
+        "no qualifying finding for the declared intentional formatting change"
+      ],
+      "must_exhibit_detection_evidence": [],
+      "must_exhibit_review_independence": "sequential-fallback",
+      "expected_verdict": "PASS"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "skill": "code-review",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "source": "V2 Review Control Plane eval suite: V1.1 regression coverage plus PR context, R3 security routing, S3 cross-file integration, bounded review-fix-verify, the V2.1 procedure-selection acceptance cases (PRC-01..07), and the V2.2 single-factor independence cases (v22-prc08 / v22-r3a / v22-r3b). 24 cases total.",
   "darwin_compatible": true,
   "fixtures_root": "evals/fixtures; evals/run.sh builds temporary git repos for deterministic checks.",
@@ -198,6 +198,54 @@
       "repo": "the R3 runner fixture: untrusted job id interpolated into os.system (command execution surface); provenance: implemented by a DIFFERENT session, you did not participate (author conflict = cleared); this review runs in a fresh isolated context, runtime-attested",
       "expected": "Report-level independent-pass; Sufficiency SUFFICIENT if everything else holds; findings and mechanical verdict unaffected.",
       "notes": "PRC-08 split: independent-pass path only (single-factor)."
+    },
+    {
+      "id": "v23-det01-impact-25",
+      "type": "v23_detection",
+      "prompt": "审查这次修改",
+      "repo": "det01: producer.make_result payload key renamed 'result'->'value' (SPEC.md declares intent); unchanged consumer.py reads item['result'] per the frozen contract",
+      "expected": "Trace the renamed key to the unchanged consumer (impact path root->edge->affected consumer); report the cross-file contract break citing both sides; pre-existing issues stay residual",
+      "notes": "DET-01 cross-file impact expansion"
+    },
+    {
+      "id": "v23-det02-guard-26",
+      "type": "v23_detection",
+      "prompt": "审查这次修改",
+      "repo": "det02: get_record ownership check widened to admit role=='viewer' for every record; existing tests still pass (no viewer case)",
+      "expected": "Report the widened authz guard with before/after control delta; F.3 engaged; tests weak because no viewer assertion",
+      "notes": "DET-02 guard weakening"
+    },
+    {
+      "id": "v23-det03-differential-27",
+      "type": "v23_detection",
+      "prompt": "审查这次修改",
+      "repo": "det03: 'simplified' apply_discount silently drops coupon application (SAVE10 no longer honored); only visible by running BASE vs HEAD with the same corpus",
+      "expected": "Materialize BASE/HEAD, run same deterministic corpus, classify the delta as an unintended regression, report the dropped coupon behavior",
+      "notes": "DET-03 base-vs-head differential"
+    },
+    {
+      "id": "v23-det04-synthesis-28",
+      "type": "v23_detection",
+      "prompt": "审查这次修改",
+      "repo": "det04: parse_setting gains a colon path using line.split(':') which crashes (ValueError) on lines without a colon or empty lines",
+      "expected": "Generate a bounded adversarial input family for the new parse path, demonstrate the crash with a minimal input, report it",
+      "notes": "DET-04 adversarial synthesis"
+    },
+    {
+      "id": "v23-det05-chain-29",
+      "type": "v23_detection",
+      "prompt": "审查这次修改",
+      "repo": "det05: DEBUG enabled (tracebacks expose env) AND auth check removed from /metrics which returns DB_HOST/DB_PASSWORD/API_SIGNING_KEY",
+      "expected": "Find both weaknesses, compose the chain (unauthenticated /metrics -> env secret exposure) with a proven edge, re-rate ONE primary root-cause finding, record the other as supporting",
+      "notes": "DET-05 exploit-chain composition"
+    },
+    {
+      "id": "v23-det06-clean-30",
+      "type": "v23_detection",
+      "prompt": "审查这次修改（本次把收据金额统一成两位小数格式）",
+      "repo": "det06: format_receipt now formats the total to two decimal places; declared intentional by the task",
+      "expected": "No qualifying finding for the intentional formatting change; a differential check may classify it as expected",
+      "notes": "DET-06 clean negative / intentional behavior change"
     }
   ]
 }
