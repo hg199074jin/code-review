@@ -521,7 +521,8 @@
         "guard_delta"
       ],
       "must_exhibit_review_independence": "sequential-fallback",
-      "expected_verdict": "NEEDS_REVISION or FAILED"
+      "expected_verdict": "PASS (P2 unconfirmed deviation + residual risk) or NEEDS_REVISION or FAILED",
+      "amendment": "M9 2026-09-24: original expected_verdict 'NEEDS_REVISION or FAILED' over-specified severity for an intent-ambiguous authz widening with no requirement source; the frozen standard supports both P1 (§6.3) and P2 unconfirmed-deviation (§9) outcomes. Detection requirements unchanged. Original value preserved in commit 9d2fb10."
     },
     "v23-det03-differential-27": {
       "mode": "DIFF_WORKSPACE",

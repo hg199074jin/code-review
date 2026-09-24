@@ -361,7 +361,11 @@ Map** (recipe of C.2/E.1/I.2; trigger: cross-file/public contract or changed sym
 unchanged callers/consumers → callees → entries → sinks/boundaries → tests by reference tracing; bounds R1≤10 nodes (1-hop,
 signal-gated), R2≤30/depth≤3, R3≤60/depth≤5, S3≤90 total, truncation disclosed; record key paths as `impact_path` evidence —
 root, ≥1 edge, affected consumer/boundary, change-to-impact relation. §6.1 admission is unchanged: pre-existing defects found
-via the map are residual risk, not findings.
+via the map are residual risk, not findings. When a Detection Profile materially contributed to a finding, its Evidence line
+MUST carry the matching evidence type token with the minimum payload — root/edge/consumer/relation for `impact_path`;
+before/after/property/location for `guard_delta`; input/expected/observed/context for `generated_probe`;
+relation/input/lhs/rhs/violation for `metamorphic_relation`; corpus/comparable/BASE/HEAD/classification for `base_head_diff`;
+source/capability/target/precondition/proof for `chain_edge`.
 **Guard Weakening** — deletion/relaxation pass (authz→F.3, file/destructive→F.4, timeout/rollback→D.2, error/fail-open→C.3,
 TLS/signature→F.5, sanitizer→F.1/F.2, test-assertion weakening→G.1/G.4): on every reviewable hunk inspect 100% of deleted
 lines and changed conditionals for removed/weakened guards — ≤40 candidates, risk-prioritized (authz/fail-open/destructive/
