@@ -378,6 +378,12 @@ both (≤10 calls, 30s/case, 10min total); comparable=YES only when interpreter/
 introduced by the reviewed change, which are preserved and disclosed; comparable=NO → LIMITED, never graded as regression.
 Record `base_head_diff` evidence — corpus item, comparable, BASE result, HEAD result, classification (expected change /
 regression / unknown; unknown is noted, not a finding).
+**Exploit-chain Composition** — recipe of J.1/J.2 (coordinator, after findings are verified): for pairs among ≤8 verified
+findings, test whether A's capability/output satisfies B's precondition/input (≤16 edge checks, depth ≤4); every claimed edge
+needs E1 code-path or E3 runtime proof — co-occurrence alone never upgrades severity. A proven chain re-rates ONE primary
+root-cause finding by its demonstrable composed impact; other chain members are recorded as supporting/same-chain, no second
+blocker is created, and the verdict stays mechanical. Record `chain_edge` evidence — source finding, capability/output,
+target finding, precondition/input, E1/E3 proof reference.
 
 ---
 
