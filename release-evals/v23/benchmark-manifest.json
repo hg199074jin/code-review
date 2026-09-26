@@ -69,6 +69,186 @@
       "fixture_sha256": "94ec7aa1567eafa04e820ea39e9fc6de9f465b6a",
       "task_sha256": "7ba9cb5ae7fc86df8198aa694f4cf8aa8a4271a7bfa406739a64603625e1b37b",
       "oracle_sha256": "f905213273b931d18c36799c6cfc090763f6989271dd207e1563905693e3a818"
+    },
+    {
+      "case_id": "GA-01",
+      "family": "guard_weakening",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "e275693b2991e1f6b9ed4fd5ae1b46144cf8a97c",
+      "task_sha256": "4d5a8e9026f91052111a1c55b1e6dd919dff6da32ba1509f323de042fd75442b",
+      "oracle_sha256": "b6ef66689782c93937624e611dfd90a40b8715aba135c02f5bedf3940483ced7"
+    },
+    {
+      "case_id": "GA-02",
+      "family": "guard_weakening",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "a6b76cb6a9903cf25957da0bc6626bb844ea835e",
+      "task_sha256": "7046d74b588dd8e48b3c46b8fc03476c2b991e61b23682442ba658976876e42c",
+      "oracle_sha256": "91d588b6fc5323b3665b53162f42a4e702aaf8da5cf2c7b04c8dbbe2c579943c"
+    },
+    {
+      "case_id": "GA-03",
+      "family": "adversarial_input",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "2f08d574aced57d11cc902798272633903fd5d66",
+      "task_sha256": "9d2bb22954f0f5038dbc27f48e579657725ab2537fa9c3756c974ecd6b7a2223",
+      "oracle_sha256": "515df26b18de465063eb1bcb16b4ede25dcd9e0814e8b0cbd37991bfae79fbdf"
+    },
+    {
+      "case_id": "GA-04",
+      "family": "adversarial_input",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "2f08d574aced57d11cc902798272633903fd5d66",
+      "task_sha256": "7046d74b588dd8e48b3c46b8fc03476c2b991e61b23682442ba658976876e42c",
+      "oracle_sha256": "11dec1248e98d9c03dfdc69f99d38e83a1d750454d3e365367c388d0f200cf7a"
+    },
+    {
+      "case_id": "GA-05",
+      "family": "exploit_chain",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "0f659febc5c3f63cf6ebfcc187980d79d5bdae00",
+      "task_sha256": "7046d74b588dd8e48b3c46b8fc03476c2b991e61b23682442ba658976876e42c",
+      "oracle_sha256": "1b2faa502513e8759ef50d71178ea0c3bfe190589495e5c0a640951e847a29d3"
+    },
+    {
+      "case_id": "GA-06",
+      "family": "exploit_chain",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "5439cf8ae56f7368478e443a1c30f4e02587b362",
+      "task_sha256": "3f48daa195415890f229d3b8643839a29cdabc13596cc266ffcd68329d9c32c8",
+      "oracle_sha256": "d0c519048d857d4489f3530029985a2122e4998f4df383022ba86ba21deff3ba"
+    },
+    {
+      "case_id": "GA-07",
+      "family": "cross_file_impact",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "df10fab336169b19e30f4f1d3609ed30ee756198",
+      "task_sha256": "22d544590eef19508001eefa3266fb07a303d79801f77d9900eb5a3141aa0c31",
+      "oracle_sha256": "1ce373cf1a27a8e44e0e5cb6f817da741c7a8c2fb12fa97374e0eebe71ca6ee6"
+    },
+    {
+      "case_id": "GA-08",
+      "family": "cross_file_impact",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "11f28ad6e5f161a761fd7ed894988e4ffbe84afb",
+      "task_sha256": "7642bef8600be329e9ae1a03400f0c7283da3b2359494aaa1269fc6e44342261",
+      "oracle_sha256": "ba0743032a4a35e75752fbcf7d2f81811870fe06523e18fecaa7509680048018"
+    },
+    {
+      "case_id": "GA-09",
+      "family": "differential_regression",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "c5a29e56fb99a687906cd93ede0579c3eaa992c8",
+      "task_sha256": "d0660a4914676f51ce7081d58370481f3680a2902f27efd8dc2c296298510c32",
+      "oracle_sha256": "058a0b50fe0cfdb2e37c651f17e400d327e0990e9a76dfa2f4f7326b798ec042"
+    },
+    {
+      "case_id": "GA-10",
+      "family": "differential_regression",
+      "round": 2,
+      "layer": "layer_a",
+      "fixture_sha256": "e2ad0ae7f6909222111a64d83cc88ac710d8fc68",
+      "task_sha256": "7642bef8600be329e9ae1a03400f0c7283da3b2359494aaa1269fc6e44342261",
+      "oracle_sha256": "d39d43f25e7ec299801fc938982995d83a3c6dc898329a986f785ec6979c7ae8"
+    },
+    {
+      "case_id": "LB-01",
+      "family": "exploit_chain",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "58ef56e1115d945f02feb028bf10f1a907e92512",
+      "task_sha256": "d05427b5ae13494e8a8c4b7572ecbfe6146b8190ee69a1feeaa642148dd53706",
+      "oracle_sha256": "345d327e21e71896bc0106925d96085891ae9fc17c94a1535e84dec619d3934b"
+    },
+    {
+      "case_id": "LB-02",
+      "family": "exploit_chain",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "f0ef610242a1b247bba425f041a724dddeb13173",
+      "task_sha256": "7642bef8600be329e9ae1a03400f0c7283da3b2359494aaa1269fc6e44342261",
+      "oracle_sha256": "68ffb9b651c762d74dc9f5115ea9c93d52df57a98af88ee4a2b559d0181cb211"
+    },
+    {
+      "case_id": "LB-03",
+      "family": "guard_weakening",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "20ec4fc646070529268d6578fb98f0ba6f64f606",
+      "task_sha256": "1868e75e32866d0adba2abe53d1e2654654bd5025c714afe814a858eff982142",
+      "oracle_sha256": "e632426926185c6f211e33bcdfd07e40e0b6cab2dc62a626b03cac1d0e630cfc"
+    },
+    {
+      "case_id": "LB-04",
+      "family": "guard_weakening",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "703ba72236bc075a668827b2d13947b77a9d003e",
+      "task_sha256": "6eb7fa446aa2902d06b69369fc7e895d59a09f861958d125de01f99dc5896118",
+      "oracle_sha256": "6f4bdd78e62e25952c229bd6ded45a5feb663bbac31486ca5bdeaad7c711b84a"
+    },
+    {
+      "case_id": "LB-05",
+      "family": "adversarial_input",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "d59f831bb79ccbdd4b80201202f45b70d78eefa5",
+      "task_sha256": "7046d74b588dd8e48b3c46b8fc03476c2b991e61b23682442ba658976876e42c",
+      "oracle_sha256": "03e00231c3b234789f295076486db8513b497c2df8c06994d3760ea06fb5d5b1"
+    },
+    {
+      "case_id": "LB-06",
+      "family": "adversarial_input",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "27344cc854ac88355af7200e30518dbae5907b1b",
+      "task_sha256": "db9b610981dcec2d13e059c35dbc19663ec9be10b7711bdeaf13197886172383",
+      "oracle_sha256": "6ffd5ac4f410ff0dc3bd34c2174cea2d96d430110d933922ffcb2bf256693a99"
+    },
+    {
+      "case_id": "LB-07",
+      "family": "differential_regression",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "858bf88d4d3bf4f5314e7a10019f8710ae271895",
+      "task_sha256": "7046d74b588dd8e48b3c46b8fc03476c2b991e61b23682442ba658976876e42c",
+      "oracle_sha256": "d36588a881029e0dd4371affac439d05e9c227fbe016d5b777447f5b5986b769"
+    },
+    {
+      "case_id": "LB-08",
+      "family": "differential_regression",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "ca5d62a9dd1577cdee652a43e1cff509767d8849",
+      "task_sha256": "d86bc8a2ca5a425e6bbcd6afdc4908947df826c3e4649e1a6118b6b423289eb5",
+      "oracle_sha256": "45a8c32fab1710990a9e4ae13e9ab931e13930251e69bf4d2b14e668ca1f500e"
+    },
+    {
+      "case_id": "LB-09",
+      "family": "cross_file_impact",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "e2305b46511f5b25184ac81f95f356dc62279511",
+      "task_sha256": "1868e75e32866d0adba2abe53d1e2654654bd5025c714afe814a858eff982142",
+      "oracle_sha256": "9dffb42d42d0fb4bf04b45260df6912ac8de286bc8a6408e3ecea7d547c67592"
+    },
+    {
+      "case_id": "LB-10",
+      "family": "cross_file_impact",
+      "round": 2,
+      "layer": "layer_b",
+      "fixture_sha256": "20044ab6f671a95be58d1c466292e0068add1f01",
+      "task_sha256": "3b38f5869586daca91f7652db56a22e7e8b75aaf7e6b1b636b1070b0716ff9ed",
+      "oracle_sha256": "c0ff6f41920635aea39b11441ffe41a032f1d23e47b9e02dd3484437d9592276"
     }
   ],
   "runs": [
@@ -543,6 +723,9 @@
     "holdout_commitments_sha256": "83a0edb19b3891bb5b4aa49d70c7132a6360f967e024defad6010b5e1c893aa2",
     "holdout_frozen_at": "2026-09-24T06:18:39+00:00",
     "holdout_case_count": 10,
-    "round_1_result": "G1 PASS; G2 FAIL by rubric-literal (HR-09 shared violation both arms - design wording 'not NEW vs v2.2' would PASS; erratum recorded); G3 FAIL (v2.2 5/5 on this sample, 0 uplift cases); G5 no uplift claim. Observation delta -1. Directional uplift NOT demonstrated on round-1 holdout."
+    "round_1_result": "G1 PASS; G2 FAIL by rubric-literal (HR-09 shared violation both arms - design wording 'not NEW vs v2.2' would PASS; erratum recorded); G3 FAIL (v2.2 5/5 on this sample, 0 uplift cases); G5 no uplift claim. Observation delta -1. Directional uplift NOT demonstrated on round-1 holdout.",
+    "round2_commitments_sha256": "168163f9bbecffad806437f772d525e9906b263f1a3c527b24327b75c7f20f7b",
+    "round2_frozen_at": "2026-09-26T16:21:26+00:00",
+    "round2_seed_commitment_sha256": "2e7aaa023e857296245f36986c46b8c8919626bc6418f36da3a796b4674feb1c"
   }
 }
