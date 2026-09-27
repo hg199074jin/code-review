@@ -1,0 +1,194 @@
+{
+  "cases": [
+    {
+      "case_id": "GA-01",
+      "family": "guard_weakening",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "0da4f9fb828a906548aee90c19eb2a9d58196246",
+      "task_sha256": "b313fa8b3a8ec7385b4b373400931983c8fb57827d7f841899fc51cd8ab7e95f",
+      "oracle_sha256": "2ee6b7f09196a17e840cdc04b3415a93ebe85ce0918fed43a96faee395d2a253"
+    },
+    {
+      "case_id": "GA-02",
+      "family": "exploit_chain",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "48aa82a0581fb43ab33113651ca2a37adc222d48",
+      "task_sha256": "658d5644be14ae5bf7aab3ec76034b239d9075bbf106c0c96d163abafaa8817e",
+      "oracle_sha256": "369babf5a0f89d70dad29b7cf43a0760196fd11ee6267f93fab63a183b763738"
+    },
+    {
+      "case_id": "GA-03",
+      "family": "cross_file_impact",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "fa30ed743755ea034fe08d8b0385276fecb6ee27",
+      "task_sha256": "a2b56de9b220c82c8ef33563254a0a84329f77a7ceb367bb861c40a663e59bcb",
+      "oracle_sha256": "3d4c2b6e4a1e0b77beaeaeb32647f6c25f5029454ad7ead5b3050712fc74fa67"
+    },
+    {
+      "case_id": "GA-04",
+      "family": "differential_regression",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "d31412c43b5a07b3ba29f05526dd932fc246f200",
+      "task_sha256": "a7d82ccef8b9fdbb35119058c40b52299e9e550ba500334b5c0bcd0854f81af9",
+      "oracle_sha256": "1ca2a491cdc93ed0f0e424c015f3d521d15c78c8d6d4839debf972d829db1d52"
+    },
+    {
+      "case_id": "GA-05",
+      "family": "adversarial_input",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "a93a8a410527f869d808056277e5538241f2abb4",
+      "task_sha256": "8828429c852617203f82c3e9da7856c1b5caf0786f0c46d6f6ecbc8b722d84e4",
+      "oracle_sha256": "8826880939dbae141c61adacb8e60590d06f10822273dcbf060fb1593b5a68ad"
+    },
+    {
+      "case_id": "GA-06",
+      "family": "guard_weakening",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "0da4f9fb828a906548aee90c19eb2a9d58196246",
+      "task_sha256": "b313fa8b3a8ec7385b4b373400931983c8fb57827d7f841899fc51cd8ab7e95f",
+      "oracle_sha256": "e6840af3468dcd61f5a5f29b6202df033478ed51266778646ae6842aac02095d"
+    },
+    {
+      "case_id": "GA-07",
+      "family": "exploit_chain",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "48aa82a0581fb43ab33113651ca2a37adc222d48",
+      "task_sha256": "658d5644be14ae5bf7aab3ec76034b239d9075bbf106c0c96d163abafaa8817e",
+      "oracle_sha256": "60200b2bfb9a0f5d7779926229d415033e9c6115f7717d1b5ae7addd66801d75"
+    },
+    {
+      "case_id": "GA-08",
+      "family": "cross_file_impact",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "fa30ed743755ea034fe08d8b0385276fecb6ee27",
+      "task_sha256": "a2b56de9b220c82c8ef33563254a0a84329f77a7ceb367bb861c40a663e59bcb",
+      "oracle_sha256": "4919a2cf25d02319295bcb50239db81bbb49fad8758b30ea6535c46d1c983c6f"
+    },
+    {
+      "case_id": "GA-09",
+      "family": "differential_regression",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "d31412c43b5a07b3ba29f05526dd932fc246f200",
+      "task_sha256": "a7d82ccef8b9fdbb35119058c40b52299e9e550ba500334b5c0bcd0854f81af9",
+      "oracle_sha256": "08b1efaef7205c2ce0f6fc7d0ed9cfdf68d2881a93a0302bdb0200c95c87136a"
+    },
+    {
+      "case_id": "GA-10",
+      "family": "adversarial_input",
+      "round": 3,
+      "layer": "layer_a",
+      "fixture_sha256": "a93a8a410527f869d808056277e5538241f2abb4",
+      "task_sha256": "8828429c852617203f82c3e9da7856c1b5caf0786f0c46d6f6ecbc8b722d84e4",
+      "oracle_sha256": "42196224d6825c8b42fec7db0d513497e7e90a789639f785d46c8fbf477adc81"
+    },
+    {
+      "case_id": "LB-01",
+      "family": "cve_dependency",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "101ac395732c87b9419a099d2a5423068fb18366",
+      "task_sha256": "09f51e64526b9c7440ea7e8292f49e08a431c84b83098fdd28a9b48010ee6167",
+      "oracle_sha256": "e0a7b71b923b64683a0a4a3e5e385523417721e23ad018344d7b5885386df3cd"
+    },
+    {
+      "case_id": "LB-02",
+      "family": "cve_dependency",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "98dbf0d527a6c2284cc13710e41820cd3b6b5e39",
+      "task_sha256": "1fe47f380f74d6521ccfb2929a992810b43015397c8da75d43c65e472c4da90c",
+      "oracle_sha256": "2e6fc23c4886ad9fd9ce4fb12f93f10e2ec227dc4f7106d1422a5e48ac97ad22"
+    },
+    {
+      "case_id": "LB-03",
+      "family": "secret_leak",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "3745f9d26dd0d6c32ec2fd6684fbcb06d46f4b2d",
+      "task_sha256": "e68a3fc497294128d017237c84259898da731dbe36b8b4dad3f665f05878fd50",
+      "oracle_sha256": "bb715e1914ce26566ab01cd9f1d9944550d2082a64a84ee236218d245b84bf1e"
+    },
+    {
+      "case_id": "LB-04",
+      "family": "config_misconfiguration",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "7b98ae872b4a128383fe06f3cd47ffc53278f5a6",
+      "task_sha256": "8b13112cd6314175fe0b419b9595f9cd620155cf5995710329380aeeb153472b",
+      "oracle_sha256": "e45214c4dd1dd217722d8416e8868c89d8039d2459603902d3b47bdee3fc7280"
+    },
+    {
+      "case_id": "LB-05",
+      "family": "config_misconfiguration",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "c1b220099b0b2d7a9d2477925e93de8f0778dd55",
+      "task_sha256": "ada26ebf5ed77d16e38715e04ee02b7befbb37d3b47679612e16ca03620a50a5",
+      "oracle_sha256": "4fad4f2daa534e381f4a0733c1229006e80514aca31ccd506dbadc675896cf76"
+    },
+    {
+      "case_id": "LB-06",
+      "family": "cve_dependency",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "101ac395732c87b9419a099d2a5423068fb18366",
+      "task_sha256": "09f51e64526b9c7440ea7e8292f49e08a431c84b83098fdd28a9b48010ee6167",
+      "oracle_sha256": "a0ada59638a5a9618fd540d1d6779781efa810f755e36aba0b6b2d4f0d6ecd2f"
+    },
+    {
+      "case_id": "LB-07",
+      "family": "cve_dependency",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "98dbf0d527a6c2284cc13710e41820cd3b6b5e39",
+      "task_sha256": "1fe47f380f74d6521ccfb2929a992810b43015397c8da75d43c65e472c4da90c",
+      "oracle_sha256": "797180f45b2c117586a7e762079268a9bd697025625302283083f52801554497"
+    },
+    {
+      "case_id": "LB-08",
+      "family": "secret_leak",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "3745f9d26dd0d6c32ec2fd6684fbcb06d46f4b2d",
+      "task_sha256": "e68a3fc497294128d017237c84259898da731dbe36b8b4dad3f665f05878fd50",
+      "oracle_sha256": "6fd294e01f92441ab553a6bce37b1400017673b3d32f48ce206492381c586107"
+    },
+    {
+      "case_id": "LB-09",
+      "family": "config_misconfiguration",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "7b98ae872b4a128383fe06f3cd47ffc53278f5a6",
+      "task_sha256": "8b13112cd6314175fe0b419b9595f9cd620155cf5995710329380aeeb153472b",
+      "oracle_sha256": "48fd8bbe92955c8b3407c7deacee2c1ff9becbd640e544124761e5cbe8c88a03"
+    },
+    {
+      "case_id": "LB-10",
+      "family": "config_misconfiguration",
+      "round": 3,
+      "layer": "layer_b",
+      "fixture_sha256": "c1b220099b0b2d7a9d2477925e93de8f0778dd55",
+      "task_sha256": "ada26ebf5ed77d16e38715e04ee02b7befbb37d3b47679612e16ca03620a50a5",
+      "oracle_sha256": "87a4e2c7b49748cceb7586c2afb232d34fbaa3ccd083efb88d03e91cbbf2fc60"
+    }
+  ],
+  "runs": [],
+  "commitments": {
+    "mode": "plan-b-precommitted-generation",
+    "design_sha256_note": "V2.4 design v1 FROZEN, stamped sha256 83fface511929181...(pre-stamp content 9e2d2e4028baafe5...)",
+    "seed_commitment_sha256": "658a2e050b1ca8b0f8e1da6f5f7ea77ecdd8ae5f7a981c02da7027325c2aae09",
+    "corpus_commitments_sha256": "400c4e6bb80107a1820c858e5edba4b090fe6df4224ef511c9d77f2c5a9ad7b6",
+    "frozen_at": "2026-09-27T07:02:14+00:00",
+    "composition": "Layer A 10 general + Layer B 10 specialized (CVE x2, SECRET x1, MISCONFIG x2, each w/ minimal-pair negative; positives precommitted P0/P1 with e1_path; advisory snapshot evaluator-private)",
+    "note": "V2.4 round-3 benchmark. Rounds 1-2 records live on the archived v2.3 donor branch."
+  }
+}
