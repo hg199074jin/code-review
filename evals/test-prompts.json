@@ -1,6 +1,6 @@
 {
   "skill": "code-review",
-  "version": "2.2.0",
+  "version": "2.4.0",
   "source": "V2 Review Control Plane eval suite: V1.1 regression coverage plus PR context, R3 security routing, S3 cross-file integration, bounded review-fix-verify, the V2.1 procedure-selection acceptance cases (PRC-01..07), and the V2.2 single-factor independence cases (v22-prc08 / v22-r3a / v22-r3b). 24 cases total.",
   "darwin_compatible": true,
   "fixtures_root": "evals/fixtures; evals/run.sh builds temporary git repos for deterministic checks.",
